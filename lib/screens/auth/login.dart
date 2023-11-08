@@ -1,6 +1,8 @@
+import 'package:checkpoint_app/screens/public/welcome_screen.dart';
 import 'package:checkpoint_app/themes/colors.dart';
 import 'package:checkpoint_app/widgets/costum_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
     var screenSize = MediaQuery.of(context).size;
     return Scaffold(
       body: Stack(
+        clipBehavior: Clip.none,
         children: [
           Container(
             height: screenSize.height * .6,
@@ -23,34 +26,54 @@ class _LoginScreenState extends State<LoginScreen> {
               color: primaryColor,
             ),
           ),
-          Positioned.fill(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                8.0,
-                (screenSize.height * .5),
-                8.0,
-                8.0,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text(
-                    "CHECK POINT APP",
-                    style: TextStyle(
-                      fontSize: 25.0,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
+          SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              4,
+              (screenSize.height * .32),
+              4,
+              4,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/icons/nfc-1.svg",
+                      height: 80.0,
+                      colorFilter: const ColorFilter.mode(
+                        scaffoldColor,
+                        BlendMode.srcIn,
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 30.0,
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4.0),
+                    const SizedBox(
+                      height: 5.0,
                     ),
+                    const Text(
+                      "CHECK POINT APP",
+                      style: TextStyle(
+                        fontSize: 30.0,
+                        fontWeight: FontWeight.w900,
+                        color: lightColor,
+                        fontFamily: 'Staatliches',
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 30.0,
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4.0),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
                     child: Column(
                       children: [
                         const CustomField(
@@ -58,8 +81,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           iconPath: "assets/icons/user.svg",
                         ),
                         const CustomField(
-                          hintText: "Mot de passe ",
+                          hintText: "Mot de passe",
                           iconPath: "assets/icons/key.svg",
+                          isPassword: true,
                         ),
                         SizedBox(
                           width: screenSize.width,
@@ -69,18 +93,28 @@ class _LoginScreenState extends State<LoginScreen> {
                               backgroundColor: secondaryColor,
                               elevation: 10.0,
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const WelcomeScreen(),
+                                ),
+                              );
+                            },
                             child: const Text(
                               'CONNECTER',
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         )
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           )
         ],

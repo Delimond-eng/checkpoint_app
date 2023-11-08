@@ -51,18 +51,21 @@ class CustomField extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    margin: const EdgeInsets.all(3),
+                    margin: const EdgeInsets.all(2),
                     decoration: const BoxDecoration(
                       color: scaffoldColor,
                       shape: BoxShape.circle,
                     ),
-                    child: SvgPicture.asset(
-                      iconPath,
-                      colorFilter: const ColorFilter.mode(
-                        secondaryColor,
-                        BlendMode.srcIn,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: SvgPicture.asset(
+                        iconPath,
+                        colorFilter: const ColorFilter.mode(
+                          secondaryColor,
+                          BlendMode.srcIn,
+                        ),
+                        width: 18.0,
                       ),
-                      width: 18.0,
                     ),
                   ),
                   const SizedBox(

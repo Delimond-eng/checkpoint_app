@@ -11,7 +11,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  ValueNotifier<dynamic> result = ValueNotifier(null);
+  ValueNotifier<String> result = ValueNotifier("");
   ValueNotifier<bool> scannig = ValueNotifier(false);
 
   @override
@@ -50,15 +50,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               margin: const EdgeInsets.all(4),
                               constraints: const BoxConstraints.expand(),
                               child: Center(
-                                child: ValueListenableBuilder<dynamic>(
+                                child: ValueListenableBuilder<String>(
                                   valueListenable: result,
                                   builder: (context, value, _) {
-                                    if (value == null) {
+                                    if (value.isEmpty) {
                                       return const Text(
                                           "Press button to read nfc tag !");
                                     } else {
                                       return Text(
-                                        '${value ?? ''}',
+                                        value,
                                         style: const TextStyle(
                                           fontSize: 20.0,
                                           fontWeight: FontWeight.w700,

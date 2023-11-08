@@ -1,6 +1,5 @@
-import 'package:checkpoint_app/screens/auth/login.dart';
-import 'package:checkpoint_app/screens/home_screen.dart';
-import 'package:checkpoint_app/themes/colors.dart';
+import '/screens/auth/login.dart';
+import '/themes/colors.dart';
 import 'package:flutter/material.dart';
 
 class Application extends StatelessWidget {
