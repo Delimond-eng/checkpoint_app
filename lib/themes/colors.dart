@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 const primaryColor = Color(0xFF331778);
 const secondaryColor = Color(0xFF4d2a9a);
+const secondaryLightColor = Color.fromARGB(255, 135, 94, 224);
 const scaffoldColor = Color(0xFFe9e5fb);
 const lightColor = Color(0xFFf9f6fe);
 const semiLightColor = Color(0xFFafa3d6);
