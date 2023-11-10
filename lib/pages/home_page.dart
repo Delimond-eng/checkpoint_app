@@ -180,7 +180,7 @@ class _HomePageState extends State<HomePage> {
                                   height: 50.0,
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
+                                      backgroundColor: primaryColor,
                                       elevation: 10.0,
                                     ),
                                     onPressed: showControlStartBottomSheet,
@@ -213,24 +213,48 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(
-                                  width: screenSize.width - 20,
-                                  height: 50.0,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.orange,
-                                      elevation: 10.0,
-                                    ),
-                                    onPressed: showControlStartBottomSheet,
-                                    child: Text(
-                                      'Continuer la patrouille'.toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
+                                if (tagsController.tags.length < 4) ...[
+                                  SizedBox(
+                                    width: screenSize.width - 20,
+                                    height: 50.0,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.orange,
+                                        elevation: 10.0,
+                                      ),
+                                      onPressed: showControlStartBottomSheet,
+                                      child: Text(
+                                        'Continuer la patrouille'.toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                )
+                                  )
+                                ] else ...[
+                                  SizedBox(
+                                    width: screenSize.width - 20,
+                                    height: 50.0,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        elevation: 10.0,
+                                      ),
+                                      onPressed: () {
+                                        NfcManager.instance.stopSession();
+                                        tagsController.tags.clear();
+                                      },
+                                      child: Text(
+                                        'Terminer la patrouille'.toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                ]
                               ],
                             ),
                     ),
@@ -384,7 +408,7 @@ class _HomePageState extends State<HomePage> {
                               height: 50.0,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: secondaryColor,
+                                  backgroundColor: Colors.black,
                                   elevation: 10.0,
                                 ),
                                 onPressed: () {
@@ -393,8 +417,7 @@ class _HomePageState extends State<HomePage> {
                                   setState(() {});
                                 },
                                 child: Text(
-                                  'Terminer la patrouille en cours'
-                                      .toUpperCase(),
+                                  'Fermer'.toUpperCase(),
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w500,
