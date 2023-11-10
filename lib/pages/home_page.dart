@@ -1,10 +1,12 @@
+import 'package:animate_do/animate_do.dart';
+import 'package:checkpoint_app/global/controllers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 
-import '/widgets/dashline.dart';
 import '/themes/colors.dart';
 import '/widgets/tag_card.dart';
 
@@ -16,8 +18,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  ValueNotifier<List<String>> results = ValueNotifier([]);
-  ValueNotifier<bool> scanning = ValueNotifier(false);
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
@@ -68,11 +68,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-              ),
-              const DashedLine(
-                color: Color(0xFF7b63d7),
-                height: .5,
-                space: EdgeInsets.symmetric(horizontal: 15.0, vertical: 2.0),
               ),
               Container(
                 margin: const EdgeInsets.all(10.0),
@@ -143,106 +138,101 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(10.0),
-                    child: ValueListenableBuilder<List<String>>(
-                      valueListenable: results,
-                      builder: (context, values, __) {
-                        if (values.isEmpty) {
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              FutureBuilder<bool>(
-                                future: NfcManager.instance.isAvailable(),
-                                builder: (context, ss) => ss.data != true
-                                    ? Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Lottie.asset(
-                                                "assets/animations/nfc_fail.json"),
-                                            const SizedBox(
-                                              height: 10.0,
-                                            ),
-                                            const Text(
-                                              'Veuillez activer l\'option NFC pour utiliser cette application ',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                color: secondaryColor,
-                                                fontWeight: FontWeight.w500,
+                    child: Obx(
+                      () => (tagsController.tags.isEmpty)
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                FutureBuilder<bool>(
+                                  future: NfcManager.instance.isAvailable(),
+                                  builder: (context, ss) => ss.data != true
+                                      ? Center(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              Lottie.asset(
+                                                  "assets/animations/nfc_fail.json"),
+                                              const SizedBox(
+                                                height: 10.0,
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    : scanStartMessage(),
-                              ),
-                              const SizedBox(
-                                height: 40.0,
-                              ),
-                              SizedBox(
-                                width: screenSize.width - 20,
-                                height: 50.0,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    elevation: 10.0,
+                                              const Text(
+                                                'Veuillez activer l\'option NFC pour utiliser cette application ',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  color: secondaryColor,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : scanStartMessage(),
+                                ),
+                                const SizedBox(
+                                  height: 40.0,
+                                ),
+                                SizedBox(
+                                  width: screenSize.width - 20,
+                                  height: 50.0,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      elevation: 10.0,
+                                    ),
+                                    onPressed: showControlStartBottomSheet,
+                                    child: Text(
+                                      'Commencer la patrouille'.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                   ),
-                                  onPressed: showControlStartBottomSheet,
-                                  child: Text(
-                                    'Commencer la patrouille'.toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
+                                )
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                Expanded(
+                                  child: ListView.separated(
+                                    shrinkWrap: true,
+                                    itemCount: tagsController.tags.length,
+                                    padding: EdgeInsets.zero,
+                                    itemBuilder: (context, index) {
+                                      return TagCard(
+                                        index: index,
+                                        tag: tagsController.tags[index],
+                                      );
+                                    },
+                                    separatorBuilder: (_, __) => const SizedBox(
+                                      height: 8.0,
                                     ),
                                   ),
                                 ),
-                              )
-                            ],
-                          );
-                        } else {
-                          return Column(
-                            children: [
-                              Expanded(
-                                child: ListView.separated(
-                                  shrinkWrap: true,
-                                  itemCount: values.length,
-                                  padding: EdgeInsets.zero,
-                                  itemBuilder: (context, index) {
-                                    return TagCard(
-                                      index: index,
-                                      tag: values[index],
-                                    );
-                                  },
-                                  separatorBuilder: (_, __) => const SizedBox(
-                                    height: 8.0,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: screenSize.width - 20,
-                                height: 50.0,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orange,
-                                    elevation: 10.0,
-                                  ),
-                                  onPressed: showControlStartBottomSheet,
-                                  child: Text(
-                                    'Continuer la patrouille'.toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
+                                SizedBox(
+                                  width: screenSize.width - 20,
+                                  height: 50.0,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orange,
+                                      elevation: 10.0,
+                                    ),
+                                    onPressed: showControlStartBottomSheet,
+                                    child: Text(
+                                      'Continuer la patrouille'.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              )
-                            ],
-                          );
-                        }
-                      },
+                                )
+                              ],
+                            ),
                     ),
                   ),
                 ),
@@ -301,9 +291,7 @@ class _HomePageState extends State<HomePage> {
       /**
        * CHECK IF TAG ISN'T EXIST
       */
-      if (results.value.isEmpty || !results.value.contains(formattedTag)) {
-        results.value.add(formattedTag);
-      }
+      tagsController.addTag(formattedTag);
       if (kDebugMode) {
         print(stringPayload);
       }
@@ -355,26 +343,68 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(
                     height: 30.0,
                   ),
-                  SizedBox(
-                    width: screenSize.width,
-                    height: 50.0,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: secondaryColor,
-                        elevation: 10.0,
-                      ),
-                      onPressed: () {
-                        NfcManager.instance.stopSession();
-                        Navigator.pop(context);
-                        setState(() {});
-                      },
-                      child: Text(
-                        'Terminer la patrouille en cours'.toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w400,
+                  Obx(
+                    () => Row(
+                      children: [
+                        if (tagsController.tags.isNotEmpty) ...[
+                          ZoomIn(
+                            child: Container(
+                              height: 50.0,
+                              width: 50.0,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.green,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    tagsController.tags.length
+                                        .toString()
+                                        .padLeft(2, "0"),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 16.0,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 10.0,
+                          ),
+                        ],
+                        Flexible(
+                          child: ZoomIn(
+                            child: SizedBox(
+                              width: screenSize.width,
+                              height: 50.0,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: secondaryColor,
+                                  elevation: 10.0,
+                                ),
+                                onPressed: () {
+                                  NfcManager.instance.stopSession();
+                                  Navigator.pop(context);
+                                  setState(() {});
+                                },
+                                child: Text(
+                                  'Terminer la patrouille en cours'
+                                      .toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   )
                 ],

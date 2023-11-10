@@ -1,3 +1,4 @@
+import 'package:get/get.dart';
 import '/screens/auth/login.dart';
 import '/themes/colors.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,7 @@ class Application extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       theme: ThemeData(
         primaryColor: primaryColor,
         primarySwatch: Palette.kPrimarySwatch,
