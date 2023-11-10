@@ -11,7 +11,7 @@ class TagsController extends GetxController {
     if (tags.isEmpty || !tags.contains(tag)) {
       tags.add(tag);
     } else if (tags.contains(tag)) {
-      EasyLoading.showToast("Patrouille déjà effectué pour ce point tag !");
+      EasyLoading.showToast("Point tag déjà patrouillé !");
       return;
     }
   }
