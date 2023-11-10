@@ -1,3 +1,4 @@
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import '/screens/auth/login.dart';
 import '/themes/colors.dart';
@@ -17,6 +18,7 @@ class Application extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       home: const LoginScreen(),
+      builder: EasyLoading.init(),
     );
   }
 }

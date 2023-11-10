@@ -1,3 +1,4 @@
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 class TagsController extends GetxController {
@@ -9,6 +10,9 @@ class TagsController extends GetxController {
   void addTag(String tag) {
     if (tags.isEmpty || !tags.contains(tag)) {
       tags.add(tag);
+    } else if (tags.contains(tag)) {
+      EasyLoading.showToast("Patrouille déjà effectué pour ce point tag !");
+      return;
     }
   }
 }
