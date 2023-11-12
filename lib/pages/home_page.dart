@@ -1,10 +1,12 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:checkpoint_app/global/controllers.dart';
+import 'package:checkpoint_app/global/modal.dart';
 import 'package:checkpoint_app/global/store.dart';
 import 'package:checkpoint_app/kernel/services/http_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
@@ -21,6 +23,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final loading = ValueNotifier<bool>(false);
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
@@ -178,21 +181,31 @@ class _HomePageState extends State<HomePage> {
                                 const SizedBox(
                                   height: 40.0,
                                 ),
-                                SizedBox(
-                                  width: screenSize.width - 20,
-                                  height: 50.0,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: primaryColor,
-                                      elevation: 10.0,
-                                    ),
-                                    onPressed: showControlStartBottomSheet,
-                                    child: Text(
-                                      'Commencer la patrouille'.toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
+                                ValueListenableBuilder<bool>(
+                                  valueListenable: loading,
+                                  builder: (context, value, _) => SizedBox(
+                                    width: screenSize.width - 20,
+                                    height: 50.0,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryColor,
+                                        disabledBackgroundColor:
+                                            Colors.grey.shade700,
+                                        elevation: 10.0,
                                       ),
+                                      onPressed: showControlStartBottomSheet,
+                                      child: value == true
+                                          ? const SpinKitWave(
+                                              color: Colors.white,
+                                            )
+                                          : Text(
+                                              'Commencer la patrouille'
+                                                  .toUpperCase(),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
                                     ),
                                   ),
                                 )
@@ -320,8 +333,9 @@ class _HomePageState extends State<HomePage> {
       String formattedTag = stringPayload.substring(3);
 
       var manager = HttpManager();
-
+      DGCustomDialog.showLoading(context);
       manager.savePatrol(tag: formattedTag).then((res) {
+        Get.back();
         if (res is! bool) {
           /**
           * CHECK IF TAG ISN'T EXIST
@@ -341,116 +355,127 @@ class _HomePageState extends State<HomePage> {
 
   //ALLOW TO START NEW CHECK POINT SESSION
   void showControlStartBottomSheet() async {
-    /**
-     * Start read tags session
-    */
-    startReadTagSession();
-    var screenSize = MediaQuery.of(context).size;
+    var manager = HttpManager();
+    DGCustomDialog.showLoading(context);
+    manager.startPatrol().then((res) {
+      if (res != 0) {
+        /**
+          * Start read tags session
+         */
+        startReadTagSession();
+        var screenSize = MediaQuery.of(context).size;
 
-    /**
+        /**
      * OPEN LOADING BOTTOM SHEET
     */
-    showModalBottomSheet(
-        context: context,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(5),
-        ),
-        builder: (context) {
-          return Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(5.0),
-              ),
+        showModalBottomSheet(
+            context: context,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Lottie.asset("assets/animations/nfc_scan_1.json"),
+            builder: (context) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(5.0),
                   ),
-                  const Text(
-                    'Faites la patrouille du site en scannant chaque point tag du site!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15.0,
-                      color: Colors.red,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 30.0,
-                  ),
-                  Obx(
-                    () => Row(
-                      children: [
-                        if (tagsController.tags.isNotEmpty) ...[
-                          ZoomIn(
-                            child: Container(
-                              height: 50.0,
-                              width: 50.0,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.green,
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    tagsController.tags.length
-                                        .toString()
-                                        .padLeft(2, "0"),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 16.0,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 10.0,
-                          ),
-                        ],
-                        Flexible(
-                          child: ZoomIn(
-                            child: SizedBox(
-                              width: screenSize.width,
-                              height: 50.0,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.black,
-                                  elevation: 10.0,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child:
+                            Lottie.asset("assets/animations/nfc_scan_1.json"),
+                      ),
+                      const Text(
+                        'Faites la patrouille du site en scannant chaque point tag du site!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15.0,
+                          color: Colors.red,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 30.0,
+                      ),
+                      Obx(
+                        () => Row(
+                          children: [
+                            if (tagsController.tags.isNotEmpty) ...[
+                              ZoomIn(
+                                child: Container(
+                                  height: 50.0,
+                                  width: 50.0,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.green,
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        tagsController.tags.length
+                                            .toString()
+                                            .padLeft(2, "0"),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 16.0,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 ),
-                                onPressed: () {
-                                  NfcManager.instance.stopSession();
-                                  Navigator.pop(context);
-                                  setState(() {});
-                                },
-                                child: Text(
-                                  'Fermer'.toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
+                              ),
+                              const SizedBox(
+                                width: 10.0,
+                              ),
+                            ],
+                            Flexible(
+                              child: ZoomIn(
+                                child: SizedBox(
+                                  width: screenSize.width,
+                                  height: 50.0,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.black,
+                                      elevation: 10.0,
+                                    ),
+                                    onPressed: () {
+                                      NfcManager.instance.stopSession();
+                                      Navigator.pop(context);
+                                      setState(() {});
+                                    },
+                                    child: Text(
+                                      'Fermer'.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
-          );
-        });
+                      )
+                    ],
+                  ),
+                ),
+              );
+            });
+      } else {
+        EasyLoading.showInfo("Echec de traitement, reéssayez ultérieurement !");
+        return;
+      }
+    });
   }
 }

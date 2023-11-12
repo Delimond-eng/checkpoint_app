@@ -1,5 +1,6 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
@@ -113,11 +114,20 @@ class DGCustomDialog {
                     padding: const EdgeInsets.all(10.0),
                     alignment: Alignment.center,
                     child: Container(
-                      height: 70.0,
-                      width: 70.0,
+                      height: 60.0,
+                      width: 60.0,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: BorderRadius.circular(4),
                         color: Colors.white.withOpacity(.5),
+                      ),
+                      child: const Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SpinKitWave(
+                            color: secondaryColor,
+                          )
+                        ],
                       ),
                     ),
                   ),
