@@ -1,8 +1,7 @@
 import 'package:animate_do/animate_do.dart';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/global/modal.dart';
-import 'package:checkpoint_app/global/store.dart';
-import 'package:checkpoint_app/kernel/services/http_manager.dart';
+import '/global/controllers.dart';
+import '/global/modal.dart';
+import '/kernel/services/http_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -260,10 +259,7 @@ class _HomePageState extends State<HomePage> {
                                         elevation: 10.0,
                                       ),
                                       onPressed: () {
-                                        NfcManager.instance.stopSession();
-                                        tagsController.tags.clear();
-                                        localStorage.remove('code_patrouille');
-                                        tagsController.refreshCurrentPatrol();
+                                        tagsController.closePatrol();
                                       },
                                       child: Text(
                                         'Terminer la patrouille'.toUpperCase(),
@@ -411,9 +407,13 @@ class _HomePageState extends State<HomePage> {
                                 child: Container(
                                   height: 50.0,
                                   width: 50.0,
-                                  decoration: const BoxDecoration(
+                                  decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.green,
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: Colors.greenAccent.withOpacity(.6),
+                                      width: .7,
+                                    ),
                                   ),
                                   child: Row(
                                     crossAxisAlignment:
@@ -425,9 +425,9 @@ class _HomePageState extends State<HomePage> {
                                             .toString()
                                             .padLeft(2, "0"),
                                         style: const TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 16.0,
-                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 15.0,
+                                          color: Colors.green,
                                         ),
                                       )
                                     ],
@@ -447,6 +447,9 @@ class _HomePageState extends State<HomePage> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.black,
                                       elevation: 10.0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(50),
+                                      ),
                                     ),
                                     onPressed: () {
                                       NfcManager.instance.stopSession();

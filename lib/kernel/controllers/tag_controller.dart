@@ -1,6 +1,7 @@
 import 'package:checkpoint_app/global/store.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:nfc_manager/nfc_manager.dart';
 
 class TagsController extends GetxController {
   static TagsController instance = Get.find();
@@ -22,5 +23,12 @@ class TagsController extends GetxController {
     } else {
       return 0;
     }
+  }
+
+  void closePatrol() {
+    NfcManager.instance.stopSession();
+    tags.clear();
+    localStorage.remove('code_patrouille');
+    refreshCurrentPatrol();
   }
 }
