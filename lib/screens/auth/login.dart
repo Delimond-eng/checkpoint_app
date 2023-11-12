@@ -1,8 +1,13 @@
-import 'package:checkpoint_app/screens/public/welcome_screen.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+
+import '/screens/public/welcome_screen.dart';
 import 'package:checkpoint_app/themes/colors.dart';
 import 'package:checkpoint_app/widgets/costum_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
+
+import '/kernel/services/http_manager.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,6 +17,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final loading = ValueNotifier<bool>(false);
+  final txtUserName = TextEditingController();
+  final txtUserPass = TextEditingController();
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
@@ -76,37 +84,70 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.all(10.0),
                     child: Column(
                       children: [
-                        const CustomField(
+                        CustomField(
                           hintText: "Nom d'utilisateur",
                           iconPath: "assets/icons/user.svg",
+                          controller: txtUserName,
                         ),
-                        const CustomField(
+                        CustomField(
                           hintText: "Mot de passe",
                           iconPath: "assets/icons/key.svg",
                           isPassword: true,
+                          controller: txtUserPass,
                         ),
-                        SizedBox(
-                          width: screenSize.width,
-                          height: 60.0,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: secondaryColor,
-                              elevation: 10.0,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const WelcomeScreen(),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              'CONNECTER',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
+                        ValueListenableBuilder<bool>(
+                          valueListenable: loading,
+                          builder: (context, val, _) => SizedBox(
+                            width: screenSize.width,
+                            height: 60.0,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: secondaryColor,
+                                disabledBackgroundColor: Colors.grey.shade700,
+                                elevation: 10.0,
                               ),
+                              onPressed: val == true
+                                  ? null
+                                  : () {
+                                      if (txtUserName.text.isEmpty &&
+                                          txtUserPass.text.isEmpty) {
+                                        EasyLoading.showToast(
+                                            "Nom d'utilisateur et mot de passe requis !");
+                                        return;
+                                      }
+                                      var manager = HttpManager();
+                                      manager
+                                          .login(
+                                              uName: txtUserName.text,
+                                              uPass: txtUserPass.text)
+                                          .then((res) {
+                                        if (res) {
+                                          Navigator.pushAndRemoveUntil(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const WelcomeScreen(),
+                                            ),
+                                            (route) => false,
+                                          );
+                                        } else {
+                                          EasyLoading.showToast(
+                                              "Nom d'utilisateur ou mot de passe erroné !");
+                                          return;
+                                        }
+                                      });
+                                    },
+                              child: val == true
+                                  ? const SpinKitWave(
+                                      color: Colors.white,
+                                    )
+                                  : const Text(
+                                      'CONNECTER',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                             ),
                           ),
                         )
