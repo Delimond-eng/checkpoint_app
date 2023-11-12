@@ -108,26 +108,28 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Gaston Delimond",
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w700,
+                    Obx(
+                      () => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${authController.userSession.value.nom!} ${authController.userSession.value.prenom}',
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        Text(
-                          "Bienvenue agent !",
-                          style: TextStyle(
-                            color: Color(0xFF7560a9),
-                            fontSize: 14.0,
-                            fontWeight: FontWeight.w400,
+                          const Text(
+                            "Bienvenue agent !",
+                            style: TextStyle(
+                              color: Color(0xFF7560a9),
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     )
                   ],
                 ),
@@ -194,8 +196,11 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       onPressed: showControlStartBottomSheet,
                                       child: value == true
-                                          ? const SpinKitWave(
-                                              color: Colors.white,
+                                          ? const Padding(
+                                              padding: EdgeInsets.all(18.0),
+                                              child: SpinKitThreeBounce(
+                                                color: Colors.white,
+                                              ),
                                             )
                                           : Text(
                                               'Commencer la patrouille'
@@ -230,47 +235,76 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                 ),
-                                if (tagsController.tags.length < 4) ...[
-                                  SizedBox(
-                                    width: screenSize.width - 20,
-                                    height: 50.0,
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.orange,
-                                        elevation: 10.0,
-                                      ),
-                                      onPressed: showControlStartBottomSheet,
-                                      child: Text(
-                                        'Continuer la patrouille'.toUpperCase(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                ] else ...[
-                                  SizedBox(
-                                    width: screenSize.width - 20,
-                                    height: 50.0,
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.green,
-                                        elevation: 10.0,
-                                      ),
-                                      onPressed: () {
-                                        tagsController.closePatrol();
-                                      },
-                                      child: Text(
-                                        'Terminer la patrouille'.toUpperCase(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                ]
+                                Obx(
+                                  () => tagsController.patrolCode.value != 0
+                                      ? Row(
+                                          children: [
+                                            Flexible(
+                                              child: SizedBox(
+                                                width: screenSize.width - 20,
+                                                height: 50.0,
+                                                child: ElevatedButton(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.orange,
+                                                    elevation: 10.0,
+                                                  ),
+                                                  onPressed:
+                                                      showControlStartBottomSheet,
+                                                  child: const Text(
+                                                    'Continuer la patrouille',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              width: 8.0,
+                                            ),
+                                            Flexible(
+                                              child: SizedBox(
+                                                width: screenSize.width - 20,
+                                                height: 50.0,
+                                                child: ElevatedButton(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.green,
+                                                    elevation: 10.0,
+                                                  ),
+                                                  onPressed: () {
+                                                    DGCustomDialog.showInteraction(
+                                                        context,
+                                                        message:
+                                                            'Etes-vous sûr de vouloir clôturer la patrouille en cours  ?',
+                                                        onValidated: () {
+                                                      tagsController
+                                                          .closePatrol();
+                                                    });
+                                                  },
+                                                  child: const Text(
+                                                    'Terminer la patrouille',
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 11.0,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                          ],
+                                        )
+                                      : const SizedBox.shrink(),
+                                )
                               ],
                             ),
                     ),
@@ -328,11 +362,11 @@ class _HomePageState extends State<HomePage> {
       */
       String formattedTag = stringPayload.substring(3);
 
-      var manager = HttpManager();
       DGCustomDialog.showLoading(context);
+      var manager = HttpManager();
       manager.savePatrol(tag: formattedTag).then((res) {
-        Get.back();
-        if (res is! bool) {
+        DGCustomDialog.dismissLoding();
+        if (res != null) {
           /**
           * CHECK IF TAG ISN'T EXIST
           */
@@ -352,8 +386,9 @@ class _HomePageState extends State<HomePage> {
   //ALLOW TO START NEW CHECK POINT SESSION
   void showControlStartBottomSheet() async {
     var manager = HttpManager();
-    DGCustomDialog.showLoading(context);
+    loading.value = true;
     manager.startPatrol().then((res) {
+      loading.value = false;
       if (res != 0) {
         /**
           * Start read tags session

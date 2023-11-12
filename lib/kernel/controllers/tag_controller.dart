@@ -11,6 +11,13 @@ class TagsController extends GetxController {
 
   //ADD NEW TAG IF DOESN'T EXIST
   void addTag(String tag, String tagName) {
+    for (var el in tags) {
+      if (el['tag_id'] == tag) {
+        EasyLoading.showInfo("Patrouille déjà effectué  !");
+        return;
+      }
+    }
+
     tags.add({"tag_id": tag, "tag_name": tagName});
     EasyLoading.showSuccess("Effectué avec succès !");
   }
@@ -18,7 +25,7 @@ class TagsController extends GetxController {
   Future<int> refreshCurrentPatrol() async {
     var pId = localStorage.read("code_patrouille");
     if (pId != null) {
-      patrolCode = pId;
+      patrolCode.value = pId;
       return pId;
     } else {
       return 0;

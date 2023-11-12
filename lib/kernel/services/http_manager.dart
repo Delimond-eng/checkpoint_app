@@ -9,10 +9,12 @@ class HttpManager {
       "all/insertion/insertConnexion",
       data: {"username": uName, "password": uPass},
     );
+
     if (response != null) {
-      if (response['reponse']['status'] == 'success') {
+      if (response['reponse']['status'] == 'successs') {
         //save user session data
         localStorage.write("user_session", response['reponse']['dataexist'][0]);
+        authController.refreshUser();
         return true;
       } else {
         return false;
@@ -51,14 +53,15 @@ class HttpManager {
       "pointag_id": tag,
       "site_id": user.siteId,
     });
+
     if (response != null) {
-      if (response['reponse']['status'] == 'success') {
+      if (response['reponse']['status'] == 'successs') {
         return response['reponse']['dataexist'][0];
       } else {
-        return false;
+        return null;
       }
     }
-    return false;
+    return null;
   }
 
   //Close patrol

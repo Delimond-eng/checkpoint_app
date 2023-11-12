@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: secondaryColor,
-                                disabledBackgroundColor: Colors.grey.shade700,
+                                disabledBackgroundColor: primaryColor,
                                 elevation: 10.0,
                               ),
                               onPressed: val == true
@@ -116,11 +116,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                         return;
                                       }
                                       var manager = HttpManager();
+                                      loading.value = true;
                                       manager
                                           .login(
                                               uName: txtUserName.text,
                                               uPass: txtUserPass.text)
                                           .then((res) {
+                                        loading.value = false;
                                         if (res) {
                                           Navigator.pushAndRemoveUntil(
                                             context,
@@ -138,8 +140,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                       });
                                     },
                               child: val == true
-                                  ? const SpinKitWave(
-                                      color: Colors.white,
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(18.0),
+                                      child: SpinKitThreeBounce(
+                                        color: Colors.white,
+                                      ),
                                     )
                                   : const Text(
                                       'CONNECTER',

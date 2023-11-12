@@ -124,7 +124,7 @@ class DGCustomDialog {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SpinKitWave(
+                          SpinKitFadingCircle(
                             color: secondaryColor,
                           )
                         ],
@@ -213,7 +213,7 @@ class DGCustomDialog {
                       children: [
                         Flexible(
                           child: Btn(
-                            color: Colors.grey.shade700,
+                            color: primaryColor,
                             height: 40.0,
                             label: 'Non',
                             labelColor: Colors.white,
