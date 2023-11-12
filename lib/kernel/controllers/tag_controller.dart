@@ -5,18 +5,13 @@ import 'package:get/get.dart';
 class TagsController extends GetxController {
   static TagsController instance = Get.find();
 
-  RxList<String> tags = RxList([]);
+  RxList<Map<String, dynamic>> tags = RxList([]);
   RxInt patrolCode = RxInt(0);
 
   //ADD NEW TAG IF DOESN'T EXIST
-  void addTag(String tag) {
-    if (tags.isEmpty || !tags.contains(tag)) {
-      tags.add(tag);
-      EasyLoading.showSuccess("Effectué avec succès !");
-    } else if (tags.contains(tag)) {
-      EasyLoading.showToast("Point tag déjà patrouillé !");
-      return;
-    }
+  void addTag(String tag, String tagName) {
+    tags.add({"tag_id": tag, "tag_name": tagName});
+    EasyLoading.showSuccess("Effectué avec succès !");
   }
 
   Future<int> refreshCurrentPatrol() async {

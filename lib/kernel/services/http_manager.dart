@@ -38,27 +38,24 @@ class HttpManager {
     return 0;
   }
 
-  Future<bool> savePatrol({
+  Future savePatrol({
     int? code,
     String? tag,
   }) async {
     var user = await authController.refreshUser();
     var patrolCode = await tagsController.refreshCurrentPatrol();
-    if (patrolCode != 0) {
-      var response = await HttpService.postRequest(
-          "all/insertion/insertPatrouilles",
-          data: {
-            "code_patrouille": patrolCode,
-            "agent_id": user.agentId,
-            "pointag_id": tag,
-            "site_id": user.siteId,
-          });
-      if (response != null) {
-        if (response['reponse']['status'] == 'success') {
-          return true;
-        } else {
-          return false;
-        }
+    var response =
+        await HttpService.postRequest("all/insertion/insertPatrouilles", data: {
+      "code_patrouille": patrolCode,
+      "agent_id": user.agentId,
+      "pointag_id": tag,
+      "site_id": user.siteId,
+    });
+    if (response != null) {
+      if (response['reponse']['status'] == 'success') {
+        return response['reponse']['dataexist'][0];
+      } else {
+        return false;
       }
     }
     return false;

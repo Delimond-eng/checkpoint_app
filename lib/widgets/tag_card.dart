@@ -4,9 +4,9 @@ import 'package:lottie/lottie.dart';
 import '../themes/colors.dart';
 
 class TagCard extends StatelessWidget {
-  final int? index;
+  final String? tagName;
   final String? tag;
-  const TagCard({super.key, this.index, this.tag});
+  const TagCard({super.key, this.tag, this.tagName});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class TagCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Tag point no. ${index! + 1}",
+                      tagName!.toUpperCase(),
                       style: const TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w700,

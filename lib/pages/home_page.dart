@@ -1,7 +1,10 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:checkpoint_app/global/controllers.dart';
+import 'package:checkpoint_app/global/store.dart';
+import 'package:checkpoint_app/kernel/services/http_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
@@ -204,8 +207,10 @@ class _HomePageState extends State<HomePage> {
                                     padding: EdgeInsets.zero,
                                     itemBuilder: (context, index) {
                                       return TagCard(
-                                        index: index,
-                                        tag: tagsController.tags[index],
+                                        tagName: tagsController.tags[index]
+                                            ['tag_name'],
+                                        tag: tagsController.tags[index]
+                                            ['tag_id'],
                                       );
                                     },
                                     separatorBuilder: (_, __) => const SizedBox(
@@ -244,6 +249,8 @@ class _HomePageState extends State<HomePage> {
                                       onPressed: () {
                                         NfcManager.instance.stopSession();
                                         tagsController.tags.clear();
+                                        localStorage.remove('code_patrouille');
+                                        tagsController.refreshCurrentPatrol();
                                       },
                                       child: Text(
                                         'Terminer la patrouille'.toUpperCase(),
@@ -312,10 +319,20 @@ class _HomePageState extends State<HomePage> {
       */
       String formattedTag = stringPayload.substring(3);
 
-      /**
-       * CHECK IF TAG ISN'T EXIST
-      */
-      tagsController.addTag(formattedTag);
+      var manager = HttpManager();
+
+      manager.savePatrol(tag: formattedTag).then((res) {
+        if (res is! bool) {
+          /**
+          * CHECK IF TAG ISN'T EXIST
+          */
+          tagsController.addTag(formattedTag, res['nom']);
+        } else {
+          EasyLoading.showInfo("Echec de traitement des informations !");
+          return;
+        }
+      });
+
       if (kDebugMode) {
         print(stringPayload);
       }
