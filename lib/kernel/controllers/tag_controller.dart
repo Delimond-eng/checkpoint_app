@@ -10,6 +10,7 @@ class TagsController extends GetxController {
   void addTag(String tag) {
     if (tags.isEmpty || !tags.contains(tag)) {
       tags.add(tag);
+      EasyLoading.showSuccess("Effectué avec succès !");
     } else if (tags.contains(tag)) {
       EasyLoading.showToast("Point tag déjà patrouillé !");
       return;

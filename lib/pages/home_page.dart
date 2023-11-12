@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
                         width: 5.0,
                       ),
                       const Text(
-                        "CHECK POINT APP",
+                        "PATROL TAG",
                         style: TextStyle(
                           fontSize: 22.0,
                           fontWeight: FontWeight.w900,

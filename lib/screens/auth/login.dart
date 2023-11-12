@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 5.0,
                     ),
                     const Text(
-                      "CHECK POINT APP",
+                      "PATROL TAG",
                       style: TextStyle(
                         fontSize: 30.0,
                         fontWeight: FontWeight.w900,
