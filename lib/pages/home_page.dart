@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${authController.userSession.value.nom!} ${authController.userSession.value.prenom}',
+                            '${authController.userSession.value.nom!.capitalizeFirst} ${authController.userSession.value.prenom}',
                             style: const TextStyle(
                               color: Colors.green,
                               fontSize: 18.0,
@@ -151,63 +151,75 @@ class _HomePageState extends State<HomePage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                FutureBuilder<bool>(
-                                  future: NfcManager.instance.isAvailable(),
-                                  builder: (context, ss) => ss.data != true
-                                      ? Center(
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Lottie.asset(
-                                                  "assets/animations/nfc_fail.json"),
-                                              const SizedBox(
-                                                height: 10.0,
-                                              ),
-                                              const Text(
-                                                'Veuillez activer l\'option NFC pour utiliser cette application ',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color: secondaryColor,
-                                                  fontWeight: FontWeight.w500,
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      FutureBuilder<bool>(
+                                        future:
+                                            NfcManager.instance.isAvailable(),
+                                        builder: (context, ss) => ss.data !=
+                                                true
+                                            ? Center(
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  children: [
+                                                    Lottie.asset(
+                                                        "assets/animations/nfc_fail.json"),
+                                                    const SizedBox(
+                                                      height: 10.0,
+                                                    ),
+                                                    const Text(
+                                                      'Veuillez activer l\'option NFC pour utiliser cette application ',
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: secondaryColor,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      : scanStartMessage(),
+                                              )
+                                            : scanStartMessage(),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 const SizedBox(
-                                  height: 40.0,
+                                  height: 20.0,
                                 ),
                                 ValueListenableBuilder<bool>(
                                   valueListenable: loading,
                                   builder: (context, value, _) => SizedBox(
-                                    width: screenSize.width - 20,
                                     height: 50.0,
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: primaryColor,
+                                        backgroundColor:
+                                            const Color(0xFF007efc),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 15.0),
                                         disabledBackgroundColor:
-                                            Colors.grey.shade700,
+                                            const Color.fromARGB(
+                                                255, 82, 158, 233),
                                         elevation: 10.0,
                                       ),
                                       onPressed: showControlStartBottomSheet,
                                       child: value == true
-                                          ? const Padding(
-                                              padding: EdgeInsets.all(18.0),
-                                              child: SpinKitThreeBounce(
-                                                color: Colors.white,
-                                              ),
+                                          ? const SpinKitThreeBounce(
+                                              color: Colors.white,
+                                              size: 20.0,
                                             )
                                           : Text(
                                               'Commencer la patrouille'
                                                   .toUpperCase(),
                                               style: const TextStyle(
                                                 color: Colors.white,
-                                                fontWeight: FontWeight.w500,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 12.0,
                                               ),
                                             ),
                                     ),
@@ -254,9 +266,10 @@ class _HomePageState extends State<HomePage> {
                                                       showControlStartBottomSheet,
                                                   child: const Text(
                                                     'Continuer la patrouille',
+                                                    textAlign: TextAlign.center,
                                                     style: TextStyle(
                                                       color: Colors.white,
-                                                      fontSize: 11,
+                                                      fontSize: 12,
                                                       fontWeight:
                                                           FontWeight.w600,
                                                     ),
@@ -293,7 +306,7 @@ class _HomePageState extends State<HomePage> {
                                                     textAlign: TextAlign.center,
                                                     style: TextStyle(
                                                       color: Colors.white,
-                                                      fontSize: 11.0,
+                                                      fontSize: 12.0,
                                                       fontWeight:
                                                           FontWeight.w600,
                                                     ),
@@ -319,28 +332,39 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget scanStartMessage() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SvgPicture.asset(
-          "assets/icons/idea.svg",
-          height: 80.0,
-          colorFilter: const ColorFilter.mode(Colors.orange, BlendMode.srcIn),
-        ),
-        const SizedBox(
-          height: 20,
-        ),
-        const Text(
-          'Veuillez appuyer sur le bouton en bas pour lancer la patrouille des points tags !',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14.0,
-            color: Colors.red,
-            fontWeight: FontWeight.w400,
+    return Expanded(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(220),
+                  child: Image.asset(
+                    'assets/images/patrol.gif',
+                    fit: BoxFit.cover,
+                    height: 220.0,
+                    width: 220.0,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+          const Text(
+            'Veuillez appuyer sur le bouton en bas pour lancer la patrouille des points tags !',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14.0,
+              color: Colors.red,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -390,6 +414,7 @@ class _HomePageState extends State<HomePage> {
     manager.startPatrol().then((res) {
       loading.value = false;
       if (res != 0) {
+        tagsController.refreshCurrentPatrol();
         /**
           * Start read tags session
          */

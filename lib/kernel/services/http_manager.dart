@@ -28,6 +28,7 @@ class HttpManager {
   Future<int> startPatrol() async {
     var response =
         await HttpService.postRequest('all/insertion/insertDebut', data: {});
+    print(response);
     if (response != null) {
       if (response['reponse']['status'] == 'success') {
         localStorage.write(
