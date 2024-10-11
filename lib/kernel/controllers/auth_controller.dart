@@ -7,6 +7,12 @@ class AuthController extends GetxController {
 
   var userSession = User().obs;
 
+  @override
+  void onInit() {
+    super.onInit();
+    refreshUser();
+  }
+
   Future<User> refreshUser() async {
     var userObject = localStorage.read('user_session');
     if (userObject != null) {

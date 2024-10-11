@@ -1,64 +1,103 @@
 class User {
-  String? agentId;
-  String? nom;
-  String? postnom;
-  String? prenom;
-  String? code;
-  String? telephone;
-  String? fonction;
-  String? grade;
-  String? username;
+  int? id;
+  String? matricule;
+  String? fullname;
   String? password;
-  String? statutAgent;
-  String? siteId;
-  String? dateEnregistrement;
+  int? agencyId;
+  int? siteId;
+  String? status;
+  String? role;
+  Site? site;
 
-  User(
-      {this.agentId,
-      this.nom,
-      this.postnom,
-      this.prenom,
-      this.code,
-      this.telephone,
-      this.fonction,
-      this.grade,
-      this.username,
-      this.password,
-      this.statutAgent,
-      this.siteId,
-      this.dateEnregistrement});
+  User({
+    this.id,
+    this.matricule,
+    this.fullname,
+    this.password,
+    this.agencyId,
+    this.siteId,
+    this.status,
+    this.role,
+    this.site,
+  });
 
-  User.fromJson(Map<String, dynamic> json) {
-    agentId = json['agent_id'];
-    nom = json['nom'];
-    postnom = json['postnom'];
-    prenom = json['prenom'];
-    code = json['code'];
-    telephone = json['telephone'];
-    fonction = json['fonction'];
-    grade = json['grade'];
-    username = json['username'];
-    password = json['password'];
-    statutAgent = json['statut_agent'];
-    siteId = json['site_id'];
-    dateEnregistrement = json['date_enregistrement'];
+  // Factory method to create an instance of Agent from JSON
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'],
+      matricule: json['matricule'],
+      fullname: json['fullname'],
+      password: json['password'],
+      agencyId: json['agency_id'],
+      siteId: json['site_id'],
+      status: json['status'],
+      role: json['role'],
+      site: json['site'] != null ? Site.fromJson(json['site']) : Site(),
+    );
   }
 
+  // Method to convert Agent object back to JSON
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['agent_id'] = agentId;
-    data['nom'] = nom;
-    data['postnom'] = postnom;
-    data['prenom'] = prenom;
-    data['code'] = code;
-    data['telephone'] = telephone;
-    data['fonction'] = fonction;
-    data['grade'] = grade;
-    data['username'] = username;
-    data['password'] = password;
-    data['statut_agent'] = statutAgent;
-    data['site_id'] = siteId;
-    data['date_enregistrement'] = dateEnregistrement;
-    return data;
+    return {
+      'id': id,
+      'matricule': matricule,
+      'fullname': fullname,
+      'password': password,
+      'agency_id': agencyId,
+      'site_id': siteId,
+      'status': status,
+      'role': role,
+      'site': site!.toJson(),
+    };
+  }
+}
+
+class Site {
+  int? id;
+  String? name;
+  String? code;
+  String? adresse;
+  String? latlng;
+  String? phone;
+  int? agencyId;
+  String? status;
+
+  Site({
+    this.id,
+    this.name,
+    this.code,
+    this.adresse,
+    this.latlng,
+    this.phone,
+    this.agencyId,
+    this.status,
+  });
+
+  // Factory method to create an instance of Site from JSON
+  factory Site.fromJson(Map<String, dynamic> json) {
+    return Site(
+      id: json['id'],
+      name: json['name'],
+      code: json['code'],
+      adresse: json['adresse'],
+      latlng: json['latlng'],
+      phone: json['phone'],
+      agencyId: json['agency_id'],
+      status: json['status'],
+    );
+  }
+
+  // Method to convert Site object back to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'code': code,
+      'adresse': adresse,
+      'latlng': latlng,
+      'phone': phone,
+      'agency_id': agencyId,
+      'status': status,
+    };
   }
 }

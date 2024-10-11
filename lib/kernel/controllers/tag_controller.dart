@@ -1,41 +1,26 @@
+import 'dart:io';
+
 import 'package:checkpoint_app/global/store.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:checkpoint_app/kernel/models/area.dart';
 import 'package:get/get.dart';
-import 'package:nfc_manager/nfc_manager.dart';
 
 class TagsController extends GetxController {
   static TagsController instance = Get.find();
 
-  RxList<Map<String, dynamic>> tags = RxList([]);
-  RxInt patrolCode = RxInt(0);
+  var scannedArea = Area().obs;
+  var patrolId = 0.obs;
+  var isLoading = false.obs;
+  var isScanningModalOpen = false.obs;
+  var mediaFile = Rx<File?>(null);
 
-  //ADD NEW TAG IF DOESN'T EXIST
-  void addTag(String tag, String tagName) {
-    for (var el in tags) {
-      if (el['tag_id'] == tag) {
-        EasyLoading.showInfo("Patrouille déjà effectué  !");
-        return;
-      }
-    }
-
-    tags.add({"tag_id": tag, "tag_name": tagName});
-    EasyLoading.showSuccess("Effectué avec succès !");
+  @override
+  void onInit() {
+    super.onInit();
+    refreshPending();
   }
 
-  Future<int> refreshCurrentPatrol() async {
-    var pId = localStorage.read("code_patrouille");
-    if (pId != null) {
-      patrolCode.value = pId;
-      return pId;
-    } else {
-      return 0;
-    }
-  }
-
-  void closePatrol() {
-    NfcManager.instance.stopSession();
-    tags.clear();
-    localStorage.remove('code_patrouille');
-    refreshCurrentPatrol();
+  void refreshPending() {
+    var patrolIdLocal = localStorage.read("patrol_id");
+    patrolId.value = patrolIdLocal ?? 0;
   }
 }

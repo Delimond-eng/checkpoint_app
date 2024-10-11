@@ -1,5 +1,3 @@
-import 'package:flutter/cupertino.dart';
-
 import '/themes/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -35,7 +33,7 @@ class CustomField extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10.0),
         width: MediaQuery.of(context).size.width,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5.0),
+          borderRadius: BorderRadius.circular(15.0),
           color: Colors.white,
           border: Border.all(
             color: secondaryColor.withOpacity(.3),
@@ -52,20 +50,13 @@ class CustomField extends StatelessWidget {
                 children: [
                   Container(
                     margin: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: scaffoldColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: SvgPicture.asset(
-                        iconPath,
-                        colorFilter: const ColorFilter.mode(
-                          secondaryColor,
-                          BlendMode.srcIn,
-                        ),
-                        width: 18.0,
+                    child: SvgPicture.asset(
+                      iconPath,
+                      colorFilter: const ColorFilter.mode(
+                        secondaryColor,
+                        BlendMode.srcIn,
                       ),
+                      width: 18.0,
                     ),
                   ),
                   const SizedBox(
@@ -133,15 +124,19 @@ class CustomField extends StatelessWidget {
                   onTap: () {
                     setter(() => obscurText = !obscurText);
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: Icon(
-                      obscurText
-                          ? CupertinoIcons.eye_solid
-                          : CupertinoIcons.eye_slash_fill,
-                      color: primaryColor,
-                      size: 20.0,
-                    ),
+                  child: SvgPicture.asset(
+                    obscurText == true
+                        ? "assets/svgs/eye-alt.svg"
+                        : "assets/svgs/eye-slash-alt.svg",
+                    height: 24,
+                    width: 24,
+                    colorFilter: ColorFilter.mode(
+                        Theme.of(context)
+                            .textTheme
+                            .bodyLarge!
+                            .color!
+                            .withOpacity(0.3),
+                        BlendMode.srcIn),
                   ),
                 )
             ],

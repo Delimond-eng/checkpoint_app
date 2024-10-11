@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
@@ -117,7 +118,7 @@ class DGCustomDialog {
                       height: 60.0,
                       width: 60.0,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(12.0),
                         color: Colors.white.withOpacity(.5),
                       ),
                       child: const Row(
@@ -162,11 +163,11 @@ class DGCustomDialog {
             backgroundColor: Colors.transparent,
             body: Center(
               child: Container(
-                height: 170.0,
+                height: 180.0,
                 width: MediaQuery.of(context).size.width,
                 margin: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4.0),
+                  borderRadius: BorderRadius.circular(20.0),
                   color: Colors.white,
                 ),
                 padding: const EdgeInsets.all(15.0),
@@ -205,7 +206,7 @@ class DGCustomDialog {
                                 ),
                               ),
                             ],
-                          ),
+                          ).paddingBottom(10.0),
                         ],
                       ),
                     ),
@@ -213,7 +214,7 @@ class DGCustomDialog {
                       children: [
                         Flexible(
                           child: Btn(
-                            color: primaryColor,
+                            color: Colors.grey.shade600,
                             height: 40.0,
                             label: 'Non',
                             labelColor: Colors.white,
@@ -230,7 +231,7 @@ class DGCustomDialog {
                           child: Btn(
                             height: 40.0,
                             label: 'Oui',
-                            color: Colors.green.shade500,
+                            color: primaryColor,
                             labelColor: Colors.white,
                             onPressed: () {
                               Get.back();
@@ -275,14 +276,14 @@ class Btn extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: color ?? primaryColor,
-        borderRadius: BorderRadius.circular(4.0),
+        borderRadius: BorderRadius.circular(30.0),
       ),
       child: Material(
-        borderRadius: BorderRadius.circular(4.0),
+        borderRadius: BorderRadius.circular(30.0),
         color: Colors.transparent,
         child: InkWell(
           onTap: () => onPressed!(),
-          borderRadius: BorderRadius.circular(4.0),
+          borderRadius: BorderRadius.circular(30.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,

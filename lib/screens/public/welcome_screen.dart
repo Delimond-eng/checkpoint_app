@@ -1,9 +1,13 @@
-import 'package:animate_do/animate_do.dart';
-import 'package:checkpoint_app/themes/colors.dart';
-import 'package:flutter_svg/svg.dart';
-
-import '/pages/home_page.dart';
+import 'package:checkpoint_app/constants/styles.dart';
+import 'package:checkpoint_app/pages/home_page.dart';
+import 'package:checkpoint_app/pages/planning_page.dart';
+import 'package:checkpoint_app/pages/profil_page.dart';
+import 'package:checkpoint_app/pages/radio_page.dart';
+import 'package:checkpoint_app/widgets/svg.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import '../../pages/qrcode_scanner_page.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -16,15 +20,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   //ALL PAGES
   List<Widget> pages = [
     const HomePage(),
-    const Center(
-      child: Text("Events"),
-    ),
-    const Center(
-      child: Text("User"),
-    ),
-    const Center(
-      child: Text("Config"),
-    )
+    const PlanningPage(),
+    const RadioPage(),
+    const ProfilPage()
   ];
 
   int currentPage = 0;
@@ -33,7 +31,70 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: pages.elementAt(currentPage),
-      bottomNavigationBar: BottomNavigationBar(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const QRcodeScannerPage(),
+            ),
+          );
+        },
+        child: const Icon(CupertinoIcons.qrcode_viewfinder),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6.0,
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Svg(path: "announce_line.svg", size: 23.0),
+              activeIcon: Svg(
+                path: "announce_line.svg",
+                size: 23.0,
+                color: primaryColor,
+              ),
+              label: 'Communiqués',
+            ),
+            BottomNavigationBarItem(
+              icon: Svg(path: "timer-start.svg", size: 23.0),
+              activeIcon: Svg(
+                path: "timer-start-fill.svg",
+                size: 23.0,
+                color: primaryColor,
+              ),
+              label: 'Planning',
+            ),
+            BottomNavigationBarItem(
+              icon: Svg(path: "radio-3-line.svg", size: 23.0),
+              activeIcon: Svg(
+                path: "radio-3-fill.svg",
+                size: 23.0,
+                color: primaryColor,
+              ),
+              label: 'Talkie walkie',
+            ),
+            BottomNavigationBarItem(
+              icon: Svg(path: "user-1.svg", size: 23.0),
+              activeIcon: Svg(
+                path: "user-1.svg",
+                size: 23.0,
+                color: primaryColor,
+              ),
+              label: 'Profil',
+            ),
+          ],
+          currentIndex: currentPage,
+          onTap: (index) {
+            setState(() {
+              currentPage = index;
+            });
+          },
+        ),
+      ),
+      /* bottomNavigationBar: BottomNavigationBar(
         landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
         backgroundColor: Colors.black,
         elevation: 2.0,
@@ -146,7 +207,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             currentPage = index;
           });
         },
-      ),
+      ), */
     );
   }
 }

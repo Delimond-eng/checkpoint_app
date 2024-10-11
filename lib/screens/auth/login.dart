@@ -1,11 +1,13 @@
+import 'package:checkpoint_app/constants/styles.dart';
+import 'package:checkpoint_app/kernel/models/user.dart';
+import 'package:checkpoint_app/pages/supervisor_home.dart';
+import 'package:checkpoint_app/themes/app_theme.dart';
+import 'package:checkpoint_app/widgets/submit_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import '/screens/public/welcome_screen.dart';
-import 'package:checkpoint_app/themes/colors.dart';
 import 'package:checkpoint_app/widgets/costum_field.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:flutter_svg/svg.dart';
 
 import '/kernel/services/http_manager.dart';
 
@@ -17,18 +19,21 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final loading = ValueNotifier<bool>(false);
+  bool isLoading = false;
   final txtUserName = TextEditingController();
   final txtUserPass = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
+    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
       body: Stack(
         clipBehavior: Clip.none,
+        alignment: Alignment.center,
         children: [
           Container(
-            height: screenSize.height * .6,
+            height: screenSize.height,
             width: screenSize.width,
             decoration: const BoxDecoration(
               color: primaryColor,
@@ -36,9 +41,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
-              4,
-              (screenSize.height * .32),
-              4,
+              0,
+              (screenSize.height * .50),
+              0,
               4,
             ),
             child: Column(
@@ -49,23 +54,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SvgPicture.asset(
-                      "assets/icons/nfc-1.svg",
+                    Image.asset(
+                      "assets/images/logo.png",
                       height: 80.0,
-                      colorFilter: const ColorFilter.mode(
-                        scaffoldColor,
-                        BlendMode.srcIn,
-                      ),
+                      fit: BoxFit.scaleDown,
                     ),
                     const SizedBox(
-                      height: 5.0,
+                      height: 10.0,
                     ),
                     const Text(
-                      "PATROL TAG",
+                      "SALAMA",
                       style: TextStyle(
                         fontSize: 30.0,
                         fontWeight: FontWeight.w900,
-                        color: lightColor,
+                        color: whiteColor,
                         fontFamily: 'Staatliches',
                         letterSpacing: 1.2,
                       ),
@@ -76,16 +78,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 30.0,
                 ),
                 Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4.0),
+                  height: screenSize.height,
+                  decoration: const BoxDecoration(
+                    color: scaffoldColor,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(30.0),
+                    ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(10.0),
+                    padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
                     child: Column(
                       children: [
                         CustomField(
-                          hintText: "Nom d'utilisateur",
+                          hintText: "Matricule agent",
                           iconPath: "assets/icons/user.svg",
                           controller: txtUserName,
                         ),
@@ -95,76 +100,72 @@ class _LoginScreenState extends State<LoginScreen> {
                           isPassword: true,
                           controller: txtUserPass,
                         ),
-                        ValueListenableBuilder<bool>(
-                          valueListenable: loading,
-                          builder: (context, val, _) => SizedBox(
-                            width: screenSize.width,
-                            height: 60.0,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: secondaryColor,
-                                disabledBackgroundColor: primaryColor,
-                                elevation: 10.0,
-                              ),
-                              onPressed: val == true
-                                  ? null
-                                  : () {
-                                      if (txtUserName.text.isEmpty &&
-                                          txtUserPass.text.isEmpty) {
-                                        EasyLoading.showToast(
-                                            "Nom d'utilisateur et mot de passe requis !");
-                                        return;
-                                      }
-                                      var manager = HttpManager();
-                                      loading.value = true;
-                                      manager
-                                          .login(
-                                              uName: txtUserName.text,
-                                              uPass: txtUserPass.text)
-                                          .then((res) {
-                                        loading.value = false;
-                                        if (res) {
-                                          Navigator.pushAndRemoveUntil(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const WelcomeScreen(),
-                                            ),
-                                            (route) => false,
-                                          );
-                                        } else {
-                                          EasyLoading.showToast(
-                                              "Nom d'utilisateur ou mot de passe erroné !");
-                                          return;
-                                        }
-                                      });
-                                    },
-                              child: val == true
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(18.0),
-                                      child: SpinKitThreeBounce(
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'CONNECTER',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                            ),
+                        SizedBox(
+                          width: screenSize.width,
+                          height: 55.0,
+                          child: SubmitButton(
+                            loading: isLoading,
+                            label: "Connecter",
+                            onPressed: _login,
                           ),
-                        )
+                        ).paddingBottom(30.0)
                       ],
                     ),
                   ),
                 ),
               ],
             ),
-          )
+          ),
+          if (!isKeyboardVisible)
+            Positioned(
+              bottom: 10.0,
+              child: Text(
+                "Salama plateforme version 1.0.0",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            )
         ],
       ),
     );
+  }
+
+  Future<void> _login() async {
+    if (txtUserName.text.isEmpty && txtUserPass.text.isEmpty) {
+      EasyLoading.showToast("Nom d'utilisateur et mot de passe requis !");
+      return;
+    }
+    var manager = HttpManager();
+    setState(() {
+      isLoading = true;
+    });
+    manager
+        .login(uMatricule: txtUserName.text, uPass: txtUserPass.text)
+        .then((res) {
+      setState(() {
+        isLoading = false;
+      });
+      if (res is User) {
+        if (res.role == 'supervisor') {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SupervisorHome(),
+            ),
+            (route) => false,
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const WelcomeScreen(),
+            ),
+            (route) => false,
+          );
+        }
+      } else {
+        EasyLoading.showToast(res.toString());
+        return;
+      }
+    });
   }
 }

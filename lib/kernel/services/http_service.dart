@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 
 class HttpService {
   //[baseURL]
-  static String baseURL = 'http://backend.chezyo.net';
+  static String baseURL = 'http://10.0.2.2:8000/api';
 
   //String [url]  request url
   static Future<dynamic> getRequest(String url) async {
@@ -33,11 +33,7 @@ class HttpService {
     try {
       var results = await dioInstance.post('$baseURL/$url', data: data);
       if (results != null) {
-        if (results.statusCode == 200) {
-          return results.data;
-        } else {
-          return null;
-        }
+        return results.data;
       }
     } catch (e) {
       return null;
