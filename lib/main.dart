@@ -8,24 +8,18 @@ import 'package:get_storage/get_storage.dart';
 import '/kernel/application.dart';
 import 'kernel/controllers/auth_controller.dart';
 import 'kernel/services/notification_service.dart';
-import 'kernel/services/tts_service.dart';
-import 'kernel/services/workmanager_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   // Initialiser les notifications locales
   await GetStorage.init();
   await NotificationService().initializeNotifications();
-
-  // Initialiser le Text-to-Speech
-  await TTSService().initializeTts();
 
   Get.put(TagsController());
   Get.put(AuthController());
   runApp(const Application());
   configEasyLoading();
-  // Initialiser WorkManager pour les tâches en arrière-plan
-  await WorkManagerService().initializeWorkManager();
   await checkPermission();
 }
 

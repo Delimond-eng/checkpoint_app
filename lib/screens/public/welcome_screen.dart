@@ -7,6 +7,7 @@ import 'package:checkpoint_app/widgets/svg.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../kernel/services/workmanager_service.dart';
 import '../../pages/qrcode_scanner_page.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -17,6 +18,17 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialiser WorkManager pour les tâches en arrière-plan
+    _initializeWorkManager();
+  }
+
+  Future<void> _initializeWorkManager() async {
+    await WorkManagerService().initializeWorkManager();
+  }
+
   //ALL PAGES
   List<Widget> pages = [
     const HomePage(),

@@ -32,6 +32,7 @@ class DatabaseHelper {
           );
         }
       });
+      print("datas stored !");
     } catch (e) {
       print('Error inserting schedules: $e');
     }
