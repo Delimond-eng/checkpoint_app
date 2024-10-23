@@ -6,19 +6,18 @@ class NotificationService {
 
   Future<void> initializeNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('launcher_icon');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
+
     const InitializationSettings initializationSettings =
-        InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
+        InitializationSettings(android: initializationSettingsAndroid);
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
   Future<void> showNotification(int id, String libelle) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-      'your_channel_id',
-      'your_channel_name',
+      'patrol_alerts',
+      'Alertes de patrouille',
       importance: Importance.max,
       priority: Priority.high,
     );

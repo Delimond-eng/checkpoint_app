@@ -4,7 +4,6 @@ import 'package:checkpoint_app/pages/supervisor_home.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/submit_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-
 import '/screens/public/welcome_screen.dart';
 import 'package:checkpoint_app/widgets/costum_field.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +21,11 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   final txtUserName = TextEditingController();
   final txtUserPass = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

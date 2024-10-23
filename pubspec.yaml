@@ -31,6 +31,10 @@ dependencies:
   flutter_local_notifications: ^17.2.3
   workmanager: ^0.5.2
   flutter_tts: ^3.8.5
+  audioplayers: ^5.2.1
+  flutter_sound: ^9.2.13
+  dart_pusher_channels: ^1.2.2+1
+  permission_handler: ^11.0.1
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +48,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/svgs/
+    - assets/sounds/
 
   fonts:
     - family: Poppins

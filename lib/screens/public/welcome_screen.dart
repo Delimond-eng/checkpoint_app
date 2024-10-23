@@ -1,4 +1,6 @@
 import 'package:checkpoint_app/constants/styles.dart';
+import 'package:checkpoint_app/kernel/services/talkie_walkie_service.dart';
+
 import 'package:checkpoint_app/pages/home_page.dart';
 import 'package:checkpoint_app/pages/planning_page.dart';
 import 'package:checkpoint_app/pages/profil_page.dart';
@@ -6,6 +8,8 @@ import 'package:checkpoint_app/pages/radio_page.dart';
 import 'package:checkpoint_app/widgets/svg.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import 'dart:async';
 
 import '../../kernel/services/workmanager_service.dart';
 import '../../pages/qrcode_scanner_page.dart';
@@ -21,12 +25,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialiser WorkManager pour les tâches en arrière-plan
+    _initTalkieWalkieService();
     _initializeWorkManager();
   }
 
   Future<void> _initializeWorkManager() async {
-    await WorkManagerService().initializeWorkManager();
+    await AlarmManagerService().initializeAlarmManager();
+  }
+
+  Future<void> _initTalkieWalkieService() async {
+    await TalkieWalkieService().initListening();
   }
 
   //ALL PAGES

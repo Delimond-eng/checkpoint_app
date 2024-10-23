@@ -259,6 +259,7 @@ class HttpManager {
       );
       if (response != null) {
         var jsonArr = response["schedules"];
+        localStorage.write("schedules", jsonArr);
         jsonArr.forEach((e) {
           plannings.add(Planning.fromJson(e));
         });

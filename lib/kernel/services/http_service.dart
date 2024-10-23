@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 
 class HttpService {
   //[baseURL]
-  static String baseURL = 'http://10.0.2.2:8000/api';
+  static String baseURL = 'http://192.168.43.146:8000/api';
 
   //String [url]  request url
   static Future<dynamic> getRequest(String url) async {

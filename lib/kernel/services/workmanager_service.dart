@@ -1,25 +1,18 @@
-import 'package:workmanager/workmanager.dart';
-
+import 'package:checkpoint_app/global/store.dart';
 import '../models/planning.dart';
-import 'database_helper.dart';
+import 'http_manager.dart';
 import 'notification_service.dart';
 import 'tts_service.dart';
 
-// La fonction callbackDispatcher doit être définie au niveau global
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    await checkAndTriggerAlarms(); // Appel de la fonction pour déclencher les alarmes
-    return Future.value(true);
-  });
+// La fonction pour exécuter la tâche en arrière-plan
+void alarmCallback() async {
+  await HttpManager.getAllPlannings();
+  await checkAndTriggerAlarms(); // Appel de la fonction pour déclencher les alarmes
 }
 
 Future<void> checkAndTriggerAlarms() async {
-  await DatabaseHelper.database();
-  await DatabaseHelper.insertSchedule();
-
-  List<Planning> schedules = await DatabaseHelper.getSchedules();
+  List<Planning> schedules = await getSchedules();
   DateTime now = DateTime.now();
-
   for (Planning schedule in schedules) {
     DateTime scheduledTime = DateTime(
       now.year,
@@ -40,15 +33,37 @@ Future<void> checkAndTriggerAlarms() async {
   }
 }
 
-class WorkManagerService {
-  static const String taskName = "check_schedule_task";
+Future<List<Planning>> getSchedules() async {
+  List<Planning> schedules = [];
+  var schedulesJsonArr = localStorage.read("schedules");
+  if (schedulesJsonArr != null) {
+    schedulesJsonArr.forEach((e) {
+      schedules.add(Planning.fromJson(e));
+    });
+  }
+  return schedules;
+}
 
-  Future<void> initializeWorkManager() async {
-    await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
-    await Workmanager().registerPeriodicTask(
-      '1',
-      taskName,
-      frequency: const Duration(hours: 1),
-    );
+class AlarmManagerService {
+  static const int alarmID = 0; // Identifiant unique pour l'alarme
+
+  // Initialiser Android Alarm Manager
+  Future<void> initializeAlarmManager() async {
+    // Initialiser le service Android Alarm Manager
+    //await AndroidAlarmManager.initialize();
+
+    // Programmer une alarme répétitive toutes les 1 minute(s)
+    /* await AndroidAlarmManager.periodic(
+      const Duration(minutes: 1), // Fréquence de répétition
+      alarmID, // Identifiant unique pour l'alarme
+      alarmCallback, // Fonction à exécuter lors de l'alarme
+      exact: true, // Assurer que l'alarme est exacte
+      wakeup: true, // Réveille l'appareil si nécessaire
+    ); */
+  }
+
+  // Stopper l'alarme
+  Future<void> cancelAlarm() async {
+    //await AndroidAlarmManager.cancel(alarmID);
   }
 }

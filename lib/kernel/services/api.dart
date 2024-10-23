@@ -4,8 +4,8 @@ import 'dart:convert';
 
 class Api {
   //static String baseUrl = 'http://192.168.1.196:8000/api';
-  //static String baseUrl = 'http://10.0.2.2:8000/api';
-  static String baseUrl = 'http://admin.salama-rdc.com/api';
+  static String baseUrl = 'http://192.168.43.146:8000/api';
+  //static String baseUrl = 'http://admin.salama-rdc.com/api';
   // ignore: slash_for_doc_comments
   /** 
     @param url: add url to endpoint

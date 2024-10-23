@@ -1,4 +1,5 @@
 import 'package:checkpoint_app/constants/styles.dart';
+import 'package:checkpoint_app/kernel/services/talkie_walkie_service.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/svg.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,6 +16,15 @@ class RadioPage extends StatefulWidget {
 }
 
 class _RadioPageState extends State<RadioPage> {
+  final talkieWalkieInstance = TalkieWalkieService();
+  bool isRecording = false;
+
+  @override
+  void initState() {
+    super.initState();
+    talkieWalkieInstance.checkMicrophonePermission();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +66,27 @@ class _RadioPageState extends State<RadioPage> {
               "Laissez votre doigt enfoncé sur le bouton pour parler et emettre en message sur ce canal privé !",
               textAlign: TextAlign.center,
             ).paddingBottom(8.0),
-            const BtnSpeach()
+            BtnSpeach(
+              isRecording: isRecording,
+              /* onPressed: () async {
+                final AudioPlayer player = AudioPlayer();
+                await player.play(UrlSource(
+                    "http://192.168.43.146:8000/storage/audios/9yg8K07EyERSpkYqq3qQ4Clz5benKcgXibHzajq6.ogg"));
+              }, */
+              onLongPress: (details) async {
+                setState(() {
+                  isRecording = true;
+                });
+                await talkieWalkieInstance.startRecording();
+              },
+              onLongPressUp: (details) async {
+                setState(() {
+                  isRecording = false;
+                });
+                var url = await talkieWalkieInstance.stopRecording();
+                await talkieWalkieInstance.sendAudio(url!);
+              },
+            )
           ],
         ).marginAll(15.0),
       ),
@@ -65,8 +95,17 @@ class _RadioPageState extends State<RadioPage> {
 }
 
 class BtnSpeach extends StatelessWidget {
+  final bool isRecording;
+  final VoidCallback? onPressed;
+  final Function(TapDownDetails details) onLongPress;
+  final Function(TapUpDetails details) onLongPressUp;
+
   const BtnSpeach({
     super.key,
+    required this.onLongPress,
+    required this.onLongPressUp,
+    this.isRecording = false,
+    this.onPressed,
   });
 
   @override
@@ -78,15 +117,17 @@ class BtnSpeach extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(100.0),
         border: Border.all(
-          color: primaryColor,
           width: 2.0,
+          color: isRecording ? Colors.green : primaryColor,
         ),
       ),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(100.0),
           gradient: LinearGradient(
-            colors: [primaryColor, primaryMaterialColor.shade300],
+            colors: isRecording
+                ? [Colors.green, Colors.green.shade300]
+                : [primaryColor, primaryMaterialColor.shade300],
           ),
         ),
         child: Material(
@@ -94,13 +135,14 @@ class BtnSpeach extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(80.0),
-            onTap: () {},
-            child: const Row(
+            onTapDown: onLongPress,
+            onTapUp: onLongPressUp,
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
-                  CupertinoIcons.mic,
+                  isRecording ? CupertinoIcons.mic_fill : CupertinoIcons.mic,
                   color: whiteColor,
                 )
               ],
