@@ -278,7 +278,7 @@ class HttpManager {
       // Obtention de la position actuelle
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
-      return "${position.latitude}:${position.longitude}";
+      return "${position.latitude},${position.longitude}";
     } catch (e) {
       return null;
     }

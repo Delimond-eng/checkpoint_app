@@ -25,7 +25,7 @@ class Application extends StatelessWidget {
           return const WelcomeScreen();
         }
       }
-      return const LoginScreen();
+      return const WelcomeScreen(); /* const LoginScreen(); */
     }
 
     return GetMaterialApp(

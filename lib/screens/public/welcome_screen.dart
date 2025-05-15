@@ -1,18 +1,14 @@
 import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/kernel/services/talkie_walkie_service.dart';
-
-import 'package:checkpoint_app/pages/home_page.dart';
-import 'package:checkpoint_app/pages/planning_page.dart';
-import 'package:checkpoint_app/pages/profil_page.dart';
-import 'package:checkpoint_app/pages/radio_page.dart';
-import 'package:checkpoint_app/widgets/svg.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:checkpoint_app/themes/app_theme.dart';
+import 'package:checkpoint_app/widgets/costum_button.dart';
+import 'package:checkpoint_app/widgets/user_status.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:get/utils.dart';
 
-import 'dart:async';
-
-import '../../kernel/services/workmanager_service.dart';
 import '../../pages/qrcode_scanner_page.dart';
+import '../../themes/colors.dart';
+import '../../widgets/home_menu_btn.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -25,19 +21,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    _initTalkieWalkieService();
-    _initializeWorkManager();
   }
 
-  Future<void> _initializeWorkManager() async {
-    await AlarmManagerService().initializeAlarmManager();
-  }
-
-  Future<void> _initTalkieWalkieService() async {
+  /* Future<void> _initTalkieWalkieService() async {
     await TalkieWalkieService().initListening();
-  }
+  } */
 
-  //ALL PAGES
+  /*  //ALL PAGES
   List<Widget> pages = [
     const HomePage(),
     const PlanningPage(),
@@ -45,13 +35,159 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     const ProfilPage()
   ];
 
-  int currentPage = 0;
+  int currentPage = 0; */
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: pages.elementAt(currentPage),
-      floatingActionButton: FloatingActionButton(
+        appBar: AppBar(
+          backgroundColor: darkColor,
+          title: Row(
+            children: [
+              Image.asset(
+                "assets/images/mamba-2.png",
+                height: 35.0,
+              ).paddingRight(8.0),
+              const Text(
+                "SALAMA",
+                style: TextStyle(
+                  fontSize: 30.0,
+                  fontWeight: FontWeight.w900,
+                  color: whiteColor,
+                  fontFamily: 'Staatliches',
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            const UserStatus(name: "Gaston delimond").marginAll(8.0),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              _btnPatrolPending().paddingBottom(20.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  HomeMenuBtn(
+                    icon: "presence",
+                    title: "Présence",
+                    onPress: () {
+                      _showBottonPresenceChoice(context);
+                    },
+                  ),
+                  HomeMenuBtn(
+                    icon: "qrcode",
+                    title: "Patrouille",
+                    onPress: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => QRcodeScannerPage()));
+                    },
+                  ),
+                  Badge(
+                    backgroundColor: Colors.blue,
+                    label: const Text(
+                      "0",
+                      style: TextStyle(
+                        color: lightColor,
+                        fontSize: 8.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    child: HomeMenuBtn(
+                      icon: "planning",
+                      title: "Planning",
+                      onPress: () {},
+                    ),
+                  ),
+                ],
+              ).paddingBottom(15.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Badge(
+                    label: const Text(
+                      "0",
+                      style: TextStyle(
+                        color: lightColor,
+                        fontSize: 8.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    child: HomeMenuBtn(
+                      icon: "tasks",
+                      title: "Tâches",
+                      onPress: () {},
+                    ),
+                  ),
+                  HomeMenuBtn(
+                    icon: "request-2",
+                    title: "Requêtes",
+                    onPress: () {},
+                  ),
+                  HomeMenuBtn(
+                    icon: "incident",
+                    title: "Signalements",
+                    onPress: () {},
+                  ),
+                ],
+              ).paddingBottom(15.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Badge(
+                    label: const Text(
+                      "3",
+                      style: TextStyle(
+                        color: lightColor,
+                        fontSize: 8.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    child: HomeMenuBtn(
+                      icon: "notify",
+                      title: "Communiqués",
+                      onPress: () {},
+                    ),
+                  ),
+                  HomeMenuBtn(
+                    icon: "user-1",
+                    title: "Profil",
+                    onPress: () {},
+                  ),
+                  HomeMenuBtn(
+                    icon: "settings",
+                    title: "Paramètres",
+                    onPress: () {},
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: primaryMaterialColor.shade500,
+          elevation: 10,
+          onPressed: () {
+            /* Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const QRcodeScannerPage(),
+              ),
+            ); */
+          },
+          child: Image.asset(
+            "assets/icons/sirene.png",
+            height: 35.0,
+          ),
+        )
+        /* floatingActionButton: FloatingActionButton(
+        backgroundColor: primaryMaterialColor,
         onPressed: () {
           Navigator.push(
             context,
@@ -60,12 +196,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
           );
         },
-        child: const Icon(CupertinoIcons.qrcode_viewfinder),
+        child: const Icon(
+          CupertinoIcons.qrcode_viewfinder,
+          color: lightColor,
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6.0,
+        elevation: 0,
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           items: const <BottomNavigationBarItem>[
@@ -74,7 +212,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               activeIcon: Svg(
                 path: "announce_line.svg",
                 size: 23.0,
-                color: primaryColor,
+                color: primaryMaterialColor,
               ),
               label: 'Communiqués',
             ),
@@ -83,7 +221,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               activeIcon: Svg(
                 path: "timer-start-fill.svg",
                 size: 23.0,
-                color: primaryColor,
+                color: primaryMaterialColor,
               ),
               label: 'Planning',
             ),
@@ -92,7 +230,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               activeIcon: Svg(
                 path: "radio-3-fill.svg",
                 size: 23.0,
-                color: primaryColor,
+                color: primaryMaterialColor,
               ),
               label: 'Talkie walkie',
             ),
@@ -101,7 +239,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               activeIcon: Svg(
                 path: "user-1.svg",
                 size: 23.0,
-                color: primaryColor,
+                color: primaryMaterialColor,
               ),
               label: 'Profil',
             ),
@@ -113,121 +251,147 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             });
           },
         ),
-      ),
-      /* bottomNavigationBar: BottomNavigationBar(
-        landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
-        backgroundColor: Colors.black,
-        elevation: 2.0,
-        iconSize: 20.0,
-        selectedItemColor: secondaryLightColor,
-        showUnselectedLabels: true,
-        unselectedItemColor: semiLightColor,
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: const TextStyle(
-          fontFamily: 'Poppins',
-          color: secondaryLightColor,
-          fontWeight: FontWeight.w600,
-          fontSize: 11.0,
-        ),
-        unselectedFontSize: 11.0,
-        unselectedLabelStyle: TextStyle(
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.w400,
-          color: Colors.grey[600],
-        ),
-        items: [
-          BottomNavigationBarItem(
-            activeIcon: JelloIn(
-              child: SvgPicture.asset(
-                "assets/icons/nfc-tag.svg",
-                height: 22,
-                colorFilter: const ColorFilter.mode(
-                  secondaryLightColor,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-            icon: SvgPicture.asset(
-              "assets/icons/nfc-tag.svg",
-              height: 22,
-              colorFilter: const ColorFilter.mode(
-                semiLightColor,
-                BlendMode.srcIn,
-              ),
-            ),
-            label: "Patrouille",
-          ),
-          BottomNavigationBarItem(
-            activeIcon: JelloIn(
-              child: SvgPicture.asset(
-                "assets/icons/events.svg",
-                height: 22.0,
-                colorFilter: const ColorFilter.mode(
-                  secondaryLightColor,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-            icon: SvgPicture.asset(
-              "assets/icons/events.svg",
-              height: 22.0,
-              colorFilter: const ColorFilter.mode(
-                semiLightColor,
-                BlendMode.srcIn,
-              ),
-            ),
-            label: "Evénements",
-          ),
-          BottomNavigationBarItem(
-            activeIcon: JelloIn(
-              child: SvgPicture.asset(
-                "assets/icons/user.svg",
-                height: 22.0,
-                colorFilter: const ColorFilter.mode(
-                  secondaryLightColor,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-            icon: SvgPicture.asset(
-              "assets/icons/user.svg",
-              height: 22.0,
-              colorFilter: const ColorFilter.mode(
-                semiLightColor,
-                BlendMode.srcIn,
-              ),
-            ),
-            label: "Profil",
-          ),
-          BottomNavigationBarItem(
-            activeIcon: JelloIn(
-              child: SvgPicture.asset(
-                "assets/icons/settings.svg",
-                height: 22.0,
-                colorFilter: const ColorFilter.mode(
-                  secondaryLightColor,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-            icon: SvgPicture.asset(
-              "assets/icons/settings.svg",
-              height: 22.0,
-              colorFilter: const ColorFilter.mode(
-                semiLightColor,
-                BlendMode.srcIn,
-              ),
-            ),
-            label: "Paramètres",
-          ),
-        ],
-        currentIndex: currentPage,
-        onTap: (index) {
-          setState(() {
-            currentPage = index;
-          });
-        },
       ), */
+        );
+  }
+
+  void _showBottonPatrolChoice(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(12.0),
+          topRight: Radius.circular(12.0),
+        ),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: SizedBox(
+            height: 90.0,
+            child: Row(
+              children: [
+                Expanded(
+                  child: CostumButton(
+                    bgColor: primaryMaterialColor.shade100,
+                    title: "Poursuivre",
+                    onPress: () {},
+                  ),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: CostumButton(
+                    title: "Clôturer",
+                    bgColor: primaryMaterialColor,
+                    labelColor: Colors.white,
+                    onPress: () {},
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showBottonPresenceChoice(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(12.0),
+          topRight: Radius.circular(12.0),
+        ),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: SizedBox(
+            height: 90.0,
+            child: Row(
+              children: [
+                Expanded(
+                  child: CostumButton(
+                    bgColor: primaryMaterialColor.shade100,
+                    title: "Signer mon arrivée",
+                    onPress: () {},
+                  ),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: CostumButton(
+                    title: "Signer mon départ",
+                    bgColor: primaryMaterialColor,
+                    labelColor: Colors.white,
+                    onPress: () {},
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _btnPatrolPending() {
+    return DottedBorder(
+      color: primaryMaterialColor.shade100,
+      radius: const Radius.circular(12.0),
+      strokeWidth: 1,
+      borderType: BorderType.RRect,
+      dashPattern: const [6, 3], // Optionnel, personnalise les pointillés
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        child: InkWell(
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          onTap: () {
+            _showBottonPatrolChoice(context);
+          },
+          child: ClipRRect(
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
+            child: Container(
+              // Utilise padding plutôt que margin
+              color: Colors.white,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    "assets/images/patrol_illustration.png",
+                    height: 80.0,
+                  ).paddingRight(8.0),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Patrouille en cours disponible",
+                          style: TextStyle(
+                            fontFamily: "Poppins",
+                            color: primaryMaterialColor,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15.0,
+                          ),
+                        ),
+                        SizedBox(height: 4.0),
+                        Text(
+                          "Veuillez cliquer ici pour clôturer ou poursuivre la patrouille en cours.",
+                          style: TextStyle(
+                            fontFamily: "Poppins",
+                            fontSize: 10.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

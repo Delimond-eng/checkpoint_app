@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
             height: screenSize.height,
             width: screenSize.width,
             decoration: const BoxDecoration(
-              color: primaryColor,
+              color: Color(0xFF020005),
             ),
           ),
           SingleChildScrollView(
@@ -59,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      "assets/images/logo.png",
+                      "assets/images/mamba-2.png",
                       height: 80.0,
                       fit: BoxFit.scaleDown,
                     ),

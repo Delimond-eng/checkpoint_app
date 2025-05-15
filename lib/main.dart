@@ -1,21 +1,19 @@
+import 'package:checkpoint_app/constants/styles.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
-
-import '/kernel/controllers/tag_controller.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+
 import '/kernel/application.dart';
+import '/kernel/controllers/tag_controller.dart';
 import 'kernel/controllers/auth_controller.dart';
-import 'kernel/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialiser les notifications locales
   await GetStorage.init();
-  await NotificationService().initializeNotifications();
-
   Get.put(TagsController());
   Get.put(AuthController());
   runApp(const Application());
@@ -31,7 +29,7 @@ void configEasyLoading() {
     ..backgroundColor = Colors.black
     ..textColor = Colors.white
     ..indicatorColor = Colors.white
-    ..maskColor = Colors.blue.withOpacity(0.5)
+    ..maskColor = primaryMaterialColor.shade300.withOpacity(0.5)
     ..userInteractions = true;
 }
 
@@ -42,7 +40,8 @@ Future<void> checkPermission() async {
   // Vérifie si le service de localisation est activé
   serviceEnabled = await Geolocator.isLocationServiceEnabled();
   if (!serviceEnabled) {
-    // Si le service est désactivé, vous pouvez demander à l'utilisateur de l'activer
+    // Si le service est désactivé, vous pouvez demande3.
+    // r à l'utilisateur de l'activer
     return Future.error('Le service de localisation est désactivé.');
   }
 

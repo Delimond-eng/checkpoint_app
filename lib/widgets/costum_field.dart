@@ -1,6 +1,8 @@
-import '/themes/colors.dart';
+import 'package:checkpoint_app/constants/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+
+import '/themes/colors.dart';
 
 class CustomField extends StatelessWidget {
   final String hintText;
@@ -36,7 +38,7 @@ class CustomField extends StatelessWidget {
           borderRadius: BorderRadius.circular(15.0),
           color: Colors.white,
           border: Border.all(
-            color: secondaryColor.withOpacity(.3),
+            color: greyColor40,
             width: 1,
           ),
         ),
@@ -52,8 +54,8 @@ class CustomField extends StatelessWidget {
                     margin: const EdgeInsets.all(2),
                     child: SvgPicture.asset(
                       iconPath,
-                      colorFilter: const ColorFilter.mode(
-                        secondaryColor,
+                      colorFilter: ColorFilter.mode(
+                        primaryMaterialColor.shade300,
                         BlendMode.srcIn,
                       ),
                       width: 18.0,
@@ -80,10 +82,11 @@ class CustomField extends StatelessWidget {
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
                           hintText: hintText,
-                          hintStyle: TextStyle(
+                          hintStyle: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 12.0,
-                            color: semiLightColor.withOpacity(.8),
+                            fontStyle: FontStyle.italic,
+                            color: greyColor80,
                             fontWeight: FontWeight.w400,
                           ),
                           counterText: '',
@@ -109,10 +112,11 @@ class CustomField extends StatelessWidget {
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
                           hintText: hintText,
-                          hintStyle: TextStyle(
+                          hintStyle: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 12.0,
-                            color: semiLightColor.withOpacity(.8),
+                            fontStyle: FontStyle.italic,
+                            color: greyColor80,
                             fontWeight: FontWeight.w400,
                           ),
                           counterText: '',

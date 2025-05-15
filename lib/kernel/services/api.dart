@@ -1,10 +1,10 @@
-import 'package:http/http.dart' as http;
-
 import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 
 class Api {
   //static String baseUrl = 'http://192.168.1.196:8000/api';
-  static String baseUrl = 'http://192.168.43.146:8000/api';
+  static String baseUrl = 'http://salama.uco.rod.mybluehost.me/api';
   //static String baseUrl = 'http://admin.salama-rdc.com/api';
   // ignore: slash_for_doc_comments
   /** 

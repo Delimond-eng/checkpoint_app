@@ -10,8 +10,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
+
+import '../constants/styles.dart';
 import '../themes/colors.dart';
+import '../widgets/user_status.dart';
 
 class QRcodeScannerPage extends StatefulWidget {
   const QRcodeScannerPage({super.key});
@@ -75,18 +78,19 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        title: Text("Patrouille QRcode Scan".toUpperCase()),
+        backgroundColor: darkColor,
+        title: const Text(
+          "PATROUILLE",
+          style: TextStyle(
+            fontSize: 30.0,
+            fontWeight: FontWeight.w900,
+            color: whiteColor,
+            fontFamily: 'Staatliches',
+            letterSpacing: 1.2,
+          ),
+        ),
         actions: [
-          Obx(
-            () => CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.blue,
-              child: Text(
-                authController.userSession.value.fullname!.substring(0, 1),
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ).marginAll(8.0),
-          )
+          const UserStatus(name: "Gaston delimond").marginAll(8.0),
         ],
       ),
       body: SafeArea(

@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class RealtimeDataProvider<T> {
   final StreamController<T> _dataStreamController = StreamController<T>();
   late Stream<T> dataStream;
-  final String baseURL = "http://10.0.2.2:8000/api";
+  final String baseURL = "http://salama.uco.rod.mybluehost.me/api";
 
   RealtimeDataProvider({required String url}) {
     dataStream = _dataStreamController.stream;

@@ -6,7 +6,8 @@ import 'package:checkpoint_app/kernel/models/area.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
+
 import '../modals/supervisor_completer_modal.dart';
 import '../themes/colors.dart';
 
