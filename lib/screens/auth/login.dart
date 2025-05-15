@@ -4,6 +4,7 @@ import 'package:checkpoint_app/pages/supervisor_home.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/submit_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart';
 import '/screens/public/welcome_screen.dart';
 import 'package:checkpoint_app/widgets/costum_field.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Image.asset(
                       "assets/images/mamba-2.png",
-                      height: 80.0,
+                      height: 100.0,
                       fit: BoxFit.scaleDown,
                     ),
                     const SizedBox(
@@ -112,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             label: "Connecter",
                             onPressed: _login,
                           ),
-                        ).paddingBottom(30.0)
+                        ).marginOnly(bottom: 40)
                       ],
                     ),
                   ),

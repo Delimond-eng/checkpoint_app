@@ -39,8 +39,10 @@ class CostumButton extends StatelessWidget {
               child: Text(
                 title,
                 style: TextStyle(
-                  color: labelColor ?? blackColor80,
+                  color: labelColor ?? blackColor,
                   fontWeight: FontWeight.w600,
+                  fontFamily: "Staatliches",
+                  letterSpacing: 1,
                   fontSize: 13.0,
                 ),
               ),

@@ -13,7 +13,6 @@ import 'package:get/get.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 
 import '../constants/styles.dart';
-import '../themes/colors.dart';
 import '../widgets/user_status.dart';
 
 class QRcodeScannerPage extends StatefulWidget {
@@ -99,11 +98,11 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
           QRView(
             key: qrKey,
             overlay: QrScannerOverlayShape(
-              borderColor: secondaryColor,
+              borderColor: primaryMaterialColor,
               overlayColor: Colors.white.withOpacity(.5),
-              borderRadius: 10.0,
+              borderRadius: 12.0,
               borderLength: 50.0,
-              borderWidth: 4.0,
+              borderWidth: 8.0,
               cutOutSize: 250,
             ),
             onQRViewCreated: onQRViewCreated,
@@ -120,15 +119,20 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
             if (tagsController.patrolId.value != 0) ...[
               FloatingActionButton.extended(
                 heroTag: "btnClose",
-                backgroundColor: const Color.fromARGB(255, 207, 136, 4),
+                backgroundColor: primaryMaterialColor,
                 onPressed: () {
                   showClosePatrolModal(context);
                 },
                 label: const Text(
                   'Cloturer la patrouille en cours',
+                  style: TextStyle(
+                    fontFamily: "Staatliches",
+                    color: whiteColor,
+                    letterSpacing: 1,
+                  ),
                 ), // Texte pour le bouton
                 icon: const Icon(
-                  CupertinoIcons.check_mark_circled_solid,
+                  CupertinoIcons.check_mark,
                 ), // Icône optionnelle
               ),
             ] else ...[
@@ -137,7 +141,7 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
             FloatingActionButton(
               heroTag: "btnLight",
               elevation: 10.0,
-              backgroundColor: Colors.blue,
+              backgroundColor: primaryMaterialColor.shade100,
               onPressed: () async {
                 setState(() {
                   isLigthing = !isLigthing;
@@ -146,7 +150,7 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
               },
               child: Icon(
                 (isLigthing) ? Icons.flash_off_rounded : Icons.flash_on_rounded,
-                color: Colors.white,
+                color: primaryMaterialColor,
                 size: 18.0,
               ),
             ),

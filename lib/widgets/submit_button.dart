@@ -52,7 +52,9 @@ class SubmitButton extends StatelessWidget {
                   label,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontFamily: 'Poppins',
+                    fontFamily: 'Staatliches',
+                    fontSize: 15.0,
+                    letterSpacing: 1,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

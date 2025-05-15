@@ -68,7 +68,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           padding: const EdgeInsets.all(10.0),
           child: Column(
             children: [
-              _btnPatrolPending().paddingBottom(20.0),
+              _btnPatrolPending().paddingBottom(20.0).paddingTop(10.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -84,13 +84,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     title: "Patrouille",
                     onPress: () {
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => QRcodeScannerPage()));
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const QRcodeScannerPage(),
+                        ),
+                      );
                     },
                   ),
                   Badge(
-                    backgroundColor: Colors.blue,
                     label: const Text(
                       "0",
                       style: TextStyle(
@@ -172,6 +173,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: primaryMaterialColor.shade500,
+          tooltip: "Appuyez longtemps pour déclencher un alèrte !",
           elevation: 10,
           onPressed: () {
             /* Navigator.push(
@@ -369,7 +371,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         Text(
                           "Patrouille en cours disponible",
                           style: TextStyle(
-                            fontFamily: "Poppins",
+                            fontFamily: 'Staatliches',
                             color: primaryMaterialColor,
                             fontWeight: FontWeight.w700,
                             fontSize: 15.0,

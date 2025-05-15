@@ -1,5 +1,4 @@
 import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/themes/colors.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 
@@ -24,7 +23,7 @@ class HomeMenuBtn extends StatelessWidget {
     final btnSize = (screenWidth - 60) / 3;
 
     return DottedBorder(
-      color: primaryMaterialColor.shade100,
+      color: primaryMaterialColor.shade200,
       radius: const Radius.circular(12.0),
       strokeWidth: 1,
       borderType: BorderType.RRect,
@@ -34,8 +33,8 @@ class HomeMenuBtn extends StatelessWidget {
         child: Container(
           height: btnSize,
           width: btnSize,
-          decoration: BoxDecoration(
-            color: primaryMaterialColor.shade50.withOpacity(.3),
+          decoration: const BoxDecoration(
+            color: Color.fromARGB(255, 13, 1, 1),
           ),
           child: Material(
             color: Colors.transparent,
@@ -48,15 +47,17 @@ class HomeMenuBtn extends StatelessWidget {
                 children: [
                   Svg(
                     path: "$icon.svg",
-                    size: btnSize * 0.4, // Taille de l'icône responsive
-                    color: primaryMaterialColor,
-                  ).paddingBottom(8.0),
+                    size: btnSize * 0.35, // Taille de l'icône responsive
+                    color: primaryMaterialColor.shade400,
+                  ).paddingBottom(10.0),
                   Text(
                     title,
                     style: TextStyle(
-                      color: blackColor80,
+                      color: lightGreyColor,
+                      fontFamily: 'Staatliches',
+                      letterSpacing: 1,
                       fontWeight: FontWeight.w600,
-                      fontSize: btnSize * 0.11, // Taille du texte responsive
+                      fontSize: btnSize * 0.12, // Taille du texte responsive
                     ),
                   )
                 ],
