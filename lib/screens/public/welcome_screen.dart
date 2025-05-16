@@ -202,7 +202,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   HomeMenuBtn(
                     icon: "settings",
                     title: "Paramètres",
-                    onPress: () {},
+                    onPress: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PatrolPlanning(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               )

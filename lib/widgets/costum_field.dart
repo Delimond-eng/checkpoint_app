@@ -2,8 +2,6 @@ import 'package:checkpoint_app/constants/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-import '/themes/colors.dart';
-
 class CustomField extends StatelessWidget {
   final String hintText;
   final bool? isPassword;
