@@ -24,7 +24,7 @@ Future<void> showRequestModal(context) async {
           children: [
             Text(
               "Veuillez renseigner tous les champs requis pour effectuer une requête !",
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context).textTheme.bodySmall,
             ).paddingBottom(8.0),
             Container(
               height: 50,

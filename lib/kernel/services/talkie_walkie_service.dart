@@ -47,7 +47,6 @@ class TalkieWalkieService {
         });
     final AudioPlayer player = AudioPlayer();
     final channel = client.publicChannel('talkie-walkie');
-    var agent = authController.userSession.value;
     channel.bind('audio.sent').listen((event) async {
       var res = jsonDecode(event.data);
       await player.release();

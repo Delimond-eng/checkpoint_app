@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
+import 'package:checkpoint_app/themes/colors.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
 
@@ -31,7 +33,7 @@ Future<void> showSignalementModal(context) async {
           children: [
             Text(
               "Veuillez renseigner tous les champs requis pour effectuer un signalement !",
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context).textTheme.bodySmall,
             ).paddingBottom(8.0),
             Container(
               height: 50,
@@ -92,32 +94,38 @@ Future<void> showSignalementModal(context) async {
                     context: context,
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(30.0),
+                        top: Radius.circular(15.0),
                       ),
                     ),
                     builder: (context) {
                       return Container(
-                        height: 150.0,
+                        height: 120.0,
                         padding: const EdgeInsets.all(15.0),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Flexible(
-                              child: PickerActionButton(
-                                label: "Capture Photo",
-                                icon: CupertinoIcons.photo_camera,
-                                onPressed: () {
-                                  pickImage().then((value) => Get.back());
-                                },
-                              ).paddingRight(10.0),
+                            Expanded(
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                child: PickerActionButton(
+                                  label: "Capture Photo",
+                                  icon: CupertinoIcons.photo_camera,
+                                  onPressed: () {
+                                    pickImage().then((value) => Get.back());
+                                  },
+                                ).paddingRight(10.0),
+                              ),
                             ),
-                            Flexible(
-                              child: PickerActionButton(
-                                label: "Capture vidéo",
-                                icon: CupertinoIcons.video_camera,
-                                onPressed: () {
-                                  pickVideo().then((value) => Get.back());
-                                },
+                            Expanded(
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                child: PickerActionButton(
+                                  label: "Capture vidéo",
+                                  icon: CupertinoIcons.video_camera,
+                                  onPressed: () {
+                                    pickVideo().then((value) => Get.back());
+                                  },
+                                ),
                               ),
                             )
                           ],
@@ -218,50 +226,48 @@ class PickerButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Container(
-          height: 120.0,
-          padding: const EdgeInsets.all(2.5),
-          width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: isPicked ? Colors.green : greyColor,
-              width: 2.0,
-            ),
-            borderRadius: BorderRadius.circular(14.0),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child: Material(
-              borderRadius: BorderRadius.circular(12.0),
-              color: Colors.transparent,
-              child: InkWell(
+        DottedBorder(
+          color: primaryMaterialColor.shade500,
+          radius: const Radius.circular(12.0),
+          strokeWidth: 1,
+          borderType: BorderType.RRect,
+          dashPattern: const [6, 3],
+          child: ClipRRect(
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
+            child: Container(
+              height: 120.0,
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.all(2.5),
+              color: whiteColor,
+              child: Material(
                 borderRadius: BorderRadius.circular(12.0),
-                onTap: onPressed,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (tagsController.mediaFile.value == null) ...[
-                      const Text("Faites une capture photo ou une video")
-                          .paddingBottom(10),
-                    ] else ...[
-                      Text(
-                        basename(tagsController.mediaFile.value!.path),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge!
-                            .copyWith(color: Colors.green),
-                      ).paddingBottom(10).paddingHorizontal(10.0),
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12.0),
+                  onTap: onPressed,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (tagsController.mediaFile.value == null) ...[
+                        const Text("Faites une capture photo ou une video")
+                            .paddingBottom(10),
+                      ] else ...[
+                        Text(
+                          basename(tagsController.mediaFile.value!.path),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge!
+                              .copyWith(color: Colors.green),
+                        ).paddingBottom(10).paddingHorizontal(10.0),
+                      ],
+                      const Icon(
+                        CupertinoIcons.play,
+                        color: primaryMaterialColor,
+                      )
                     ],
-                    const Icon(
-                      CupertinoIcons.play_rectangle,
-                      color: Colors.blue,
-                    )
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -313,39 +319,39 @@ class PickerActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 120.0,
-      padding: const EdgeInsets.all(3.0),
-      width: MediaQuery.of(context).size.width,
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.blue,
-          width: 1.0,
-        ),
-        borderRadius: BorderRadius.circular(20.0),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(18.0),
-        ),
-        child: Material(
-          borderRadius: BorderRadius.circular(18.0),
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18.0),
-            onTap: onPressed,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  color: Colors.blue,
-                  size: 30.0,
-                ).paddingBottom(10),
-                Text(label),
-              ],
+    return DottedBorder(
+      color: primaryMaterialColor.shade500,
+      radius: const Radius.circular(12.0),
+      strokeWidth: 1,
+      borderType: BorderType.RRect,
+      dashPattern: const [6, 3],
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        child: Container(
+          color: Colors.white,
+          width: MediaQuery.of(context).size.width,
+          child: Material(
+            borderRadius: BorderRadius.circular(12.0),
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12.0),
+              onTap: onPressed,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    color: primaryMaterialColor,
+                    size: 30.0,
+                  ).paddingBottom(10),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                        fontFamily: "Staatliches", color: blackColor),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

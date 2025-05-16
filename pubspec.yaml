@@ -19,7 +19,7 @@ dependencies:
   flutter_easyloading: ^3.0.5
   get_storage: ^2.1.1
   flutter_spinkit: ^5.2.0
-  flutter_launcher_icons: ^0.14.3
+  #flutter_launcher_icons: ^0.14.3
   form_field_validator: ^1.1.0
   http: ^1.1.0
   geolocator: ^11.1.0
@@ -31,12 +31,16 @@ dependencies:
   flutter_sound: ^9.2.13
   dart_pusher_channels: ^1.2.2+1
   permission_handler: ^11.0.1
-
   path: any
   http_parser: any
   qr_code_scanner_plus: ^2.0.10+1
-  flutter_native_splash: ^2.4.4
+  #flutter_native_splash: ^2.4.4
   dotted_border: ^2.1.0
+  chat_bubbles: ^1.7.0
+  google_mlkit_face_detection: ^0.13.1
+  image: ^3.3.0
+  tflite_flutter: ^0.11.0
+  camera: ^0.11.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -50,6 +54,7 @@ flutter:
     - assets/icons/
     - assets/svgs/
     - assets/sounds/
+    - assets/models/facenet.tflite
 
   fonts:
     - family: Poppins

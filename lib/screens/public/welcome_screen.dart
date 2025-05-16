@@ -1,4 +1,5 @@
 import 'package:checkpoint_app/constants/styles.dart';
+import 'package:checkpoint_app/pages/tasks_page.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:checkpoint_app/widgets/user_status.dart';
@@ -6,6 +7,11 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:get/utils.dart';
 
+import '../../modals/request_modal.dart';
+import '../../modals/signalement_modal.dart';
+import '../../pages/announce_page.dart';
+import '../../pages/patrol_planning.dart';
+import '../../pages/profil_page.dart';
 import '../../pages/qrcode_scanner_page.dart';
 import '../../themes/colors.dart';
 import '../../widgets/home_menu_btn.dart';
@@ -103,7 +109,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     child: HomeMenuBtn(
                       icon: "planning",
                       title: "Planning",
-                      onPress: () {},
+                      onPress: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PatrolPlanning(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -123,18 +136,29 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     child: HomeMenuBtn(
                       icon: "tasks",
                       title: "Tâches",
-                      onPress: () {},
+                      onPress: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TaskPage(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   HomeMenuBtn(
                     icon: "request-2",
                     title: "Requêtes",
-                    onPress: () {},
+                    onPress: () {
+                      showRequestModal(context);
+                    },
                   ),
                   HomeMenuBtn(
                     icon: "incident",
                     title: "Signalements",
-                    onPress: () {},
+                    onPress: () {
+                      showSignalementModal(context);
+                    },
                   ),
                 ],
               ).paddingBottom(15.0),
@@ -153,13 +177,27 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     child: HomeMenuBtn(
                       icon: "notify",
                       title: "Communiqués",
-                      onPress: () {},
+                      onPress: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AnnouncePage(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   HomeMenuBtn(
                     icon: "user-1",
                     title: "Profil",
-                    onPress: () {},
+                    onPress: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilPage(),
+                        ),
+                      );
+                    },
                   ),
                   HomeMenuBtn(
                     icon: "settings",

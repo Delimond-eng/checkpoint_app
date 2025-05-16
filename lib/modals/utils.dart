@@ -46,7 +46,9 @@ void showCustomModal(context,
                                   .headlineSmall!
                                   .copyWith(
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 18.0,
+                                    fontSize: 20.0,
+                                    fontFamily: "Staatliches",
+                                    letterSpacing: 1.0,
                                   ),
                             ).paddingRight(5),
                           ),

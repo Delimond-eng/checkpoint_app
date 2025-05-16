@@ -3,7 +3,6 @@ import 'package:checkpoint_app/pages/supervisor_home.dart';
 import 'package:checkpoint_app/screens/public/welcome_screen.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
-import '../screens/auth/login.dart';
 import '../themes/app_theme.dart';
 import 'package:flutter/material.dart';
 

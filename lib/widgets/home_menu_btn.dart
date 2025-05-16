@@ -23,7 +23,7 @@ class HomeMenuBtn extends StatelessWidget {
     final btnSize = (screenWidth - 60) / 3;
 
     return DottedBorder(
-      color: primaryMaterialColor.shade200,
+      color: primaryMaterialColor.shade500,
       radius: const Radius.circular(12.0),
       strokeWidth: 1,
       borderType: BorderType.RRect,
