@@ -13,6 +13,7 @@ import '../../pages/announce_page.dart';
 import '../../pages/patrol_planning.dart';
 import '../../pages/profil_page.dart';
 import '../../pages/qrcode_scanner_page.dart';
+import '../../pages/setting_page.dart';
 import '../../themes/colors.dart';
 import '../../widgets/home_menu_btn.dart';
 
@@ -206,7 +207,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const PatrolPlanning(),
+                          builder: (context) => const SettingPage(),
                         ),
                       );
                     },

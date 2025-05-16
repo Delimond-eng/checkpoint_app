@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/themes/colors.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
@@ -256,15 +255,18 @@ class PickerButton extends StatelessWidget {
                         Text(
                           basename(tagsController.mediaFile.value!.path),
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge!
-                              .copyWith(color: Colors.green),
+                          style: const TextStyle(
+                            fontSize: 10.0,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.green,
+                          ),
                         ).paddingBottom(10).paddingHorizontal(10.0),
                       ],
-                      const Icon(
+                      Icon(
                         CupertinoIcons.play,
-                        color: primaryMaterialColor,
+                        color: tagsController.mediaFile.value != null
+                            ? Colors.green
+                            : primaryMaterialColor,
                       )
                     ],
                   ),
