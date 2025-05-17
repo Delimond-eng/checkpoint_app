@@ -213,6 +213,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     },
                   ),
                 ],
+              ).paddingBottom(15.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  HomeMenuBtn(
+                    icon: "face-2",
+                    title: "Enrollement",
+                    onPress: () {},
+                  ),
+                ],
               )
             ],
           ),
