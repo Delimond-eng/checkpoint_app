@@ -1,48 +1,43 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:checkpoint_app/kernel/models/face.dart';
 import 'package:path/path.dart';
-
-import '../models/planning.dart';
-import 'http_manager.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
-  static Future<Database> database() async {
-    final dbPath = await getDatabasesPath();
-    return openDatabase(
-      join(dbPath, 'schedules.db'),
-      onCreate: (db, version) {
-        return db.execute(
-          'CREATE TABLE schedules(id INTEGER PRIMARY KEY, libelle TEXT, start_time TEXT, end_time TEXT)',
-        );
-      },
+  static final DatabaseHelper _instance = DatabaseHelper._internal();
+  factory DatabaseHelper() => _instance;
+  DatabaseHelper._internal();
+
+  Database? _db;
+
+  Future<void> init() async {
+    final path = join(await getDatabasesPath(), 'faces.db');
+    _db = await openDatabase(
+      path,
       version: 1,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE faces (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            embedding TEXT,
+            image_path TEXT
+          )
+        ''');
+      },
     );
   }
 
-  static Future<void> insertSchedule() async {
-    try {
-      final db = await DatabaseHelper.database();
-      var schedules = await HttpManager.getAllPlannings();
-
-      await db.transaction((txn) async {
-        for (var schedule in schedules) {
-          await txn.insert(
-            'schedules',
-            schedule.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
-        }
-      });
-      print("datas stored !");
-    } catch (e) {
-      print('Error inserting schedules: $e');
-    }
+  Future<void> insertFace(FacePicture face) async {
+    await _db!.insert('faces', face.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  static Future<List<Planning>> getSchedules() async {
-    final db = await DatabaseHelper.database();
-    final List<Map<String, dynamic>> maps = await db.query('schedules');
-    return List.generate(maps.length, (i) {
-      return Planning.fromJson(maps[i]);
-    });
+  Future<List<FacePicture>> getAllFaces() async {
+    final List<Map<String, dynamic>> maps = await _db!.query('faces');
+    return maps.map(FacePicture.fromMap).toList();
+  }
+
+  Future<void> deleteAll() async {
+    await _db!.delete('faces');
   }
 }

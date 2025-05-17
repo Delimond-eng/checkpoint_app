@@ -1,7 +1,6 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
 import 'package:checkpoint_app/pages/supervisor_home.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/submit_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';

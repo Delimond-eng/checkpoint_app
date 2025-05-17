@@ -1,5 +1,6 @@
 import 'package:checkpoint_app/global/store.dart';
 import 'package:checkpoint_app/pages/supervisor_home.dart';
+import 'package:checkpoint_app/screens/public/test_recognition.dart';
 import 'package:checkpoint_app/screens/public/welcome_screen.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -25,7 +26,7 @@ class Application extends StatelessWidget {
         }
       }
       //return const LoginScreen();
-      return const WelcomeScreen(); /* const LoginScreen(); */
+      return const FaceRecognitionScreen(); //WelcomeScreen(); /* const LoginScreen(); */
     }
 
     return GetMaterialApp(

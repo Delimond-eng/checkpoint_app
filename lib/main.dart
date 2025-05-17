@@ -4,19 +4,27 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:provider/provider.dart';
 
 import '/kernel/application.dart';
 import '/kernel/controllers/tag_controller.dart';
 import 'kernel/controllers/auth_controller.dart';
+import 'kernel/services/recognition_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialiser les notifications locales
   await GetStorage.init();
+  //Get.put(FaceRecognitionService());
   Get.put(TagsController());
   Get.put(AuthController());
-  runApp(const Application());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => FaceRecognitionController(),
+      child: const Application(),
+    ),
+  );
   configEasyLoading();
   await checkPermission();
 }
