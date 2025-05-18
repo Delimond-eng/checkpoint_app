@@ -1,6 +1,4 @@
-// ignore_for_file: depend_on_referenced_packages
-
-import 'dart:convert';
+import 'dart:io';
 
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/global/store.dart';
@@ -8,10 +6,8 @@ import 'package:checkpoint_app/kernel/models/announce.dart';
 import 'package:checkpoint_app/kernel/models/planning.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
 import 'package:checkpoint_app/kernel/services/api.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:path/path.dart';
 
 class HttpManager {
   //Agent login
@@ -36,7 +32,9 @@ class HttpManager {
         return response["errors"].toString();
       }
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
       return "Echec de traitement de la requête !";
     }
   }
@@ -50,17 +48,23 @@ class HttpManager {
         "site_id": authController.userSession.value.siteId,
         "agency_id": authController.userSession.value.agencyId,
         "patrol_id": patrolId != 0 ? patrolId : null,
+        "matricule": tagsController.faceResult.value,
         "scan": {
           "agent_id": authController.userSession.value.id,
           "area_id": tagsController.scannedArea.value.id,
           "comment": comment,
-          "latlng": latlng
+          "latlng": latlng,
         }
       };
       var response = await Api.request(
         url: "patrol.scan",
         method: "post",
         body: data,
+        files: {
+          "photo": File(
+            tagsController.face.value!.path,
+          ),
+        },
       );
       if (response != null) {
         if (response.containsKey("errors")) {
@@ -81,11 +85,12 @@ class HttpManager {
   }
 
   //Complete Area
-  Future<dynamic> completeArea() async {
+  Future<dynamic> completeArea(String libelle) async {
     var latlng = await _getCurrentLocation();
     try {
       var data = {
         "area_id": tagsController.scannedArea.value.id,
+        "libelle": libelle,
         "latlng": latlng
       };
       var response = await Api.request(
@@ -111,6 +116,39 @@ class HttpManager {
     }
   }
 
+  //Presence signal
+  Future<dynamic> checkPresence() async {
+    var latlng = await _getCurrentLocation();
+    try {
+      Map<String, dynamic> data = {
+        "matricule": tagsController.faceResult.value,
+        "heure": "${DateTime.now().hour}:${DateTime.now().minute}",
+        "status_photo": "success",
+        "coordonnees": latlng,
+      };
+
+      var response = await Api.request(
+        url: "presence.create",
+        method: "post",
+        body: data,
+        files: {
+          'photo': File(tagsController.face.value!.path),
+        },
+      );
+      if (response != null) {
+        if (response.containsKey("errors")) {
+          return response["errors"].toString();
+        } else {
+          return "success";
+        }
+      } else {
+        return response["errors"].toString();
+      }
+    } catch (e) {
+      return "Echec de traitement de la requête !";
+    }
+  }
+
   //close pending patrol
   Future<dynamic> stopPendingPatrol(String? comment) async {
     var patrolId = localStorage.read("patrol_id");
@@ -120,6 +158,9 @@ class HttpManager {
         url: "patrol.close",
         method: "post",
         body: data,
+        files: {
+          "photo": File(tagsController.face.value!.path),
+        },
       );
       if (response != null) {
         if (response.containsKey("errors")) {
@@ -168,63 +209,36 @@ class HttpManager {
   // Create Signalement
   Future<dynamic> createSignalement(String title, String description) async {
     var file = tagsController.mediaFile.value!;
-    String fileName = basename(file.path); // Récupère le nom du fichier
-    String ext =
-        extension(file.path).toLowerCase(); // Récupère l'extension du fichier
-
-    // Déterminer le type MIME basé sur l'extension du fichier
-    MediaType? mediaType;
-
-    if (ext == '.jpg' || ext == '.jpeg') {
-      mediaType = MediaType('image', 'jpeg');
-    } else if (ext == '.png') {
-      mediaType = MediaType('image', 'png');
-    } else if (ext == '.mp4') {
-      mediaType = MediaType('video', 'mp4');
-    } else {
-      return "Format de fichier non supporté";
-    }
-
-    // Créer la requête multipart
-    var uri = Uri.parse("${Api.baseUrl}/signalement.create"); // URL de ton API
-    var request = http.MultipartRequest('POST', uri);
-
-    // Ajouter les champs de données
-    request.fields['title'] = title;
-    request.fields['description'] = description;
-    request.fields['site_id'] =
-        authController.userSession.value.siteId.toString();
-    request.fields['agent_id'] = authController.userSession.value.id.toString();
-    request.fields['agency_id'] =
-        authController.userSession.value.agencyId.toString();
-
-    // Ajouter le fichier à la requête multipart avec le bon type MIME
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'media',
-        file.path,
-        filename: fileName,
-        contentType: mediaType, // Ajout du type MIME approprié
-      ),
-    );
 
     try {
-      // Envoyer la requête
-      var response = await request.send();
-      // Lire la réponse
-      if (response.statusCode == 200) {
-        var responseBody = await response.stream.bytesToString();
-        var decodedResponse = jsonDecode(responseBody);
-        if (decodedResponse["status"] == "success") {
-          return decodedResponse;
+      var response = await Api.request(
+        method: "post",
+        url: "signalement.create",
+        body: {
+          "title": title,
+          "description": description,
+          "site_id": authController.userSession.value.siteId.toString(),
+          "agent_id": authController.userSession.value.id.toString(),
+          "agency_id": authController.userSession.value.agencyId.toString(),
+        },
+        files: {
+          "media": file,
+        },
+      );
+
+      if (response != null) {
+        if (response.containsKey("errors")) {
+          return response["errors"].toString();
         } else {
-          return "Une erreur est survenue lors de la transmission de données !";
+          return response["result"];
         }
       } else {
-        return "Échec de traitement de la requête !";
+        return response["errors"].toString();
       }
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print("Erreur createSignalement: $e");
+      }
       return "Échec de traitement de la requête";
     }
   }
@@ -235,6 +249,7 @@ class HttpManager {
     List<Announce> announces = [];
     try {
       var response = await Api.request(
+        method: "get",
         url: "announces.load?site_id=${user.siteId}&agency_id=${user.agencyId}",
       );
       if (response != null) {
@@ -244,7 +259,9 @@ class HttpManager {
         });
       }
     } catch (e) {
-      print("Request Error ${e.toString()}");
+      if (kDebugMode) {
+        print("Request Error ${e.toString()}");
+      }
     }
     return announces;
   }
@@ -255,6 +272,7 @@ class HttpManager {
     List<Planning> plannings = [];
     try {
       var response = await Api.request(
+        method: "get",
         url: "schedules.all?site_id=${user.siteId}&agency_id=${user.agencyId}",
       );
       if (response != null) {

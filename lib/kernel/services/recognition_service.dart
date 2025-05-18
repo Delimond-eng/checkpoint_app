@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'dart:math';
+import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/models/face.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
@@ -15,9 +16,45 @@ class FaceRecognitionController extends ChangeNotifier {
   bool isModelInitializing = false;
   String? modelLoadingError;
   final Map<String, List<double>> _knownFaces = {};
+  Completer<void>? _modelInitCompleter;
+
+  Future<void> initializeModel() async {
+    // Si déjà chargé, on quitte
+    if (isModelLoaded) return;
+    // Si une initialisation est déjà en cours, on attend simplement sa fin
+    if (_modelInitCompleter != null) {
+      return _modelInitCompleter!.future;
+    }
+
+    _modelInitCompleter = Completer();
+    isModelInitializing = true;
+    notifyListeners();
+
+    try {
+      _interpreter =
+          await Interpreter.fromAsset('assets/models/facenet.tflite');
+
+      await DatabaseHelper().init();
+      final storedFaces = await DatabaseHelper().getAllFaces();
+
+      for (final face in storedFaces) {
+        _knownFaces[face.matricule] = face.embedding;
+      }
+
+      isModelLoaded = true;
+      modelLoadingError = null;
+      _modelInitCompleter!.complete();
+    } catch (e) {
+      modelLoadingError = "Erreur de chargement du modèle: $e";
+      _modelInitCompleter!.completeError(e);
+    } finally {
+      isModelInitializing = false;
+      notifyListeners();
+    }
+  }
 
   /// Charge le modèle
-  Future<void> initializeModel() async {
+  /* Future<void> initializeModel() async {
     if (isModelLoaded || isModelInitializing) return;
     isModelInitializing = true;
     notifyListeners();
@@ -32,7 +69,7 @@ class FaceRecognitionController extends ChangeNotifier {
         print("faces ${storedFaces.length}");
       }
       for (final face in storedFaces) {
-        _knownFaces[face.name] = face.embedding;
+        _knownFaces[face.matricule] = face.embedding;
       }
       isModelLoaded = true;
       modelLoadingError = null;
@@ -42,10 +79,10 @@ class FaceRecognitionController extends ChangeNotifier {
 
     isModelInitializing = false;
     notifyListeners();
-  }
+  } */
 
   Future<void> addKnownFaceFromMultipleImages(
-      String name, List<XFile> images) async {
+      String matricule, List<XFile> images) async {
     List<List<double>> embeddings = [];
 
     for (XFile image in images) {
@@ -67,9 +104,9 @@ class FaceRecognitionController extends ChangeNotifier {
       averagedEmbedding[i] /= embeddings.length;
     }
 
-    _knownFaces[name] = averagedEmbedding;
-    await DatabaseHelper()
-        .insertFace(FacePicture(name: name, embedding: averagedEmbedding));
+    _knownFaces[matricule] = averagedEmbedding;
+    await DatabaseHelper().insertFace(
+        FacePicture(matricule: matricule, embedding: averagedEmbedding));
 
     notifyListeners();
   }
@@ -134,7 +171,7 @@ class FaceRecognitionController extends ChangeNotifier {
     final image = await picker.pickImage(source: source);
 
     if (image == null) return "Opération annulée par l'utilisateur";
-
+    tagsController.face.value = image;
     final embedding = await getEmbedding(image);
     if (embedding == null) return "Impossible d'obtenir l'empreinte";
 

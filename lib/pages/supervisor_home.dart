@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/models/area.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,7 @@ import 'package:get/get.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 
 import '../modals/supervisor_completer_modal.dart';
-import '../themes/colors.dart';
+import '../widgets/user_status.dart';
 
 class SupervisorHome extends StatefulWidget {
   const SupervisorHome({super.key});
@@ -73,17 +74,19 @@ class _SupervisorHomeState extends State<SupervisorHome> {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        title: Text("SUPERVISEUR QRCODE SCAN".toUpperCase()),
+        backgroundColor: darkColor,
+        title: const Text(
+          "COMPLETER ZONE",
+          style: TextStyle(
+            fontSize: 30.0,
+            fontWeight: FontWeight.w900,
+            color: whiteColor,
+            fontFamily: 'Staatliches',
+            letterSpacing: 1.2,
+          ),
+        ),
         actions: [
-          Obx(
-            () => CircleAvatar(
-              radius: 30,
-              child: Text(
-                authController.userSession.value.fullname!.substring(0, 1),
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ).marginAll(8.0),
-          )
+          const UserStatus(name: "Gaston delimond").marginAll(8.0),
         ],
       ),
       body: SafeArea(
@@ -92,11 +95,11 @@ class _SupervisorHomeState extends State<SupervisorHome> {
           QRView(
             key: qrKey,
             overlay: QrScannerOverlayShape(
-              borderColor: secondaryColor,
+              borderColor: primaryMaterialColor,
               overlayColor: Colors.white.withOpacity(.5),
               borderRadius: 10.0,
               borderLength: 50.0,
-              borderWidth: 4.0,
+              borderWidth: 8.0,
               cutOutSize: 250,
             ),
             onQRViewCreated: onQRViewCreated,
@@ -106,7 +109,7 @@ class _SupervisorHomeState extends State<SupervisorHome> {
       )),
       floatingActionButton: FloatingActionButton(
         elevation: 10.0,
-        backgroundColor: Colors.blue,
+        backgroundColor: primaryMaterialColor,
         onPressed: () async {
           setState(() {
             isLigthing = !isLigthing;

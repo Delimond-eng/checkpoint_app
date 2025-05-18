@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/models/area.dart';
+import 'package:checkpoint_app/kernel/services/recognition_service.dart';
 import 'package:checkpoint_app/modals/close_patrol_modal.dart';
 import 'package:checkpoint_app/modals/scanning_completer_modal.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 
 import '../constants/styles.dart';
@@ -28,6 +30,21 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
   late Barcode result;
   late QRViewController controller;
   bool isLigthing = false;
+
+  late FaceRecognitionController _controller;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _controller =
+        Provider.of<FaceRecognitionController>(context, listen: false);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_controller.isModelInitializing && !_controller.isModelLoaded) {
+        _controller.initializeModel();
+      }
+    });
+  }
 
   @override
   void reassemble() {
@@ -61,8 +78,9 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
             Map<String, dynamic> jsonMap = jsonDecode(scanData.code!);
             // Formatter le JSON en objet Dart
             var area = Area.fromJson(jsonMap);
+            print("ID DE L3AREA ${area.id}");
             tagsController.scannedArea.value = area;
-            showScanningCompleter(context);
+            showScanningCompleter(context, _controller);
           }
         } catch (e) {
           EasyLoading.showToast(

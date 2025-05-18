@@ -12,6 +12,7 @@ import 'utils.dart';
 
 Future<void> showSupervisorCompleter(context) async {
   tagsController.isScanningModalOpen.value = true;
+  final areaLibelle = TextEditingController();
   showCustomModal(
     context,
     onClosed: () {
@@ -67,9 +68,34 @@ Future<void> showSupervisorCompleter(context) async {
               ),
             ).paddingBottom(8.0),
             Text(
-              "Veuillez completer les coordonnées GPS de cette zone de patrouille en cliquant sur le bouton completer !",
+              "Veuillez completer la zone avec le libellé et les coordonnées GPS !",
               style: Theme.of(context).textTheme.bodyLarge,
-            ).paddingBottom(5.0),
+            ).paddingBottom(8.0),
+            Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.0),
+                border: Border.all(
+                  color: primaryMaterialColor.shade100,
+                ),
+              ),
+              width: MediaQuery.of(context).size.width,
+              child: Row(
+                children: [
+                  Flexible(
+                    child: TextField(
+                      controller: areaLibelle,
+                      decoration: const InputDecoration(
+                        hintText: "Zone Libellé.",
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
+                    ),
+                  )
+                ],
+              ).paddingHorizontal(8.0),
+            ).paddingBottom(10.0),
             SizedBox(
               width: MediaQuery.of(context).size.width,
               height: 55.0,
@@ -79,7 +105,7 @@ Future<void> showSupervisorCompleter(context) async {
                 onPressed: () async {
                   var manager = HttpManager();
                   tagsController.isLoading.value = true;
-                  manager.completeArea().then((value) {
+                  manager.completeArea(areaLibelle.text).then((value) {
                     tagsController.isLoading.value = false;
                     if (value != "success") {
                       EasyLoading.showToast(value);
@@ -87,7 +113,7 @@ Future<void> showSupervisorCompleter(context) async {
                       tagsController.isScanningModalOpen.value = false;
                       Get.back();
                       EasyLoading.showSuccess(
-                        "Coordonnées GPS de la zone patrouille completées avec succès !",
+                        "Zone de patrouille completées avec succès !",
                       );
                     }
                   });

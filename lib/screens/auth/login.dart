@@ -1,6 +1,5 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
-import 'package:checkpoint_app/pages/supervisor_home.dart';
 import 'package:checkpoint_app/widgets/submit_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -149,23 +148,13 @@ class _LoginScreenState extends State<LoginScreen> {
         isLoading = false;
       });
       if (res is User) {
-        if (res.role == 'supervisor') {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const SupervisorHome(),
-            ),
-            (route) => false,
-          );
-        } else {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const WelcomeScreen(),
-            ),
-            (route) => false,
-          );
-        }
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const WelcomeScreen(),
+          ),
+          (route) => false,
+        );
       } else {
         EasyLoading.showToast(res.toString());
         return;

@@ -1,9 +1,12 @@
 import 'package:chat_bubbles/bubbles/bubble_special_one.dart';
+import 'package:checkpoint_app/kernel/services/http_manager.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../constants/styles.dart';
+import '../kernel/models/announce.dart';
+import '../widgets/svg.dart';
 import '../widgets/user_status.dart';
 
 class AnnouncePage extends StatefulWidget {
@@ -33,27 +36,71 @@ class _AnnouncePageState extends State<AnnouncePage> {
           const UserStatus(name: "Gaston delimond").marginAll(8.0),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          children: [
-            const SizedBox(
-              height: 10.0,
-            ),
-            for (int i = 0; i < 5; i++) ...[
-              const AnnounceCard().paddingBottom(8.0),
-            ]
-          ],
-        ),
+      body: FutureBuilder<List<Announce>>(
+        future: HttpManager.getAllAnnounces(),
+        builder: (context, snapshot) {
+          if (snapshot.data != null) {
+            if (snapshot.data!.isEmpty) {
+              return emptyState();
+            } else {
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: snapshot.data!.length,
+                padding: const EdgeInsets.all(10.0),
+                itemBuilder: (context, index) {
+                  var item = snapshot.data![index];
+                  return AnnounceCard(
+                    data: item,
+                  );
+                },
+              );
+            }
+          } else {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    color: primaryMaterialColor,
+                  )
+                ],
+              ),
+            );
+          }
+        },
       ),
     );
+  }
+
+  Widget emptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Svg(
+            path: "notify.svg",
+            size: 40.0,
+            color: primaryColor,
+          ).paddingBottom(10.0),
+          const Text(
+            "Aucun communiqué disponible !",
+            style: TextStyle(
+              color: primaryMaterialColor,
+              fontWeight: FontWeight.w500,
+              fontSize: 12.5,
+            ),
+          )
+        ],
+      ),
+    ).paddingTop(30.0);
   }
 }
 
 class AnnounceCard extends StatelessWidget {
-  const AnnounceCard({
-    super.key,
-  });
+  final Announce? data;
+  const AnnounceCard({super.key, this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -69,19 +116,35 @@ class AnnounceCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Avis aux nouveaux agents.",
+                data!.title!,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: primaryMaterialColor.shade900,
                 ),
               ).paddingLeft(5.0).paddingBottom(5.0),
-              const BubbleSpecialOne(
-                text:
-                    'Il est porté à la connaissance de tous les agents de se présenter demain matin ?',
+              BubbleSpecialOne(
+                text: data!.content!,
                 isSender: false,
                 color: greyColor60,
-                textStyle: TextStyle(fontSize: 15.0, color: darkColor),
+                textStyle: const TextStyle(fontSize: 15.0, color: darkColor),
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Icon(
+                    Icons.calendar_month,
+                    size: 12.0,
+                    color: Colors.blue,
+                  ).paddingRight(5.0),
+                  Text(
+                    data!.createdAt!,
+                    style: const TextStyle(
+                      fontSize: 10.0,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                ],
+              ).marginOnly(right: 20.0)
             ],
           ),
         ),

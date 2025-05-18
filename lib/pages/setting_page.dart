@@ -1,3 +1,4 @@
+import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/global/modal.dart';
 import 'package:checkpoint_app/global/store.dart';
 import 'package:checkpoint_app/screens/auth/login.dart';
@@ -70,6 +71,7 @@ class _SettingPageState extends State<SettingPage> {
                             builder: (context) => const LoginScreen(),
                           ),
                           (route) => false);
+                      authController.refreshUser();
                     });
                   },
                 ).paddingBottom(10),

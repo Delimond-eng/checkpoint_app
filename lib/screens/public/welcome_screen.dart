@@ -1,11 +1,18 @@
 import 'package:checkpoint_app/constants/styles.dart';
+import 'package:checkpoint_app/global/controllers.dart';
+import 'package:checkpoint_app/kernel/services/recognition_service.dart';
+import 'package:checkpoint_app/modals/close_patrol_modal.dart';
+import 'package:checkpoint_app/modals/recognition_face_modal.dart';
+import 'package:checkpoint_app/pages/enroll_face_page.dart';
 import 'package:checkpoint_app/pages/tasks_page.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:checkpoint_app/widgets/user_status.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
-import 'package:get/utils.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 import '../../modals/request_modal.dart';
 import '../../modals/signalement_modal.dart';
@@ -14,7 +21,7 @@ import '../../pages/patrol_planning.dart';
 import '../../pages/profil_page.dart';
 import '../../pages/qrcode_scanner_page.dart';
 import '../../pages/setting_page.dart';
-import '../../themes/colors.dart';
+import '../../pages/supervisor_home.dart';
 import '../../widgets/home_menu_btn.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -25,24 +32,23 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
+  late FaceRecognitionController controller;
+
   @override
   void initState() {
     super.initState();
   }
 
-  /* Future<void> _initTalkieWalkieService() async {
-    await TalkieWalkieService().initListening();
-  } */
-
-  /*  //ALL PAGES
-  List<Widget> pages = [
-    const HomePage(),
-    const PlanningPage(),
-    const RadioPage(),
-    const ProfilPage()
-  ];
-
-  int currentPage = 0; */
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    controller = Provider.of<FaceRecognitionController>(context, listen: true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!controller.isModelInitializing && !controller.isModelLoaded) {
+        controller.initializeModel();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,41 +79,33 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(10.0),
-          child: Column(
-            children: [
-              _btnPatrolPending().paddingBottom(20.0).paddingTop(10.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  HomeMenuBtn(
-                    icon: "presence",
-                    title: "Présence",
-                    onPress: () {
-                      _showBottonPresenceChoice(context);
-                    },
-                  ),
-                  HomeMenuBtn(
-                    icon: "qrcode",
-                    title: "Patrouille",
-                    onPress: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const QRcodeScannerPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  Badge(
-                    label: const Text(
-                      "0",
-                      style: TextStyle(
-                        color: lightColor,
-                        fontSize: 8.0,
-                        fontWeight: FontWeight.w600,
-                      ),
+          child: Obx(() {
+            return Column(
+              children: [
+                _btnPatrolPending().paddingBottom(20.0).paddingTop(10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    HomeMenuBtn(
+                      icon: "presence",
+                      title: "Présence",
+                      onPress: () {
+                        _showBottonPresenceChoice(context);
+                      },
                     ),
-                    child: HomeMenuBtn(
+                    HomeMenuBtn(
+                      icon: "qrcode",
+                      title: "Patrouille",
+                      onPress: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const QRcodeScannerPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    HomeMenuBtn(
                       icon: "planning",
                       title: "Planning",
                       onPress: () {
@@ -119,22 +117,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         );
                       },
                     ),
-                  ),
-                ],
-              ).paddingBottom(15.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Badge(
-                    label: const Text(
-                      "0",
-                      style: TextStyle(
-                        color: lightColor,
-                        fontSize: 8.0,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    child: HomeMenuBtn(
+                  ],
+                ).paddingBottom(15.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    HomeMenuBtn(
                       icon: "tasks",
                       title: "Tâches",
                       onPress: () {
@@ -146,36 +134,26 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         );
                       },
                     ),
-                  ),
-                  HomeMenuBtn(
-                    icon: "request-2",
-                    title: "Requêtes",
-                    onPress: () {
-                      showRequestModal(context);
-                    },
-                  ),
-                  HomeMenuBtn(
-                    icon: "incident",
-                    title: "Signalements",
-                    onPress: () {
-                      showSignalementModal(context);
-                    },
-                  ),
-                ],
-              ).paddingBottom(15.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Badge(
-                    label: const Text(
-                      "3",
-                      style: TextStyle(
-                        color: lightColor,
-                        fontSize: 8.0,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    HomeMenuBtn(
+                      icon: "request-2",
+                      title: "Requêtes",
+                      onPress: () {
+                        showRequestModal(context);
+                      },
                     ),
-                    child: HomeMenuBtn(
+                    HomeMenuBtn(
+                      icon: "incident",
+                      title: "Signalements",
+                      onPress: () {
+                        showSignalementModal(context);
+                      },
+                    ),
+                  ],
+                ).paddingBottom(15.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    HomeMenuBtn(
                       icon: "notify",
                       title: "Communiqués",
                       onPress: () {
@@ -187,45 +165,66 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         );
                       },
                     ),
-                  ),
-                  HomeMenuBtn(
-                    icon: "user-1",
-                    title: "Profil",
-                    onPress: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProfilPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  HomeMenuBtn(
-                    icon: "settings",
-                    title: "Paramètres",
-                    onPress: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingPage(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ).paddingBottom(15.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  HomeMenuBtn(
-                    icon: "face-2",
-                    title: "Enrollement",
-                    onPress: () {},
-                  ),
-                ],
-              )
-            ],
-          ),
+                    HomeMenuBtn(
+                      icon: "user-1",
+                      title: "Profil",
+                      onPress: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfilPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    HomeMenuBtn(
+                      icon: "settings",
+                      title: "Paramètres",
+                      onPress: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingPage(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ).paddingBottom(15.0),
+                if (authController.userSession.value.role == 'supervisor') ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      HomeMenuBtn(
+                        icon: "face-2",
+                        title: "Enrôlement",
+                        onPress: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EnrollFacePage(),
+                            ),
+                          );
+                        },
+                      ).paddingRight(15.0),
+                      HomeMenuBtn(
+                        icon: "qrcode",
+                        title: "Completer zone",
+                        onPress: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SupervisorHome(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  )
+                ]
+              ],
+            );
+          }),
         ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: primaryMaterialColor.shade500,
@@ -243,74 +242,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             "assets/icons/sirene.png",
             height: 35.0,
           ),
-        )
-        /* floatingActionButton: FloatingActionButton(
-        backgroundColor: primaryMaterialColor,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const QRcodeScannerPage(),
-            ),
-          );
-        },
-        child: const Icon(
-          CupertinoIcons.qrcode_viewfinder,
-          color: lightColor,
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        elevation: 0,
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Svg(path: "announce_line.svg", size: 23.0),
-              activeIcon: Svg(
-                path: "announce_line.svg",
-                size: 23.0,
-                color: primaryMaterialColor,
-              ),
-              label: 'Communiqués',
-            ),
-            BottomNavigationBarItem(
-              icon: Svg(path: "timer-start.svg", size: 23.0),
-              activeIcon: Svg(
-                path: "timer-start-fill.svg",
-                size: 23.0,
-                color: primaryMaterialColor,
-              ),
-              label: 'Planning',
-            ),
-            BottomNavigationBarItem(
-              icon: Svg(path: "radio-3-line.svg", size: 23.0),
-              activeIcon: Svg(
-                path: "radio-3-fill.svg",
-                size: 23.0,
-                color: primaryMaterialColor,
-              ),
-              label: 'Talkie walkie',
-            ),
-            BottomNavigationBarItem(
-              icon: Svg(path: "user-1.svg", size: 23.0),
-              activeIcon: Svg(
-                path: "user-1.svg",
-                size: 23.0,
-                color: primaryMaterialColor,
-              ),
-              label: 'Profil',
-            ),
-          ],
-          currentIndex: currentPage,
-          onTap: (index) {
-            setState(() {
-              currentPage = index;
-            });
-          },
-        ),
-      ), */
-        );
+        ));
   }
 
   void _showBottonPatrolChoice(BuildContext context) {
@@ -333,7 +265,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: CostumButton(
                     bgColor: primaryMaterialColor.shade100,
                     title: "Poursuivre",
-                    onPress: () {},
+                    onPress: () {
+                      Get.back();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const QRcodeScannerPage(),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 12.0),
@@ -342,7 +282,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     title: "Clôturer",
                     bgColor: primaryMaterialColor,
                     labelColor: Colors.white,
-                    onPress: () {},
+                    onPress: () {
+                      Get.back();
+                      showClosePatrolModal(context);
+                    },
                   ),
                 ),
               ],
@@ -373,7 +316,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: CostumButton(
                     bgColor: primaryMaterialColor.shade100,
                     title: "Signer mon arrivée",
-                    onPress: () {},
+                    onPress: () async {
+                      Navigator.pop(context);
+                      tagsController.recognitionKey.value = "check-in";
+                      showRecognitionModal(context);
+                      tagsController.recognize(controller, ImageSource.camera);
+                    },
                   ),
                 ),
                 const SizedBox(width: 12.0),
@@ -382,7 +330,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     title: "Signer mon départ",
                     bgColor: primaryMaterialColor,
                     labelColor: Colors.white,
-                    onPress: () {},
+                    onPress: () {
+                      Navigator.pop(context);
+                      tagsController.recognitionKey.value = "check-out";
+                      showRecognitionModal(context);
+                      tagsController.recognize(controller, ImageSource.camera);
+                    },
                   ),
                 ),
               ],
@@ -406,7 +359,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         child: InkWell(
           borderRadius: const BorderRadius.all(Radius.circular(12)),
           onTap: () {
-            _showBottonPatrolChoice(context);
+            if (tagsController.patrolId.value != 0) {
+              _showBottonPatrolChoice(context);
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const QRcodeScannerPage(),
+                ),
+              );
+            }
           },
           child: ClipRRect(
             borderRadius: const BorderRadius.all(Radius.circular(12)),
@@ -420,30 +382,77 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     "assets/images/patrol_illustration.png",
                     height: 80.0,
                   ).paddingRight(8.0),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Patrouille en cours disponible",
-                          style: TextStyle(
-                            fontFamily: 'Staatliches',
-                            color: primaryMaterialColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15.0,
+                  if (authController.userSession.value.role == 'guard') ...[
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (tagsController.patrolId.value != 0) ...[
+                            const Text(
+                              "Patrouille en cours disponible",
+                              style: TextStyle(
+                                fontFamily: 'Staatliches',
+                                color: primaryMaterialColor,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15.0,
+                              ),
+                            ),
+                            const SizedBox(height: 4.0),
+                            const Text(
+                              "Veuillez cliquer ici pour clôturer ou poursuivre la patrouille en cours.",
+                              style: TextStyle(
+                                fontFamily: "Poppins",
+                                fontSize: 10.0,
+                              ),
+                            ),
+                          ] else ...[
+                            Text(
+                              "Bienvenue agent ${authController.userSession.value.fullname}",
+                              style: const TextStyle(
+                                fontFamily: 'Staatliches',
+                                color: primaryMaterialColor,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15.0,
+                              ),
+                            ),
+                            const SizedBox(height: 4.0),
+                            const Text(
+                              "Veuillez cliquer pour commencer une nouvelle patrouille.",
+                              style: TextStyle(
+                                fontFamily: "Poppins",
+                                fontSize: 10.0,
+                              ),
+                            ),
+                          ]
+                        ],
+                      ),
+                    )
+                  ] else ...[
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Bienvenue Superviseur ${authController.userSession.value.fullname} !",
+                            style: const TextStyle(
+                              fontFamily: 'Staatliches',
+                              color: primaryMaterialColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15.0,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.0),
-                        Text(
-                          "Veuillez cliquer ici pour clôturer ou poursuivre la patrouille en cours.",
-                          style: TextStyle(
-                            fontFamily: "Poppins",
-                            fontSize: 10.0,
+                          const SizedBox(height: 4.0),
+                          const Text(
+                            "Vous pouvez completer les zones de patrouille et aussi enrôler les visages des agents.",
+                            style: TextStyle(
+                              fontFamily: "Poppins",
+                              fontSize: 10.0,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  )
+                        ],
+                      ),
+                    )
+                  ]
                 ],
               ),
             ),

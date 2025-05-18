@@ -1,5 +1,6 @@
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -35,35 +36,44 @@ class _TaskPageState extends State<TaskPage> {
           const UserStatus(name: "Gaston delimond").marginAll(8.0),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          children: [
-            const Text(
-              "Vous devez cocher un ou plusieurs de vos tâches déjà effectuées puis valider !",
-              style: TextStyle(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.checklist_rounded,
                 color: primaryMaterialColor,
-                fontWeight: FontWeight.w500,
-                fontSize: 12.0,
-              ),
-            ).paddingTop(10.0).paddingBottom(15.0),
-            for (var task in taches) ...[
-              TaskCardItem(
-                task: task,
-                onChecked: () {
-                  setState(() {
-                    task.isActive = !task.isActive;
-                    if (task.isActive) {
-                      tasks.add(task);
-                    } else {
-                      int index = tasks.indexOf(task);
-                      tasks.removeAt(index);
-                    }
-                  });
-                },
-              )
-            ]
-          ],
+                size: 40.0,
+              ).paddingBottom(10.0),
+              const Text(
+                "Aucune Tâches disponibles !",
+                style: TextStyle(
+                  color: primaryMaterialColor,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12.0,
+                ),
+              ).paddingTop(10.0).paddingBottom(15.0),
+              /* for (var task in taches) ...[
+                TaskCardItem(
+                  task: task,
+                  onChecked: () {
+                    setState(() {
+                      task.isActive = !task.isActive;
+                      if (task.isActive) {
+                        tasks.add(task);
+                      } else {
+                        int index = tasks.indexOf(task);
+                        tasks.removeAt(index);
+                      }
+                    });
+                  },
+                )
+              ] */
+            ],
+          ),
         ),
       ),
       floatingActionButton: tasks.isNotEmpty
