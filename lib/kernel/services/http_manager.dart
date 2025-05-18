@@ -43,29 +43,32 @@ class HttpManager {
   Future<dynamic> beginPatrol(String comment) async {
     var latlng = await _getCurrentLocation();
     var patrolId = tagsController.patrolId.value;
+
     try {
+      // Construction du body
       var data = {
+        "patrol_id": patrolId != 0 ? patrolId : null,
         "site_id": authController.userSession.value.siteId,
         "agency_id": authController.userSession.value.agencyId,
-        "patrol_id": patrolId != 0 ? patrolId : null,
-        "matricule": tagsController.faceResult.value,
+        "agent_id": authController.userSession.value.id,
         "scan": {
           "agent_id": authController.userSession.value.id,
           "area_id": tagsController.scannedArea.value.id,
+          "matricule": tagsController.faceResult.value,
           "comment": comment,
           "latlng": latlng,
         }
       };
+
       var response = await Api.request(
         url: "patrol.scan",
         method: "post",
         body: data,
-        files: {
-          "photo": File(
-            tagsController.face.value!.path,
-          ),
-        },
+        /*  files: {
+          "photo": File(tagsController.face.value!.path),
+        }, */
       );
+
       if (response != null) {
         if (response.containsKey("errors")) {
           return response["errors"].toString();
@@ -77,10 +80,10 @@ class HttpManager {
           return "success";
         }
       } else {
-        return response["errors"].toString();
+        return "Erreur réseau ou serveur injoignable.";
       }
     } catch (e) {
-      return "Echec de traitement de la requête !";
+      return "Echec de traitement de la requête : $e";
     }
   }
 

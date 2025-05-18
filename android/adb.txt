@@ -1,0 +1,5 @@
+//ENTRY
+adb shell cmd package set-home-activity com.example.checkpoint_app/.MainActivity
+
+//EXIT
+adb shell am start -n com.example.checkpoint_app/.ExitActivity

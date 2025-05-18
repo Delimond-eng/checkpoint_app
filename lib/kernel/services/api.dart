@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 class Api {
   static String baseUrl = 'http://salama.uco.rod.mybluehost.me/api';
 
-  /// Fonction pour faire des requêtes HTTP (GET, POST, PUT, DELETE, UPLOAD)
   static Future<dynamic> request({
     required String method,
     required String url,
@@ -20,29 +19,42 @@ class Api {
 
     try {
       if (files != null && files.isNotEmpty) {
-        // Pour l'envoi de fichiers (multipart)
+        // --- Gérer Multipart (photo + données imbriquées)
         var request = http.MultipartRequest(method.toUpperCase(), fullUrl);
-        // Ajoute les headers (sauf Content-Type, géré automatiquement)
         request.headers.addAll(headers);
-        // Ajoute les champs texte
+
         if (body != null) {
-          request.fields.addAll(
-              body.map((key, value) => MapEntry(key, value.toString())));
+          for (var entry in body.entries) {
+            if (entry.value is Map) {
+              // Pour les sous-objets comme "scan"
+              (entry.value as Map).forEach((subKey, subValue) {
+                if (subValue != null) {
+                  request.fields['${entry.key}[$subKey]'] = subValue.toString();
+                }
+              });
+            } else {
+              if (entry.value != null) {
+                request.fields[entry.key] = entry.value.toString();
+              }
+            }
+          }
         }
 
-        // Ajoute les fichiers
+        // Ajouter les fichiers
         for (var entry in files.entries) {
-          var fileStream = http.MultipartFile.fromBytes(
+          var fileBytes = await entry.value.readAsBytes();
+          var multipartFile = http.MultipartFile.fromBytes(
             entry.key,
-            await entry.value.readAsBytes(),
+            fileBytes,
             filename: entry.value.path.split("/").last,
           );
-          request.files.add(fileStream);
+          request.files.add(multipartFile);
         }
+
         var streamedResponse = await request.send();
         response = await http.Response.fromStream(streamedResponse);
       } else {
-        // Pour les requêtes normales (JSON)
+        // --- Gérer POST normal (JSON)
         switch (method.toLowerCase()) {
           case 'post':
             response = await http.post(
@@ -52,24 +64,38 @@ class Api {
             );
             break;
           case 'get':
-          default:
             response = await http.get(fullUrl, headers: headers);
+            break;
+          case 'put':
+            response = await http.put(
+              fullUrl,
+              headers: headers,
+              body: jsonEncode(body ?? {}),
+            );
+            break;
+          default:
+            throw Exception("Méthode HTTP non prise en charge : $method");
         }
       }
 
+      // --- Réponse OK
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return jsonDecode(response.body);
       } else {
         if (kDebugMode) {
-          print("Erreur ${response.statusCode}: ${response.body}");
+          print("Erreur HTTP ${response.statusCode}: ${response.body}");
         }
-        return null;
+        return {
+          "errors": ["Erreur HTTP ${response.statusCode}", response.body]
+        };
       }
     } catch (e) {
       if (kDebugMode) {
         print('Exception lors de la requête : $e');
       }
-      return null;
+      return {
+        "errors": ["Exception", e.toString()]
+      };
     }
   }
 }

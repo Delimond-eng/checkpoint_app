@@ -78,7 +78,6 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
             Map<String, dynamic> jsonMap = jsonDecode(scanData.code!);
             // Formatter le JSON en objet Dart
             var area = Area.fromJson(jsonMap);
-            print("ID DE L3AREA ${area.id}");
             tagsController.scannedArea.value = area;
             showScanningCompleter(context, _controller);
           }
@@ -151,6 +150,7 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
                 ), // Texte pour le bouton
                 icon: const Icon(
                   CupertinoIcons.check_mark,
+                  color: Colors.white,
                 ), // Icône optionnelle
               ),
             ] else ...[

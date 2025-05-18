@@ -359,13 +359,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         child: InkWell(
           borderRadius: const BorderRadius.all(Radius.circular(12)),
           onTap: () {
-            if (tagsController.patrolId.value != 0) {
-              _showBottonPatrolChoice(context);
+            if (authController.userSession.value.role == 'guard') {
+              if (tagsController.patrolId.value != 0) {
+                _showBottonPatrolChoice(context);
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const QRcodeScannerPage(),
+                  ),
+                );
+              }
             } else {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const QRcodeScannerPage(),
+                  builder: (context) => const SupervisorHome(),
                 ),
               );
             }

@@ -141,6 +141,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
                           Flexible(
                             child: TextField(
                               controller: _matriculeController,
+                              textAlign: TextAlign.center,
                               decoration: const InputDecoration(
                                 hintText: "Matricule de l'agent",
                                 enabledBorder: InputBorder.none,
