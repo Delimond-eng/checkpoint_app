@@ -1,12 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/models/area.dart';
 import 'package:checkpoint_app/kernel/services/recognition_service.dart';
 import 'package:checkpoint_app/modals/close_patrol_modal.dart';
 import 'package:checkpoint_app/modals/scanning_completer_modal.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -49,17 +48,35 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
   @override
   void reassemble() {
     super.reassemble();
-    if (Platform.isAndroid) {
-      controller.pauseCamera();
-    } else if (Platform.isIOS) {
-      controller.resumeCamera();
-    }
+    controller.pauseCamera();
   }
 
   @override
   void dispose() {
     controller.dispose();
     super.dispose();
+  }
+
+  void _restartCameraAndListen() {
+    tagsController.isQrcodeScanned.value = false;
+    controller.resumeCamera();
+    controller.scannedDataStream.listen((scanData) {
+      if (scanData.code != null && scanData.code!.isNotEmpty) {
+        try {
+          if (!tagsController.isScanningModalOpen.value) {
+            Map<String, dynamic> jsonMap = jsonDecode(scanData.code!);
+            var area = Area.fromJson(jsonMap);
+            tagsController.scannedArea.value = area;
+            tagsController.isQrcodeScanned.value = true;
+            controller.pauseCamera();
+            showScanningCompleter(context, _controller);
+          }
+        } catch (e) {
+          EasyLoading.showToast(
+              "Echec du scan de qrcode. Veuillez reéssayer !");
+        }
+      }
+    });
   }
 
   void onQRViewCreated(QRViewController controller) {
@@ -79,6 +96,8 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
             // Formatter le JSON en objet Dart
             var area = Area.fromJson(jsonMap);
             tagsController.scannedArea.value = area;
+            tagsController.isQrcodeScanned.value = true;
+            controller.pauseCamera();
             showScanningCompleter(context, _controller);
           }
         } catch (e) {
@@ -110,23 +129,73 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
         ],
       ),
       body: SafeArea(
-          child: Stack(
-        children: [
-          QRView(
-            key: qrKey,
-            overlay: QrScannerOverlayShape(
-              borderColor: primaryMaterialColor,
-              overlayColor: Colors.white.withOpacity(.5),
-              borderRadius: 12.0,
-              borderLength: 50.0,
-              borderWidth: 8.0,
-              cutOutSize: 250,
+        child: Obx(
+          () => Center(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                !tagsController.isQrcodeScanned.value
+                    ? QRView(
+                        key: qrKey,
+                        overlay: QrScannerOverlayShape(
+                          borderColor: primaryMaterialColor,
+                          overlayColor: Colors.white.withOpacity(.5),
+                          borderRadius: 12.0,
+                          borderLength: 50.0,
+                          borderWidth: 8.0,
+                          cutOutSize: 250,
+                        ),
+                        onQRViewCreated: onQRViewCreated,
+                      )
+                    : DottedBorder(
+                        color: primaryMaterialColor.shade100,
+                        radius: const Radius.circular(12.0),
+                        strokeWidth: 1,
+                        borderType: BorderType.RRect,
+                        dashPattern: const [6, 3],
+                        child: ClipRRect(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(12.0)),
+                          child: Container(
+                            height: 150.0,
+                            width: 150.0,
+                            color: Colors.white,
+                            child: Material(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(12.0)),
+                              color: Colors.white,
+                              child: InkWell(
+                                borderRadius: const BorderRadius.all(
+                                    Radius.circular(12.0)),
+                                onTap: _restartCameraAndListen,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.refresh_rounded,
+                                      color: primaryMaterialColor,
+                                    ).paddingBottom(10.0),
+                                    const Text(
+                                      "Relancer la caméra",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 10.0,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+              ],
             ),
-            onQRViewCreated: onQRViewCreated,
-          )
-          //Container()
-        ],
-      )),
+          ),
+        ),
+      ),
       floatingActionButton: Obx(
         () => Row(
           mainAxisAlignment: MainAxisAlignment
@@ -156,22 +225,25 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
             ] else ...[
               const SizedBox.shrink()
             ],
-            FloatingActionButton(
-              heroTag: "btnLight",
-              elevation: 10.0,
-              backgroundColor: primaryMaterialColor.shade100,
-              onPressed: () async {
-                setState(() {
-                  isLigthing = !isLigthing;
-                });
-                await controller.toggleFlash();
-              },
-              child: Icon(
-                (isLigthing) ? Icons.flash_off_rounded : Icons.flash_on_rounded,
-                color: primaryMaterialColor,
-                size: 18.0,
+            if (!tagsController.isQrcodeScanned.value)
+              FloatingActionButton(
+                heroTag: "btnLight",
+                elevation: 10.0,
+                backgroundColor: primaryMaterialColor.shade100,
+                onPressed: () async {
+                  setState(() {
+                    isLigthing = !isLigthing;
+                  });
+                  await controller.toggleFlash();
+                },
+                child: Icon(
+                  (isLigthing)
+                      ? Icons.flash_off_rounded
+                      : Icons.flash_on_rounded,
+                  color: primaryMaterialColor,
+                  size: 18.0,
+                ),
               ),
-            ),
           ],
         ).paddingHorizontal(8.0),
       ),

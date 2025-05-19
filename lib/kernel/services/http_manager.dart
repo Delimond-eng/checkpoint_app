@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:checkpoint_app/global/controllers.dart';
@@ -7,6 +8,7 @@ import 'package:checkpoint_app/kernel/models/planning.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
 import 'package:checkpoint_app/kernel/services/api.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
 
 class HttpManager {
@@ -294,11 +296,16 @@ class HttpManager {
   // Fonction pour récupérer la position actuelle
   Future<dynamic> _getCurrentLocation() async {
     try {
-      // Vérification des permissions
       await _checkPermission();
-      // Obtention de la position actuelle
       Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.best,
+      ).timeout(
+        const Duration(seconds: 60),
+        onTimeout: () {
+          EasyLoading.showInfo("GPS trop lent, délai dépassé.");
+          throw TimeoutException("GPS trop lent, délai dépassé.");
+        },
+      );
       return "${position.latitude},${position.longitude}";
     } catch (e) {
       return null;

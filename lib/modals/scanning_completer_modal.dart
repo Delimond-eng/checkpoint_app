@@ -240,6 +240,8 @@ Future<void> showPatrolRecognitionModal(context, String comment) async {
                               tagsController.isLoading.value = true;
                               manager.beginPatrol(comment).then((value) {
                                 tagsController.isLoading.value = false;
+                                tagsController.faceResult.value = "";
+                                tagsController.face.value = null;
                                 if (value != "success") {
                                   EasyLoading.showToast(value);
                                 } else {

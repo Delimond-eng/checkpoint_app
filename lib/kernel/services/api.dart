@@ -50,7 +50,6 @@ class Api {
           );
           request.files.add(multipartFile);
         }
-
         var streamedResponse = await request.send();
         response = await http.Response.fromStream(streamedResponse);
       } else {
@@ -77,7 +76,6 @@ class Api {
             throw Exception("Méthode HTTP non prise en charge : $method");
         }
       }
-
       // --- Réponse OK
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return jsonDecode(response.body);
@@ -85,17 +83,13 @@ class Api {
         if (kDebugMode) {
           print("Erreur HTTP ${response.statusCode}: ${response.body}");
         }
-        return {
-          "errors": ["Erreur HTTP ${response.statusCode}", response.body]
-        };
+        return null;
       }
     } catch (e) {
       if (kDebugMode) {
         print('Exception lors de la requête : $e');
       }
-      return {
-        "errors": ["Exception", e.toString()]
-      };
+      return null;
     }
   }
 }

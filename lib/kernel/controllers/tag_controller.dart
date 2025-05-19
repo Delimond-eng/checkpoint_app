@@ -10,6 +10,7 @@ class TagsController extends GetxController {
   static TagsController instance = Get.find();
 
   var scannedArea = Area().obs;
+  var isQrcodeScanned = false.obs;
   var patrolId = 0.obs;
   var isLoading = false.obs;
   var isScanningModalOpen = false.obs;
@@ -33,8 +34,9 @@ class TagsController extends GetxController {
   Future<void> recognize(
       FaceRecognitionController controller, ImageSource source) async {
     isRecognitionLoading.value = true;
+    await Future.delayed(const Duration(microseconds: 500));
     final output = await controller.recognizeFaceFromImage(source);
-    isRecognitionLoading.value = false;
     faceResult.value = output;
+    isRecognitionLoading.value = false;
   }
 }
