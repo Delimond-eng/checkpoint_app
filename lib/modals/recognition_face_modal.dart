@@ -7,9 +7,7 @@ import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:dotted_border/dotted_border.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
-import '../kernel/services/http_manager.dart';
 import 'utils.dart';
 
 Future<void> showRecognitionModal(context) async {
@@ -106,12 +104,9 @@ Future<void> showRecognitionModal(context) async {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'Staatliches',
-                            color:
-                                tagsController.faceResult.value != "Inconnu" ||
-                                        !tagsController.faceResult.value
-                                            .contains("Impossible")
-                                    ? Colors.green
-                                    : primaryMaterialColor,
+                            color: tagsController.faceResult.value != "Inconnu"
+                                ? Colors.green
+                                : primaryMaterialColor.shade500,
                             fontWeight: FontWeight.w700,
                             fontSize: 18.0,
                           ),
@@ -125,23 +120,12 @@ Future<void> showRecognitionModal(context) async {
                             bgColor: Colors.green,
                             labelColor: Colors.white,
                             onPress: () async {
-                              var manager = HttpManager();
-                              tagsController.isLoading.value = true;
-                              manager.checkPresence().then((value) {
-                                tagsController.isLoading.value = false;
-                                if (value != "success") {
-                                  EasyLoading.showToast(value);
-                                } else {
-                                  tagsController.faceResult.value = "";
-                                  tagsController.face.value = null;
-                                  tagsController.isScanningModalOpen.value =
-                                      false;
-                                  Get.back();
-                                  EasyLoading.showSuccess(
-                                    "Présence signalée avec succès !",
-                                  );
-                                }
-                              });
+                              //tagsController.isLoading.value = true;
+                              tagsController.faceResult.value = "";
+                              tagsController.face.value = null;
+                              tagsController.isScanningModalOpen.value = false;
+                              Get.back();
+                              Get.back();
                             },
                           ).paddingTop(10.0)
                         ]

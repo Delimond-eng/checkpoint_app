@@ -3,11 +3,8 @@ import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-
-import '../themes/colors.dart';
 
 void showCustomModal(context, {required Widget child, double? width}) {
   var size = MediaQuery.of(context).size;
@@ -35,7 +32,7 @@ void showCustomModal(context, {required Widget child, double? width}) {
                   margin: const EdgeInsets.all(10.0),
                   width: width ?? size.width,
                   decoration: BoxDecoration(
-                    color: lightColor,
+                    color: lightGreyColor,
                     borderRadius: BorderRadius.zero,
                     boxShadow: [
                       BoxShadow(
@@ -96,51 +93,6 @@ class DGCustomDialog {
   /*Dismiss Loading modal */
   static dismissLoding() {
     Get.back();
-  }
-
-  /* Open loading modal */
-  static showLoading(BuildContext context) {
-    showDialog(
-      barrierDismissible: false,
-      barrierColor: Colors.black12,
-      context: context,
-      useRootNavigator: true,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Dialog(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(10.0),
-                    alignment: Alignment.center,
-                    child: Container(
-                      height: 60.0,
-                      width: 60.0,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12.0),
-                        color: Colors.white.withOpacity(.5),
-                      ),
-                      child: const Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SpinKitFadingCircle(
-                            color: secondaryColor,
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   /* Open dialog interaction with user */
@@ -217,7 +169,7 @@ class DGCustomDialog {
                       children: [
                         Flexible(
                           child: Btn(
-                            color: primaryMaterialColor.shade100,
+                            color: Colors.grey.shade200,
                             height: 40.0,
                             label: 'Non',
                             labelColor: darkColor,
@@ -234,7 +186,7 @@ class DGCustomDialog {
                           child: Btn(
                             height: 40.0,
                             label: 'Oui',
-                            color: primaryMaterialColor,
+                            color: secondaryColor,
                             labelColor: Colors.white,
                             onPressed: () {
                               Get.back();
@@ -275,7 +227,7 @@ class Btn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DottedBorder(
-      color: primaryMaterialColor.shade200,
+      color: secondaryColor.withOpacity(.3),
       radius: const Radius.circular(12.0),
       strokeWidth: 1,
       borderType: BorderType.RRect,
@@ -286,7 +238,7 @@ class Btn extends StatelessWidget {
           height: 50,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: color ?? primaryMaterialColor,
+            color: color ?? secondaryColor,
           ),
           child: Material(
             borderRadius: BorderRadius.circular(12.0),

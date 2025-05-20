@@ -1,28 +1,9 @@
 import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/services/recognition_service.dart';
-import 'package:checkpoint_app/modals/close_patrol_modal.dart';
-import 'package:checkpoint_app/modals/recognition_face_modal.dart';
-import 'package:checkpoint_app/pages/enroll_face_page.dart';
+import 'package:checkpoint_app/pages/home_page.dart';
+import 'package:checkpoint_app/pages/stories_page.dart';
 import 'package:checkpoint_app/pages/tasks_page.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/widgets/costum_button.dart';
-import 'package:checkpoint_app/widgets/user_status.dart';
-import 'package:dotted_border/dotted_border.dart';
+import 'package:checkpoint_app/widgets/svg.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
-
-import '../../modals/request_modal.dart';
-import '../../modals/signalement_modal.dart';
-import '../../pages/announce_page.dart';
-import '../../pages/patrol_planning.dart';
-import '../../pages/profil_page.dart';
-import '../../pages/qrcode_scanner_page.dart';
-import '../../pages/setting_page.dart';
-import '../../pages/supervisor_home.dart';
-import '../../widgets/home_menu_btn.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -32,220 +13,87 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  late FaceRecognitionController controller;
+  int _selectedPage = 0;
+
+  final List<Widget> _pages = [
+    const HomePage(),
+    const TaskPage(),
+    const StoriesPage()
+  ];
 
   @override
   void initState() {
     super.initState();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    controller = Provider.of<FaceRecognitionController>(context, listen: true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!controller.isModelInitializing && !controller.isModelLoaded) {
-        controller.initializeModel();
-      }
+  void onPageChanged(index) {
+    setState(() {
+      _selectedPage = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: darkColor,
-          title: Row(
-            children: [
-              Image.asset(
-                "assets/images/mamba-2.png",
-                height: 35.0,
-              ).paddingRight(8.0),
-              const Text(
-                "SALAMA",
-                style: TextStyle(
-                  fontSize: 30.0,
-                  fontWeight: FontWeight.w900,
-                  color: whiteColor,
-                  fontFamily: 'Staatliches',
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            const UserStatus(name: "Gaston delimond").marginAll(8.0),
-          ],
+      body: _pages.elementAt(_selectedPage),
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: onPageChanged,
+        currentIndex: _selectedPage,
+        selectedLabelStyle: const TextStyle(
+          fontFamily: "Staatliches",
+          fontWeight: FontWeight.w900,
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(10.0),
-          child: Obx(() {
-            return Column(
-              children: [
-                _btnPatrolPending().paddingBottom(20.0).paddingTop(10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    HomeMenuBtn(
-                      icon: "presence",
-                      title: "Présence",
-                      onPress: () {
-                        _showBottonPresenceChoice(context);
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "qrcode",
-                      title: "Patrouille",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const QRcodeScannerPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "planning",
-                      title: "Planning",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PatrolPlanning(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ).paddingBottom(15.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    HomeMenuBtn(
-                      icon: "tasks",
-                      title: "Tâches",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const TaskPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "request-2",
-                      title: "Requêtes",
-                      onPress: () {
-                        showRequestModal(context);
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "incident",
-                      title: "Signalements",
-                      onPress: () {
-                        showSignalementModal(context);
-                      },
-                    ),
-                  ],
-                ).paddingBottom(15.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    HomeMenuBtn(
-                      icon: "notify",
-                      title: "Communiqués",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AnnouncePage(),
-                          ),
-                        );
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "user-1",
-                      title: "Profil",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ProfilPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "settings",
-                      title: "Paramètres",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingPage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ).paddingBottom(15.0),
-                if (authController.userSession.value.role == 'supervisor') ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      HomeMenuBtn(
-                        icon: "face-2",
-                        title: "Enrôlement",
-                        onPress: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const EnrollFacePage(),
-                            ),
-                          );
-                        },
-                      ).paddingRight(15.0),
-                      HomeMenuBtn(
-                        icon: "qrcode",
-                        title: "Completer zone",
-                        onPress: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SupervisorHome(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  )
-                ]
-              ],
-            );
-          }),
+        selectedItemColor: primaryColor,
+        unselectedItemColor: Colors.grey,
+        unselectedLabelStyle: const TextStyle(
+          fontFamily: "Staatliches",
         ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: primaryMaterialColor.shade500,
-          tooltip: "Appuyez longtemps pour déclencher un alèrte !",
-          elevation: 10,
-          onPressed: () {
-            /* Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const QRcodeScannerPage(),
-              ),
-            ); */
-          },
-          child: Image.asset(
-            "assets/icons/sirene.png",
-            height: 35.0,
+        items: const [
+          BottomNavigationBarItem(
+            activeIcon: Svg(
+              path: "menu-2.svg",
+              size: 24.0,
+              color: primaryColor,
+            ),
+            icon: Svg(
+              path: "menu-2.svg",
+              size: 24.0,
+              color: Colors.grey,
+            ),
+            label: "Accueil",
           ),
-        ));
+          BottomNavigationBarItem(
+            activeIcon: Svg(
+              path: "planning-2.svg",
+              size: 24,
+              color: primaryColor,
+            ),
+            icon: Svg(
+              path: "planning-2.svg",
+              size: 24,
+              color: Colors.grey,
+            ),
+            label: "Mes tâches",
+          ),
+          BottomNavigationBarItem(
+            activeIcon: Svg(
+              path: "events.svg",
+              size: 24.0,
+              color: primaryColor,
+            ),
+            icon: Svg(
+              path: "events.svg",
+              size: 24.0,
+              color: Colors.grey,
+            ),
+            label: "Historique",
+          ),
+        ],
+      ),
+    );
   }
 
-  void _showBottonPatrolChoice(BuildContext context) {
+  /* void _showBottonPatrolChoice(BuildContext context) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -318,9 +166,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     title: "Signer mon arrivée",
                     onPress: () async {
                       Navigator.pop(context);
-                      tagsController.recognitionKey.value = "check-in";
-                      showRecognitionModal(context);
-                      tagsController.recognize(controller, ImageSource.camera);
                     },
                   ),
                 ),
@@ -332,9 +177,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     labelColor: Colors.white,
                     onPress: () {
                       Navigator.pop(context);
-                      tagsController.recognitionKey.value = "check-out";
-                      showRecognitionModal(context);
-                      tagsController.recognize(controller, ImageSource.camera);
                     },
                   ),
                 ),
@@ -344,130 +186,5 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         );
       },
     );
-  }
-
-  Widget _btnPatrolPending() {
-    return DottedBorder(
-      color: primaryMaterialColor.shade100,
-      radius: const Radius.circular(12.0),
-      strokeWidth: 1,
-      borderType: BorderType.RRect,
-      dashPattern: const [6, 3], // Optionnel, personnalise les pointillés
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-          onTap: () {
-            if (authController.userSession.value.role == 'guard') {
-              if (tagsController.patrolId.value != 0) {
-                _showBottonPatrolChoice(context);
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const QRcodeScannerPage(),
-                  ),
-                );
-              }
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SupervisorHome(),
-                ),
-              );
-            }
-          },
-          child: ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-            child: Container(
-              // Utilise padding plutôt que margin
-              color: Colors.white,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    "assets/images/patrol_illustration.png",
-                    height: 80.0,
-                  ).paddingRight(8.0),
-                  if (authController.userSession.value.role == 'guard') ...[
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (tagsController.patrolId.value != 0) ...[
-                            const Text(
-                              "Patrouille en cours disponible",
-                              style: TextStyle(
-                                fontFamily: 'Staatliches',
-                                color: primaryMaterialColor,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15.0,
-                              ),
-                            ),
-                            const SizedBox(height: 4.0),
-                            const Text(
-                              "Veuillez cliquer ici pour clôturer ou poursuivre la patrouille en cours.",
-                              style: TextStyle(
-                                fontFamily: "Poppins",
-                                fontSize: 10.0,
-                              ),
-                            ),
-                          ] else ...[
-                            Text(
-                              "Bienvenue agent ${authController.userSession.value.fullname}",
-                              style: const TextStyle(
-                                fontFamily: 'Staatliches',
-                                color: primaryMaterialColor,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15.0,
-                              ),
-                            ),
-                            const SizedBox(height: 4.0),
-                            const Text(
-                              "Veuillez cliquer pour commencer une nouvelle patrouille.",
-                              style: TextStyle(
-                                fontFamily: "Poppins",
-                                fontSize: 10.0,
-                              ),
-                            ),
-                          ]
-                        ],
-                      ),
-                    )
-                  ] else ...[
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Bienvenue Superviseur ${authController.userSession.value.fullname} !",
-                            style: const TextStyle(
-                              fontFamily: 'Staatliches',
-                              color: primaryMaterialColor,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15.0,
-                            ),
-                          ),
-                          const SizedBox(height: 4.0),
-                          const Text(
-                            "Vous pouvez completer les zones de patrouille et aussi enrôler les visages des agents.",
-                            style: TextStyle(
-                              fontFamily: "Poppins",
-                              fontSize: 10.0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  ]
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  } */
 }

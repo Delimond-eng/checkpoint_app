@@ -23,7 +23,7 @@ class CostumButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DottedBorder(
-      color: borderColor ?? primaryMaterialColor.shade200,
+      color: borderColor ?? primaryColor,
       radius: const Radius.circular(12.0),
       strokeWidth: 1,
       borderType: BorderType.RRect,
@@ -31,7 +31,7 @@ class CostumButton extends StatelessWidget {
       child: ClipRRect(
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: Material(
-          color: primaryMaterialColor.shade50.withOpacity(.2),
+          color: Colors.transparent,
           child: InkWell(
             onTap: isLoading ? null : onPress,
             borderRadius: BorderRadius.circular(12.0),

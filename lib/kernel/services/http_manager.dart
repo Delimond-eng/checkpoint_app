@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/global/store.dart';
+import 'package:checkpoint_app/kernel/models/Agent.dart';
 import 'package:checkpoint_app/kernel/models/announce.dart';
 import 'package:checkpoint_app/kernel/models/planning.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
@@ -246,6 +247,28 @@ class HttpManager {
       }
       return "Échec de traitement de la requête";
     }
+  }
+
+  //Load agent data
+  static Future<List<Agent>> getAllAgents() async {
+    List<Agent> agents = [];
+    try {
+      var response = await Api.request(
+        method: "get",
+        url: "agents.all",
+      );
+      if (response != null) {
+        var jsonArr = response["agents"];
+        jsonArr.forEach((e) {
+          agents.add(Agent.fromJson(e));
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Request Error ${e.toString()}");
+      }
+    }
+    return agents;
   }
 
   //load announces

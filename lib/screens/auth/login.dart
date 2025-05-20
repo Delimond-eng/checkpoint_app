@@ -1,8 +1,8 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
-import 'package:checkpoint_app/widgets/submit_button.dart';
+import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:get/get.dart';
 import '/screens/public/welcome_screen.dart';
 import 'package:checkpoint_app/widgets/costum_field.dart';
 import 'package:flutter/material.dart';
@@ -29,44 +29,31 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
-    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
-      body: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          Container(
-            height: screenSize.height,
-            width: screenSize.width,
-            decoration: const BoxDecoration(
-              color: Color(0xFF020005),
-            ),
-          ),
-          SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              0,
-              (screenSize.height * .50),
-              0,
-              4,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      "assets/images/mamba-2.png",
-                      height: 100.0,
-                      fit: BoxFit.scaleDown,
+      backgroundColor: headerColor,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ZoomIn(
+                    child: Image.asset(
+                      "assets/images/logo.png",
+                      height: MediaQuery.of(context).size.width * .4,
                     ),
-                    const SizedBox(
-                      height: 10.0,
-                    ),
-                    const Text(
-                      "SALAMA",
+                  ),
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                  FadeInUp(
+                    child: const Text(
+                      "RD TASKS",
                       style: TextStyle(
                         fontSize: 30.0,
                         fontWeight: FontWeight.w900,
@@ -75,21 +62,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         letterSpacing: 1.2,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 30.0,
-                ),
-                Container(
-                  height: screenSize.height,
-                  decoration: const BoxDecoration(
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 30.0,
+              ),
+              ZoomIn(
+                child: Container(
+                  decoration: BoxDecoration(
                     color: scaffoldColor,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(30.0),
-                    ),
+                    borderRadius: BorderRadius.circular(15.0),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
+                    padding: const EdgeInsets.all(15.0),
                     child: Column(
                       children: [
                         CustomField(
@@ -106,33 +92,35 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(
                           width: screenSize.width,
                           height: 55.0,
-                          child: SubmitButton(
-                            loading: isLoading,
-                            label: "Connecter",
-                            onPressed: _login,
+                          child: CostumButton(
+                            title: "Connecter",
+                            bgColor: secondaryColor,
+                            isLoading: isLoading,
+                            labelColor: whiteColor,
+                            onPress: () {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const WelcomeScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            },
                           ),
-                        ).marginOnly(bottom: 40)
+                        )
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          if (!isKeyboardVisible)
-            Positioned(
-              bottom: 10.0,
-              child: Text(
-                "Salama plateforme version 1.0.0",
-                style: Theme.of(context).textTheme.bodySmall,
               ),
-            )
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Future<void> _login() async {
+  Future<void> login() async {
     if (txtUserName.text.isEmpty && txtUserPass.text.isEmpty) {
       EasyLoading.showToast("Nom d'utilisateur et mot de passe requis !");
       return;

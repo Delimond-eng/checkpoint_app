@@ -4,7 +4,6 @@ import 'package:checkpoint_app/global/modal.dart';
 import 'package:checkpoint_app/global/store.dart';
 import 'package:checkpoint_app/screens/auth/login.dart';
 import 'package:flutter/material.dart';
-import 'package:get/state_manager.dart';
 
 class UserStatus extends StatelessWidget {
   final String name;
@@ -19,62 +18,61 @@ class UserStatus extends StatelessWidget {
       elevation: 1,
       borderRadius: BorderRadius.circular(12.0),
       color: Colors.white,
-      child: Obx(
-        () => Container(
-          height: 40.0,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5.0),
-            child: Row(
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      height: 35.0,
-                      width: 35.0,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(35.0),
-                      ),
-                      child: Center(
-                        child: Text(
-                          authController.userSession.value.fullname!
+      child: Container(
+        height: 40.0,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+          child: Row(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    height: 35.0,
+                    width: 35.0,
+                    decoration: BoxDecoration(
+                      color: secondaryColor,
+                      borderRadius: BorderRadius.circular(35.0),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        /* authController.userSession.value.fullname!
                               .substring(0, 1)
-                              .toUpperCase(),
-                          style: const TextStyle(
-                            fontFamily: "Poppins",
-                            color: Colors.white,
-                            fontSize: 14.0,
-                            fontWeight: FontWeight.w800,
-                          ),
+                              .toUpperCase(), */
+                        "G",
+                        style: const TextStyle(
+                          fontFamily: "Poppins",
+                          color: Colors.white,
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
-                    Positioned(
-                      bottom: -5,
-                      right: -5,
-                      child: Container(
-                        height: 8,
-                        width: 8,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            width: 1.5,
-                            color: Colors.white,
-                          ),
+                  ),
+                  Positioned(
+                    bottom: -3,
+                    right: -3,
+                    child: Container(
+                      height: 8,
+                      width: 8,
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          width: 1.5,
+                          color: Colors.white,
                         ),
-                        margin: const EdgeInsets.all(5),
                       ),
-                    )
-                  ],
-                ),
-              ],
-            ),
+                      margin: const EdgeInsets.all(5),
+                    ),
+                  )
+                ],
+              ),
+            ],
           ),
         ),
       ),

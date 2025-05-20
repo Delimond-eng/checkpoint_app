@@ -1,12 +1,18 @@
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/models/announce.dart';
-import 'package:checkpoint_app/kernel/services/http_manager.dart';
+import 'package:animate_do/animate_do.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/svg.dart';
+import 'package:checkpoint_app/widgets/user_status.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 import '../constants/styles.dart';
+import '../global/controllers.dart';
+import '../kernel/services/recognition_service.dart';
+import '../modals/activities_modal.dart';
+import '../modals/recognition_face_modal.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,161 +22,231 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late FaceRecognitionController _controller;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _controller =
+        Provider.of<FaceRecognitionController>(context, listen: false);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_controller.isModelInitializing && !_controller.isModelLoaded) {
+        _controller.initializeModel();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: headerColor,
         title: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Image.asset(
               "assets/images/logo.png",
-              height: 25.0,
-            ).paddingRight(5),
-            Text("Communiqués".toUpperCase()),
+              height: 40.0,
+            ).paddingRight(5.0),
+            const Text(
+              "Accueil",
+              style: TextStyle(
+                fontSize: 30.0,
+                fontWeight: FontWeight.w900,
+                color: whiteColor,
+                fontFamily: 'Staatliches',
+                letterSpacing: 1.2,
+              ),
+            ),
           ],
         ),
         actions: [
-          Obx(
-            () => CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.blue,
-              child: Text(
-                authController.userSession.value.fullname!.substring(0, 1),
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ).marginAll(8.0),
-          )
+          const UserStatus(name: "Gaston delimond").marginAll(8.0),
         ],
       ),
-      body: _bodyContent(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          children: [
+            _welcome(),
+            for (int i = 0; i < 5; i++) ...[
+              FadeInUp(
+                child: DottedBorder(
+                  color: greyColor5,
+                  radius: const Radius.circular(12.0),
+                  strokeWidth: 1,
+                  borderType: BorderType.RRect,
+                  dashPattern: const [6, 3],
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    child: Container(
+                      color: whiteColor,
+                      child: Material(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(12)),
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            tagsController.isRecognitionLoading.value = true;
+                            tagsController.face.value = null;
+                            tagsController.faceResult.value = "";
+                            showRecognitionModal(context);
+                            tagsController.recognize(
+                                _controller, ImageSource.camera);
+                          },
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(12)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                const Svg(
+                                  path: "timer-start.svg",
+                                  color: primaryColor,
+                                ).paddingRight(5.0),
+                                const Expanded(
+                                  child: Text(
+                                    "The path provided below has to start and end with a slash",
+                                    style: TextStyle(
+                                      fontSize: 12.0,
+                                      fontWeight: FontWeight.w500,
+                                      color: darkColor,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ).marginOnly(bottom: 5.0),
+              )
+            ],
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _bodyContent() {
-    return FutureBuilder<List<Announce>>(
-      future: HttpManager.getAllAnnounces(),
-      builder: (context, snapshot) {
-        if (snapshot.data != null) {
-          if (snapshot.data!.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Svg(
-                    path: "announce_line.svg",
-                    size: 70.0,
-                    color: primaryColor,
-                  ).paddingBottom(8.0),
-                  const Text("Pas de communiqué pour l'instant !")
-                ],
-              ),
-            );
-          } else {
-            return ListView.separated(
-              itemCount: snapshot.data!.length,
-              padding: const EdgeInsets.all(10.0),
-              itemBuilder: (context, index) {
-                var item = snapshot.data![index];
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  margin: EdgeInsets.zero,
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.title!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall!
-                              .copyWith(
-                                color: primaryColor,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18.0,
-                              ),
-                        ).paddingBottom(8.0),
-                        Text(
-                          item.content!,
-                          style: Theme.of(context).textTheme.bodyMedium,
+  Widget _welcome() {
+    return FadeInUp(
+      child: DottedBorder(
+        color: primaryColor.withOpacity(.5),
+        radius: const Radius.circular(12.0),
+        strokeWidth: 1,
+        borderType: BorderType.RRect,
+        dashPattern: const [6, 3], // Optionnel, personnalise les pointillés
+        child: ClipRRect(
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          child: Container(
+            // Utilise padding plutôt que margin
+            color: Colors.white,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset(
+                  "assets/images/task-illustration-1.png",
+                  height: 80.0,
+                ).paddingRight(8.0),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Bienvenue Gaston delimond",
+                        style: TextStyle(
+                          fontFamily: 'Staatliches',
+                          color: secondaryColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15.0,
                         ),
-                        Container(
-                          height: 1,
-                          width: MediaQuery.of(context).size.width,
-                          color: greyColor.withOpacity(.3),
-                        ).paddingVertical(8.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(5.0),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      "new",
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge!
-                                          .copyWith(color: whiteColor),
-                                    )
-                                  ],
-                                ),
-                              ),
+                      ),
+                      SizedBox(height: 4.0),
+                      Text(
+                        "Veuillez sélectionner une activité que vous voulez lancer.",
+                        style: TextStyle(
+                          fontFamily: "Poppins",
+                          fontSize: 10.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ).paddingBottom(20.0),
+    );
+  }
+
+  Widget closeActivityMessage() {
+    return Expanded(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              "Commencez une nouvelle activité !",
+              style: TextStyle(
+                fontFamily: 'Staatliches',
+                color: secondaryColor,
+                fontWeight: FontWeight.w800,
+                fontSize: 22.0,
+              ),
+            ).paddingBottom(15.0),
+            DottedBorder(
+              color: secondaryColor.withOpacity(.5),
+              radius: const Radius.circular(15.0),
+              strokeWidth: 1,
+              borderType: BorderType.RRect,
+              dashPattern: const [6, 3],
+              child: ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                child: Container(
+                  height: 150.0,
+                  width: 150.0,
+                  color: whiteColor,
+                  child: Material(
+                    borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(15.0)),
+                      onTap: () {
+                        showActivitiesModal(context, _controller);
+                      },
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Svg(
+                            path: "timer-start.svg",
+                            color: primaryColor,
+                            size: 40.0,
+                          ).paddingBottom(10.0),
+                          const Text(
+                            "Lancer une activité",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 10.0,
+                              fontWeight: FontWeight.w500,
+                              color: secondaryColor,
                             ),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: primaryMaterialColor.shade50,
-                                borderRadius: BorderRadius.circular(5.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(5.0),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_month_outlined,
-                                      size: 15.0,
-                                    ).paddingRight(5.0),
-                                    Text(
-                                      item.createdAt!,
-                                      style:
-                                          Theme.of(context).textTheme.bodyLarge,
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      ],
+                          )
+                        ],
+                      ),
                     ),
                   ),
-                );
-              },
-              separatorBuilder: (_, __) => const SizedBox(
-                height: 8.0,
+                ),
               ),
-            );
-          }
-        } else {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [CircularProgressIndicator()],
-            ),
-          );
-        }
-      },
+            )
+          ],
+        ),
+      ),
     );
   }
 }

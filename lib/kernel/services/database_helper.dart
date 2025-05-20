@@ -17,8 +17,7 @@ class DatabaseHelper {
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE faces (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            matricule TEXT,
+            matricule TEXT PRIMARY KEY,
             embedding TEXT,
             image_path TEXT
           )
