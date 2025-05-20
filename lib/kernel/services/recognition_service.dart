@@ -45,17 +45,6 @@ List<List<List<List<double>>>> processImage(Map<String, dynamic> args) {
   ];
 }
 
-/// Traitement isolé pour obtenir l'embedding à partir d’un chemin d’image
-Future<List<double>?> isolateEmbedding(String path) async {
-  return await compute(_embeddingWorker, path);
-}
-
-Future<List<double>?> _embeddingWorker(String path) async {
-  final file = XFile(path);
-  final controller = FaceRecognitionController();
-  return await controller.getEmbedding(file);
-}
-
 class FaceRecognitionController extends ChangeNotifier {
   Interpreter? _interpreter;
   bool isModelLoaded = false;
@@ -137,25 +126,24 @@ class FaceRecognitionController extends ChangeNotifier {
     final tempDir = await getTemporaryDirectory();
 
     for (final item in agents) {
-      final url = item.imagePath;
+      String? url = item.imagePath;
+
       final matricule = item.matricule;
 
-      if (url == null || matricule == null) continue;
-
+      url = url!.replaceAll("127.0.0.1", "192.168.4.4");
       try {
         final imageResponse = await http.get(Uri.parse(url));
         if (imageResponse.statusCode != 200) continue;
 
         final path = "${tempDir.path}/$matricule.jpg";
         final file = File(path)..writeAsBytesSync(imageResponse.bodyBytes);
-
-        final embedding = await isolateEmbedding(file.path);
+        final xfile = XFile(file.path);
+        final embedding = await getEmbedding(xfile);
         if (embedding == null) {
           if (kDebugMode) print("Visage non détecté pour $matricule");
           continue;
         }
-
-        _knownFaces[matricule] = embedding;
+        _knownFaces[matricule!] = embedding;
         await DatabaseHelper().insertFace(
           FacePicture(matricule: matricule, embedding: embedding),
         );

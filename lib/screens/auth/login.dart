@@ -1,8 +1,10 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
+import 'package:checkpoint_app/kernel/services/recognition_service.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:provider/provider.dart';
 import '/screens/public/welcome_screen.dart';
 import 'package:checkpoint_app/widgets/costum_field.dart';
 import 'package:flutter/material.dart';
@@ -21,9 +23,35 @@ class _LoginScreenState extends State<LoginScreen> {
   final txtUserName = TextEditingController();
   final txtUserPass = TextEditingController();
 
+  late FaceRecognitionController _controller;
+
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _controller =
+        Provider.of<FaceRecognitionController>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_controller.isModelInitializing && !_controller.isModelLoaded) {
+        _controller.initializeModel();
+        setState(() => isLoading = true);
+        _controller
+            .addKnownFacesFromRemoteAPI()
+            .then((res) => setState(() => isLoading = false));
+      }
+    });
+  }
+
+  Future<void> loadAgent() async {
+    setState(() => isLoading = true);
+
+    HttpManager.getAllAgents().then((agents) {
+      setState(() => isLoading = false);
+    });
   }
 
   @override

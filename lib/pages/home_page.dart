@@ -150,11 +150,11 @@ class _HomePageState extends State<HomePage> {
                   "assets/images/task-illustration-1.png",
                   height: 80.0,
                 ).paddingRight(8.0),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "Bienvenue Gaston delimond",
                         style: TextStyle(
                           fontFamily: 'Staatliches',
@@ -163,12 +163,13 @@ class _HomePageState extends State<HomePage> {
                           fontSize: 15.0,
                         ),
                       ),
-                      SizedBox(height: 4.0),
+                      const SizedBox(height: 4.0),
                       Text(
                         "Veuillez sélectionner une activité que vous voulez lancer.",
                         style: TextStyle(
                           fontFamily: "Poppins",
                           fontSize: 10.0,
+                          color: primaryMaterialColor.shade400,
                         ),
                       ),
                     ],

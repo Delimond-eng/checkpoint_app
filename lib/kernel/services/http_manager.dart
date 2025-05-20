@@ -258,6 +258,7 @@ class HttpManager {
         url: "agents.all",
       );
       if (response != null) {
+        print(response);
         var jsonArr = response["agents"];
         jsonArr.forEach((e) {
           agents.add(Agent.fromJson(e));

@@ -64,12 +64,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
           BottomNavigationBarItem(
             activeIcon: Svg(
-              path: "planning-2.svg",
+              path: "tasks-2.svg",
               size: 24,
               color: primaryColor,
             ),
             icon: Svg(
-              path: "planning-2.svg",
+              path: "tasks-2.svg",
               size: 24,
               color: Colors.grey,
             ),
@@ -77,12 +77,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
           BottomNavigationBarItem(
             activeIcon: Svg(
-              path: "events.svg",
+              path: "hisory.svg",
               size: 24.0,
               color: primaryColor,
             ),
             icon: Svg(
-              path: "events.svg",
+              path: "history.svg",
               size: 24.0,
               color: Colors.grey,
             ),

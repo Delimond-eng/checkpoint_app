@@ -117,7 +117,7 @@ class _TaskPageState extends State<TaskPage> {
                         "Bienvenue Gaston delimond",
                         style: TextStyle(
                           fontFamily: 'Staatliches',
-                          color: primaryMaterialColor,
+                          color: secondaryColor,
                           fontWeight: FontWeight.w700,
                           fontSize: 15.0,
                         ),

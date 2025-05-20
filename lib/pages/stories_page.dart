@@ -48,6 +48,10 @@ class _StoriesPageState extends State<StoriesPage> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
+            Image.asset(
+              "assets/images/task-illustration-1.png",
+              height: 80.0,
+            ).marginAll(10.0),
             const Text(
               "L'historique de vos activités lancés.",
               style: TextStyle(
