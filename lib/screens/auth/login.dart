@@ -1,10 +1,10 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:checkpoint_app/constants/styles.dart';
+import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
-import 'package:checkpoint_app/kernel/services/recognition_service.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:provider/provider.dart';
+import 'package:get/state_manager.dart';
 import '/screens/public/welcome_screen.dart';
 import 'package:checkpoint_app/widgets/costum_field.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final txtUserName = TextEditingController();
   final txtUserPass = TextEditingController();
 
-  late FaceRecognitionController _controller;
+  //late FaceRecognitionController _controller;
 
   @override
   void initState() {
@@ -33,17 +33,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _controller =
-        Provider.of<FaceRecognitionController>(context, listen: false);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    /* _controller =
+        Provider.of<FaceRecognitionController>(context, listen: false); */
+    /* WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_controller.isModelInitializing && !_controller.isModelLoaded) {
         _controller.initializeModel();
-        setState(() => isLoading = true);
-        _controller
-            .addKnownFacesFromRemoteAPI()
-            .then((res) => setState(() => isLoading = false));
+        _controller.addKnownFacesFromRemoteAPI();
       }
-    });
+    }); */
   }
 
   Future<void> loadAgent() async {
@@ -117,23 +114,25 @@ class _LoginScreenState extends State<LoginScreen> {
                           isPassword: true,
                           controller: txtUserPass,
                         ),
-                        SizedBox(
-                          width: screenSize.width,
-                          height: 55.0,
-                          child: CostumButton(
-                            title: "Connecter",
-                            bgColor: secondaryColor,
-                            isLoading: isLoading,
-                            labelColor: whiteColor,
-                            onPress: () {
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const WelcomeScreen(),
-                                ),
-                                (route) => false,
-                              );
-                            },
+                        Obx(
+                          () => SizedBox(
+                            width: screenSize.width,
+                            height: 55.0,
+                            child: CostumButton(
+                              title: "Connecter",
+                              bgColor: secondaryColor,
+                              isLoading: tagsController.isLoading.value,
+                              labelColor: whiteColor,
+                              onPress: () {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const WelcomeScreen(),
+                                  ),
+                                  (route) => false,
+                                );
+                              },
+                            ),
                           ),
                         )
                       ],

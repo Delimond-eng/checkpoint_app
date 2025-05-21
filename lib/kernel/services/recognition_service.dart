@@ -51,6 +51,7 @@ class FaceRecognitionController extends ChangeNotifier {
   bool isModelInitializing = false;
   String? modelLoadingError;
 
+  List<FacePicture> faces = [];
   final Map<String, List<double>> _knownFaces = {};
 
   /// Initialisation du modèle
@@ -66,6 +67,7 @@ class FaceRecognitionController extends ChangeNotifier {
       await DatabaseHelper().init();
 
       final storedFaces = await DatabaseHelper().getAllFaces();
+      faces = storedFaces;
       for (final face in storedFaces) {
         _knownFaces[face.matricule] = face.embedding;
       }
@@ -122,6 +124,7 @@ class FaceRecognitionController extends ChangeNotifier {
 
   /// Ajoute des visages à partir d'une API distante
   Future<void> addKnownFacesFromRemoteAPI() async {
+    tagsController.isLoading.value = true;
     final agents = await HttpManager.getAllAgents();
     final tempDir = await getTemporaryDirectory();
 
@@ -149,10 +152,10 @@ class FaceRecognitionController extends ChangeNotifier {
         );
       } catch (e) {
         if (kDebugMode) print("Erreur de traitement pour $matricule: $e");
+      } finally {
+        tagsController.isLoading.value = false;
       }
     }
-
-    notifyListeners();
   }
 
   /// Normalisation d’un vecteur
@@ -205,6 +208,8 @@ class FaceRecognitionController extends ChangeNotifier {
 
     String? closestName;
     double minDistance = double.infinity;
+
+    print("#############Faces : ${_knownFaces.length}");
 
     for (final entry in _knownFaces.entries) {
       final distance = euclideanDistance(entry.value, embedding);

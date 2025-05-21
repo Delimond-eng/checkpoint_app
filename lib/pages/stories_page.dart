@@ -17,6 +17,12 @@ class StoriesPage extends StatefulWidget {
 }
 
 class _StoriesPageState extends State<StoriesPage> {
+  List<String> activites = [
+    "Installation des caméras et câblage (coaxial, RJ45, fibre optique)",
+    "Configuration du DVR/NVR",
+    "Maintenance préventive (nettoyage des caméras, test des connexions)",
+    "Maintenance corrective (remplacement des câbles ou caméras défectueuses)",
+  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,7 +67,7 @@ class _StoriesPageState extends State<StoriesPage> {
                 fontSize: 13.0,
               ),
             ).paddingBottom(10.0),
-            for (int i = 0; i < 5; i++) ...[
+            for (int i = 0; i < activites.length; i++) ...[
               FadeInUp(
                 child: DottedBorder(
                   color: greyColor5,
@@ -91,10 +97,10 @@ class _StoriesPageState extends State<StoriesPage> {
                                   path: "timer-start.svg",
                                   color: primaryColor,
                                 ).paddingRight(5.0),
-                                const Expanded(
+                                Expanded(
                                   child: Text(
-                                    "The path provided below has to start and end with a slash",
-                                    style: TextStyle(
+                                    activites[i],
+                                    style: const TextStyle(
                                       fontSize: 13.0,
                                       fontWeight: FontWeight.w600,
                                       color: darkColor,

@@ -24,6 +24,16 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late FaceRecognitionController _controller;
 
+  List<String> activites = [
+    "Étude du site et évaluation des besoins en vidéosurveillance",
+    "Installation des caméras et câblage (coaxial, RJ45, fibre optique)",
+    "Fixation des supports et orientation des caméras",
+    "Configuration du DVR/NVR",
+    "Maintenance préventive (nettoyage des caméras, test des connexions)",
+    "Maintenance corrective (remplacement des câbles ou caméras défectueuses)",
+    "Mise à jour logicielle du système (DVR/NVR ou application)",
+  ];
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -33,6 +43,9 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_controller.isModelInitializing && !_controller.isModelLoaded) {
         _controller.initializeModel();
+        /* if (_controller.faces.isEmpty) {
+          _controller.addKnownFacesFromRemoteAPI();
+        } */
       }
     });
   }
@@ -69,7 +82,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             _welcome(),
-            for (int i = 0; i < 5; i++) ...[
+            for (int i = 0; i < activites.length; i++) ...[
               FadeInUp(
                 child: DottedBorder(
                   color: greyColor5,
@@ -104,10 +117,10 @@ class _HomePageState extends State<HomePage> {
                                   path: "timer-start.svg",
                                   color: primaryColor,
                                 ).paddingRight(5.0),
-                                const Expanded(
+                                Expanded(
                                   child: Text(
-                                    "The path provided below has to start and end with a slash",
-                                    style: TextStyle(
+                                    activites[i],
+                                    style: const TextStyle(
                                       fontSize: 12.0,
                                       fontWeight: FontWeight.w500,
                                       color: darkColor,

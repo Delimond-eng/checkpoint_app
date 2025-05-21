@@ -45,6 +45,7 @@ Future<void> showActivitiesModal(
                         tagsController.isRecognitionLoading.value = true;
                         tagsController.face.value = null;
                         tagsController.faceResult.value = "";
+
                         showRecognitionModal(context);
                         tagsController.recognize(
                             controller, ImageSource.camera);

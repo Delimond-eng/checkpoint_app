@@ -8,6 +8,12 @@ import '../widgets/svg.dart';
 import 'utils.dart';
 
 Future<void> showUserActivitiesDoneModal(context) async {
+  List<String> taches = [
+    "Effectuer le câblage vidéo et alimentation (coaxial, RJ45, etc.)",
+    "Installer et configurer le DVR/NVR",
+    "Configurer les notifications d'alerte (email, application mobile)",
+    "Faire des tests de vision nocturne (caméras IR)",
+  ];
   showCustomModal(
     context,
     onClosed: () {},
@@ -16,7 +22,7 @@ Future<void> showUserActivitiesDoneModal(context) async {
       padding: const EdgeInsets.all(10.0),
       child: Column(
         children: [
-          for (int i = 0; i < 5; i++) ...[
+          for (int i = 0; i < taches.length; i++) ...[
             DottedBorder(
               color: greyColor40,
               radius: const Radius.circular(12.0),
@@ -35,10 +41,10 @@ Future<void> showUserActivitiesDoneModal(context) async {
                           path: "check-double.svg",
                           color: primaryColor,
                         ).paddingRight(5.0),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            "The path provided below has to start and end with a slash",
-                            style: TextStyle(
+                            taches[i],
+                            style: const TextStyle(
                               fontSize: 12.0,
                               fontWeight: FontWeight.w500,
                               color: darkColor,
