@@ -32,8 +32,6 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  late FaceRecognitionController controller;
-
   @override
   void initState() {
     super.initState();
@@ -42,12 +40,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    controller = Provider.of<FaceRecognitionController>(context, listen: true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!controller.isModelInitializing && !controller.isModelLoaded) {
-        controller.initializeModel();
-      }
-    });
   }
 
   @override
@@ -317,10 +309,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     bgColor: primaryMaterialColor.shade100,
                     title: "Signer mon arrivée",
                     onPress: () async {
-                      Navigator.pop(context);
+                      final controller = Provider.of<FaceRecognitionController>(
+                          context,
+                          listen: false);
                       tagsController.recognitionKey.value = "check-in";
-                      showRecognitionModal(context);
-                      tagsController.recognize(controller, ImageSource.camera);
+                      Navigator.pop(context);
+
+                      // Appel différé après que la bottom sheet ait été fermée proprement
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        tagsController.recognize(
+                            controller, ImageSource.camera);
+                        showRecognitionModal(context);
+                      });
                     },
                   ),
                 ),
@@ -331,10 +331,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     bgColor: primaryMaterialColor,
                     labelColor: Colors.white,
                     onPress: () {
-                      Navigator.pop(context);
+                      final controller = Provider.of<FaceRecognitionController>(
+                          context,
+                          listen: false);
                       tagsController.recognitionKey.value = "check-out";
-                      showRecognitionModal(context);
-                      tagsController.recognize(controller, ImageSource.camera);
+                      Navigator.pop(context);
+
+                      // Appel différé après que la bottom sheet ait été fermée proprement
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        tagsController.recognize(
+                            controller, ImageSource.camera);
+                        showRecognitionModal(context);
+                      });
                     },
                   ),
                 ),

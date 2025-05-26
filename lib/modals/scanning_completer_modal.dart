@@ -236,6 +236,12 @@ Future<void> showPatrolRecognitionModal(context, String comment) async {
                             bgColor: Colors.green,
                             labelColor: Colors.white,
                             onPress: () async {
+                              if (tagsController.faceResult.value !=
+                                  authController.userSession.value.matricule) {
+                                EasyLoading.showInfo(
+                                    "Le visage scanné ne correspond pas au compte de l'agent connecté !");
+                                return;
+                              }
                               var manager = HttpManager();
                               tagsController.isLoading.value = true;
                               manager.beginPatrol(comment).then((value) {

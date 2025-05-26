@@ -34,7 +34,7 @@ class TagsController extends GetxController {
   Future<void> recognize(
       FaceRecognitionController controller, ImageSource source) async {
     isRecognitionLoading.value = true;
-    await Future.delayed(const Duration(microseconds: 500));
+    await Future.delayed(const Duration(microseconds: 1000));
     final output = await controller.recognizeFaceFromImage(source);
     faceResult.value = output;
     isRecognitionLoading.value = false;

@@ -177,12 +177,9 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
     }
 
     final picker = ImagePicker();
-    List<XFile> validImages = [];
-    List<String> feedback = [];
 
     setState(() {
       isLoading = true;
-      result = "Capture en cours...";
     });
 
     // Assure que le modèle est chargé
@@ -199,74 +196,41 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
       }
     }
 
-    List<double>? referenceEmbedding;
-
-    for (int i = 0; i < 3; i++) {
-      final XFile? image = await picker.pickImage(source: ImageSource.camera);
-      if (image == null) {
-        feedback.add("Capture ${i + 1} : annulée.");
-        break;
-      }
-
-      final embedding = await controller.getEmbedding(image);
-      if (embedding == null) {
-        feedback.add(
-            "Image ${i + 1} : Aucun visage détecté. Enrôlement interrompu.");
-        break;
-      }
-
-      if (referenceEmbedding == null) {
-        // Première image : on fixe la référence
-        referenceEmbedding = embedding;
-        feedback.add("Image ${i + 1} : Visage détecté (référence)");
-        validImages.add(image);
-        setState(() {
-          pickedImage = validImages.last;
-        });
-      } else {
-        final distance =
-            controller.euclideanDistance(referenceEmbedding, embedding);
-        if (distance > 1.0) {
-          feedback.add(
-              "Image ${i + 1} : Visage différent détecté (distance = ${distance.toStringAsFixed(2)}). Enrôlement interrompu.");
-          EasyLoading.showToast(
-            "Visage différent détecté. Enrôlement interrompu",
-          );
-          break;
-        } else {
-          feedback.add(
-              "Image ${i + 1} :Visage cohérent (distance = ${distance.toStringAsFixed(2)})");
-          validImages.add(image);
-        }
-      }
-    }
-
-    if (validImages.isEmpty) {
-      setState(() {
-        isLoading = false;
-        result =
-            "${feedback.join('\n')}\n Aucune image valide pour l'enrôlement.";
-        EasyLoading.showToast(
-          "Aucune image valide pour l'enrôlement.",
-        );
-      });
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 60,
+      maxHeight: 200,
+      maxWidth: 200,
+      preferredCameraDevice: CameraDevice.front,
+    );
+    if (image == null) {
+      EasyLoading.showInfo(
+          "Veuillez prendre une capture du visage à enroler !");
+      setState(() => isLoading = false);
       return;
     }
 
+    final embedding = await controller.getEmbedding(image);
+    if (embedding == null) {
+      EasyLoading.showInfo("Aucun visage detecté sur la capture !");
+      setState(() => isLoading = false);
+      return;
+    }
+
+    setState(() {
+      pickedImage = image;
+    });
+
     try {
-      await controller.addKnownFaceFromMultipleImages(name, validImages);
+      await controller.addKnownFaceFromMultipleImages(name, image);
       setState(() {
         isLoading = false;
-        result =
-            "${feedback.join('\n')}\n✅ $name enrôlé avec ${validImages.length} images valides.";
-        EasyLoading.showSuccess(
-            "Agent matricule $name enrôlé avec ${validImages.length} images valides.");
+        EasyLoading.showSuccess("Agent enrolé avec succès !");
         _matriculeController.clear();
       });
     } catch (e) {
       setState(() {
         isLoading = false;
-        result = "${feedback.join('\n')}\n Erreur lors de l'enrôlement : $e";
         EasyLoading.showToast(
           "Erreur lors de l'enrôlement.",
         );

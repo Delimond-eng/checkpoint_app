@@ -49,26 +49,24 @@ class HttpManager {
     try {
       // Construction du body
       var data = {
-        "patrol_id": patrolId != 0 ? patrolId : null,
+        "patrol_id": patrolId != 0 ? patrolId : "",
         "site_id": authController.userSession.value.siteId,
         "agency_id": authController.userSession.value.agencyId,
         "agent_id": authController.userSession.value.id,
-        "scan": {
-          "agent_id": authController.userSession.value.id,
-          "area_id": tagsController.scannedArea.value.id,
-          "matricule": tagsController.faceResult.value,
-          "comment": comment,
-          "latlng": latlng,
-        }
+        "scan_agent_id": authController.userSession.value.id,
+        "area_id": tagsController.scannedArea.value.id,
+        "matricule": tagsController.faceResult.value,
+        "comment": comment,
+        "latlng": latlng,
       };
 
       var response = await Api.request(
         url: "patrol.scan",
         method: "post",
         body: data,
-        /*  files: {
+        files: {
           "photo": File(tagsController.face.value!.path),
-        }, */
+        },
       );
 
       if (response != null) {
@@ -179,7 +177,7 @@ class HttpManager {
         return response["errors"].toString();
       }
     } catch (e) {
-      return "Echec de traitement de la requête !";
+      return "Echec de traitement de la requête $e!";
     }
   }
 

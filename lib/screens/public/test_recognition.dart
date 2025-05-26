@@ -85,7 +85,7 @@ class _FaceRecognitionScreenState extends State<FaceRecognitionScreen> {
 
   Future<void> enrollWithMultipleCaptures(
       FaceRecognitionController controller) async {
-    final name = _nameController.text.trim();
+    /*  final name = _nameController.text.trim();
     if (name.isEmpty) {
       setState(() => result = "Entrez un nom pour enregistrer.");
       return;
@@ -171,7 +171,7 @@ class _FaceRecognitionScreenState extends State<FaceRecognitionScreen> {
         isLoading = false;
         result = "${feedback.join('\n')}\n Erreur lors de l'enrôlement : $e";
       });
-    }
+    } */
   }
 
   Future<void> recognize(

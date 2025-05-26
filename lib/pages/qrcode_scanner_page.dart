@@ -69,6 +69,7 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
             tagsController.scannedArea.value = area;
             tagsController.isQrcodeScanned.value = true;
             controller.pauseCamera();
+            controller.dispose();
             showScanningCompleter(context, _controller);
           }
         } catch (e) {
@@ -98,6 +99,7 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
             tagsController.scannedArea.value = area;
             tagsController.isQrcodeScanned.value = true;
             controller.pauseCamera();
+            controller.dispose();
             showScanningCompleter(context, _controller);
           }
         } catch (e) {
@@ -222,8 +224,6 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
                   color: Colors.white,
                 ), // Icône optionnelle
               ),
-            ] else ...[
-              const SizedBox.shrink()
             ],
             if (!tagsController.isQrcodeScanned.value)
               FloatingActionButton(

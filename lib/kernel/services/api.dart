@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class Api {
-  static String baseUrl = 'http://salama.uco.rod.mybluehost.me/api';
+  //static String baseUrl = 'http://salama.uco.rod.mybluehost.me/api';
+  static String baseUrl = 'http://192.168.187.223:8000/api';
 
   static Future<dynamic> request({
     required String method,
@@ -39,7 +40,6 @@ class Api {
             }
           }
         }
-
         // Ajouter les fichiers
         for (var entry in files.entries) {
           var fileBytes = await entry.value.readAsBytes();
@@ -76,6 +76,8 @@ class Api {
             throw Exception("Méthode HTTP non prise en charge : $method");
         }
       }
+
+      print(response.body);
       // --- Réponse OK
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return jsonDecode(response.body);
