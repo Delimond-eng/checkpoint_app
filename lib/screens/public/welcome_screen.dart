@@ -1,8 +1,6 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/services/recognition_service.dart';
 import 'package:checkpoint_app/modals/close_patrol_modal.dart';
-import 'package:checkpoint_app/modals/recognition_face_modal.dart';
 import 'package:checkpoint_app/pages/enroll_face_page.dart';
 import 'package:checkpoint_app/pages/tasks_page.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
@@ -11,12 +9,12 @@ import 'package:checkpoint_app/widgets/user_status.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 
+import '../../modals/recognition_face_modal.dart' show showRecognitionModal;
 import '../../modals/request_modal.dart';
 import '../../modals/signalement_modal.dart';
 import '../../pages/announce_page.dart';
+import '../../pages/mobile_qr_scanner.dart' show MobileQrScannerPage;
 import '../../pages/patrol_planning.dart';
 import '../../pages/profil_page.dart';
 import '../../pages/qrcode_scanner_page.dart';
@@ -92,7 +90,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const QRcodeScannerPage(),
+                            builder: (context) => const MobileQrScannerPage(),
                           ),
                         );
                       },
@@ -308,17 +306,63 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: CostumButton(
                     bgColor: primaryMaterialColor.shade100,
                     title: "Signer mon arrivée",
-                    onPress: () async {
-                      final controller = Provider.of<FaceRecognitionController>(
-                          context,
-                          listen: false);
-                      tagsController.recognitionKey.value = "check-in";
+                    onPress: () {
+                      showRecognitionModal(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: CostumButton(
+                    title: "Signer mon départ",
+                    bgColor: primaryMaterialColor,
+                    labelColor: Colors.white,
+                    onPress: () {
+                      /* faceRecognitionController.recognitionKey.value =
+                          "check-out";
                       Navigator.pop(context);
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        faceRecognitionController.recognize(ImageSource.camera);
+                        showRecognitionModal(context);
+                      }); */
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
+  /* void _showBottonPresenceChoice(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(12.0),
+          topRight: Radius.circular(12.0),
+        ),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: SizedBox(
+            height: 90.0,
+            child: Row(
+              children: [
+                Expanded(
+                  child: CostumButton(
+                    bgColor: primaryMaterialColor.shade100,
+                    title: "Signer mon arrivée",
+                    onPress: () async {
+                      faceRecognitionController.recognitionKey.value =
+                          "check-in";
+                      Navigator.pop(context);
                       // Appel différé après que la bottom sheet ait été fermée proprement
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        tagsController.recognize(
-                            controller, ImageSource.camera);
+                        faceRecognitionController.recognize(ImageSource.camera);
                         showRecognitionModal(context);
                       });
                     },
@@ -331,16 +375,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     bgColor: primaryMaterialColor,
                     labelColor: Colors.white,
                     onPress: () {
-                      final controller = Provider.of<FaceRecognitionController>(
-                          context,
-                          listen: false);
-                      tagsController.recognitionKey.value = "check-out";
+                      faceRecognitionController.recognitionKey.value =
+                          "check-out";
                       Navigator.pop(context);
-
                       // Appel différé après que la bottom sheet ait été fermée proprement
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        tagsController.recognize(
-                            controller, ImageSource.camera);
+                        faceRecognitionController.recognize(ImageSource.camera);
                         showRecognitionModal(context);
                       });
                     },
@@ -352,7 +392,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         );
       },
     );
-  }
+  } */
 
   Widget _btnPatrolPending() {
     return DottedBorder(

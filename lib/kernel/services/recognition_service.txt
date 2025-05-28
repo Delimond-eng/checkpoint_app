@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:checkpoint_app/global/controllers.dart';
+
 import 'package:checkpoint_app/kernel/models/face.dart';
 import 'package:flutter/foundation.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -156,7 +156,7 @@ class FaceRecognitionController extends ChangeNotifier {
       );
 
       if (image == null) return "Opération annulée par l'utilisateur";
-      tagsController.face.value = image;
+      //face.value = image;
 
       final embedding = await getEmbedding(image);
       if (embedding == null) return "Impossible d'obtenir l'empreinte";

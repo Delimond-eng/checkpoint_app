@@ -1,5 +1,4 @@
-import 'package:checkpoint_app/kernel/services/recognition_service.dart';
-import 'package:flutter/material.dart';
+/* import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +15,7 @@ class _FaceRecognitionScreenState extends State<FaceRecognitionScreen> {
   String result = '';
   bool isLoading = false;
 
-  late FaceRecognitionController _controller;
+  /* late FaceRecognitionController _controller; */
 
   @override
   void didChangeDependencies() {
@@ -174,7 +173,7 @@ class _FaceRecognitionScreenState extends State<FaceRecognitionScreen> {
     } */
   }
 
-  Future<void> recognize(
+  /*  Future<void> recognize(
       FaceRecognitionController controller, ImageSource source) async {
     setState(() {
       isLoading = true;
@@ -187,5 +186,6 @@ class _FaceRecognitionScreenState extends State<FaceRecognitionScreen> {
       isLoading = false;
       result = "Résultat : $output";
     });
-  }
+  } */
 }
+ */

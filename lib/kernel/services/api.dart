@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 class Api {
   //static String baseUrl = 'http://salama.uco.rod.mybluehost.me/api';
-  static String baseUrl = 'http://192.168.187.223:8000/api';
+  static String baseUrl = 'http://192.168.155.223:8000/api';
 
   static Future<dynamic> request({
     required String method,
@@ -77,7 +77,9 @@ class Api {
         }
       }
 
-      print(response.body);
+      if (kDebugMode) {
+        print(response.body);
+      }
       // --- Réponse OK
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return jsonDecode(response.body);

@@ -55,7 +55,7 @@ class HttpManager {
         "agent_id": authController.userSession.value.id,
         "scan_agent_id": authController.userSession.value.id,
         "area_id": tagsController.scannedArea.value.id,
-        "matricule": tagsController.faceResult.value,
+        "matricule": faceRecognitionController.faceResult.value,
         "comment": comment,
         "latlng": latlng,
       };
@@ -119,12 +119,44 @@ class HttpManager {
     }
   }
 
+  //Enroll agent image from database online
+  Future<dynamic> enrollAgent(String matricule) async {
+    try {
+      var data = {
+        "matricule": matricule,
+      };
+      var response = await Api.request(
+        url: "agent.enroll",
+        method: "post",
+        files: {
+          "photo": File(tagsController.face.value!.path),
+        },
+        body: data,
+      );
+      if (response != null) {
+        if (response.containsKey("errors")) {
+          return response["errors"].toString();
+        } else {
+          if (localStorage.read("patrol_id") == null) {
+            localStorage.write("patrol_id", response["result"]["id"]);
+          }
+          tagsController.refreshPending();
+          return "success";
+        }
+      } else {
+        return response["errors"].toString();
+      }
+    } catch (e) {
+      return "Echec de traitement de la requête !";
+    }
+  }
+
   //Presence signal
   Future<dynamic> checkPresence() async {
     var latlng = await _getCurrentLocation();
     try {
       Map<String, dynamic> data = {
-        "matricule": tagsController.faceResult.value,
+        "matricule": faceRecognitionController.faceResult.value,
         "heure": "${DateTime.now().hour}:${DateTime.now().minute}",
         "status_photo": "success",
         "coordonnees": latlng,

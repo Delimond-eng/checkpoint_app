@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/services/recognition_service.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -10,14 +9,12 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../kernel/services/http_manager.dart';
 import '../widgets/submit_button.dart';
 import 'utils.dart';
 
-Future<void> showScanningCompleter(
-    context, FaceRecognitionController controller) async {
+Future<void> showScanningCompleter(context) async {
   final commentController = TextEditingController();
   tagsController.isScanningModalOpen.value = true;
   showCustomModal(
@@ -108,12 +105,7 @@ Future<void> showScanningCompleter(
               child: SubmitButton(
                 label: "Soumettre",
                 loading: tagsController.isLoading.value,
-                onPressed: () async {
-                  Get.back();
-                  tagsController.recognitionKey.value = "patrol";
-                  showPatrolRecognitionModal(context, commentController.text);
-                  tagsController.recognize(controller, ImageSource.camera);
-                },
+                onPressed: () async {},
               ),
             )
           ],
@@ -142,7 +134,7 @@ Future<void> showPatrolRecognitionModal(context, String comment) async {
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
-                if (tagsController.isRecognitionLoading.value) ...[
+                if (tagsController.isLoading.value) ...[
                   SizedBox(
                     height: 210.0,
                     width: 210.0,

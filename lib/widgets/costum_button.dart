@@ -1,3 +1,4 @@
+import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 
@@ -64,7 +65,7 @@ class CostumButton extends StatelessWidget {
                       ),
                     )
                 ],
-              ),
+              ).paddingHorizontal(8.0),
             ),
           ),
         ),

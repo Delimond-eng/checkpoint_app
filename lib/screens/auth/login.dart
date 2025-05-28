@@ -1,6 +1,6 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
-import 'package:checkpoint_app/widgets/submit_button.dart';
+import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import '/screens/public/welcome_screen.dart';
@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
           SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               0,
-              (screenSize.height * .50),
+              (screenSize.height * .44),
               0,
               4,
             ),
@@ -106,10 +106,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(
                           width: screenSize.width,
                           height: 55.0,
-                          child: SubmitButton(
-                            loading: isLoading,
-                            label: "Connecter",
-                            onPressed: _login,
+                          child: CostumButton(
+                            onPress: _login,
+                            isLoading: isLoading,
+                            title: 'Connecter',
+                            bgColor: primaryMaterialColor,
+                            labelColor: whiteColor,
                           ),
                         ).marginOnly(bottom: 40)
                       ],
