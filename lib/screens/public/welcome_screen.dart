@@ -8,6 +8,7 @@ import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:checkpoint_app/widgets/user_status.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 import '../../modals/recognition_face_modal.dart' show showRecognitionModal;
@@ -17,7 +18,6 @@ import '../../pages/announce_page.dart';
 import '../../pages/mobile_qr_scanner.dart' show MobileQrScannerPage;
 import '../../pages/patrol_planning.dart';
 import '../../pages/profil_page.dart';
-import '../../pages/qrcode_scanner_page.dart';
 import '../../pages/setting_page.dart';
 import '../../pages/supervisor_home.dart';
 import '../../widgets/home_menu_btn.dart';
@@ -87,12 +87,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       icon: "qrcode",
                       title: "Patrouille",
                       onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MobileQrScannerPage(),
-                          ),
-                        );
+                        if (authController.userSession.value.role == 'guard') {
+                          if (tagsController.patrolId.value != 0) {
+                            _showBottonPatrolChoice(context);
+                          } else {
+                            EasyLoading.showInfo(
+                                "Veuillez sélectionner votre planning de patrouille !");
+                          }
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SupervisorHome(),
+                            ),
+                          );
+                        }
                       },
                     ),
                     HomeMenuBtn(
@@ -260,7 +269,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const QRcodeScannerPage(),
+                          builder: (context) => const MobileQrScannerPage(),
                         ),
                       );
                     },
@@ -307,6 +316,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     bgColor: primaryMaterialColor.shade100,
                     title: "Signer mon arrivée",
                     onPress: () {
+                      Navigator.pop(context);
                       showRecognitionModal(context);
                     },
                   ),
@@ -318,13 +328,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     bgColor: primaryMaterialColor,
                     labelColor: Colors.white,
                     onPress: () {
-                      /* faceRecognitionController.recognitionKey.value =
-                          "check-out";
                       Navigator.pop(context);
-                      Future.delayed(const Duration(milliseconds: 300), () {
-                        faceRecognitionController.recognize(ImageSource.camera);
-                        showRecognitionModal(context);
-                      }); */
+                      showRecognitionModal(context);
                     },
                   ),
                 ),
@@ -335,64 +340,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       },
     );
   }
-
-  /* void _showBottonPresenceChoice(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(12.0),
-          topRight: Radius.circular(12.0),
-        ),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SizedBox(
-            height: 90.0,
-            child: Row(
-              children: [
-                Expanded(
-                  child: CostumButton(
-                    bgColor: primaryMaterialColor.shade100,
-                    title: "Signer mon arrivée",
-                    onPress: () async {
-                      faceRecognitionController.recognitionKey.value =
-                          "check-in";
-                      Navigator.pop(context);
-                      // Appel différé après que la bottom sheet ait été fermée proprement
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        faceRecognitionController.recognize(ImageSource.camera);
-                        showRecognitionModal(context);
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: CostumButton(
-                    title: "Signer mon départ",
-                    bgColor: primaryMaterialColor,
-                    labelColor: Colors.white,
-                    onPress: () {
-                      faceRecognitionController.recognitionKey.value =
-                          "check-out";
-                      Navigator.pop(context);
-                      // Appel différé après que la bottom sheet ait été fermée proprement
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        faceRecognitionController.recognize(ImageSource.camera);
-                        showRecognitionModal(context);
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  } */
 
   Widget _btnPatrolPending() {
     return DottedBorder(
@@ -411,12 +358,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               if (tagsController.patrolId.value != 0) {
                 _showBottonPatrolChoice(context);
               } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const QRcodeScannerPage(),
-                  ),
-                );
+                EasyLoading.showInfo(
+                    "Veuillez sélectionner votre planning de patrouille !");
               }
             } else {
               Navigator.push(

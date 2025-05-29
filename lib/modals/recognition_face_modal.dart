@@ -16,7 +16,8 @@ import '../widgets/costum_icon_button.dart';
 import '../widgets/svg.dart';
 import 'utils.dart';
 
-Future<void> showRecognitionModal(context) async {
+Future<void> showRecognitionModal(context,
+    {String key = "", String comment = ""}) async {
   List<CameraDescription> cameras = [];
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
@@ -130,27 +131,8 @@ Future<void> showRecognitionModal(context) async {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CostumIconButton(
-                  color: Colors.blue.shade800,
-                  svg: "camera-toggle.svg",
-                  size: 60.0,
-                  onPress: () async {
-                    tagsController.cameraIndex.value =
-                        (tagsController.cameraIndex.value + 1) % cameras.length;
-                    await _controller.dispose();
-                    try {
-                      cameras = await availableCameras();
-                      _controller = CameraController(
-                        cameras[tagsController.cameraIndex.value],
-                        ResolutionPreset.medium,
-                        enableAudio: false,
-                      );
-                      _controller.initialize();
-                    } catch (e) {
-                      print("Erreur d'initialisation de la caméra : $e");
-                    }
-                  },
-                ).paddingRight(8.0),
-                CostumIconButton(
+                  isLoading:
+                      faceRecognitionController.isRecognitionLoading.value,
                   svg: tagsController.face.value == null
                       ? "camera-capture.svg"
                       : "camera-refresh.svg",
@@ -166,10 +148,16 @@ Future<void> showRecognitionModal(context) async {
                     }
                     try {
                       final file = await _controller.takePicture();
+                      tagsController.face.value = XFile(file.path);
+                      await Future.delayed(Duration.zero);
+                      faceRecognitionController.isRecognitionLoading.value =
+                          true;
                       final faceResult = await faceRecognitionController
                           .recognizeFaceFromImage(file);
                       tagsController.faceResult.value = faceResult;
-                      tagsController.face.value = XFile(file.path);
+                      faceRecognitionController.isRecognitionLoading.value =
+                          false;
+                      tagsController.isLoading.value = false;
                     } catch (e) {
                       print("Erreur capture : $e");
                     }
@@ -179,7 +167,7 @@ Future<void> showRecognitionModal(context) async {
                   svg: tagsController.isFlashOn.value
                       ? "flash-on-2.svg"
                       : "flash-on-1.svg",
-                  size: 60.0,
+                  size: 80.0,
                   color: tagsController.cameraIndex.value == 1
                       ? Colors.blue.shade200
                       : Colors.blue.shade800,
@@ -256,24 +244,21 @@ Future<void> showRecognitionModal(context) async {
                               bgColor: Colors.green,
                               labelColor: Colors.white,
                               onPress: () async {
-                                var manager = HttpManager();
-                                tagsController.isLoading.value = true;
-                                manager.checkPresence().then((value) {
-                                  tagsController.isLoading.value = false;
-                                  if (value != "success") {
-                                    EasyLoading.showInfo(value);
-                                  } else {
-                                    tagsController.faceResult.value = "";
-                                    tagsController.face.value = null;
-                                    tagsController.isScanningModalOpen.value =
-                                        false;
+                                if (key.isEmpty) {
+                                  await checkPresence();
+                                  _controller.dispose();
+                                } else {
+                                  if (key == "patrol") {
+                                    await startPatrol(comment: comment);
                                     _controller.dispose();
                                     Get.back();
-                                    EasyLoading.showSuccess(
-                                      "Présence signalée avec succès !",
-                                    );
                                   }
-                                });
+                                  if (key == "close") {
+                                    await closePatrol(comment: comment);
+                                    _controller.dispose();
+                                    Get.back();
+                                  }
+                                }
                               },
                             ).paddingTop(10.0)
                           ]
@@ -289,4 +274,59 @@ Future<void> showRecognitionModal(context) async {
       ),
     ),
   );
+}
+
+Future<void> checkPresence() async {
+  var manager = HttpManager();
+  tagsController.isLoading.value = true;
+  manager.checkPresence().then((value) {
+    tagsController.isLoading.value = false;
+    if (value != "success") {
+      EasyLoading.showInfo(value);
+    } else {
+      tagsController.faceResult.value = "";
+      tagsController.face.value = null;
+      tagsController.isScanningModalOpen.value = false;
+      Get.back();
+      EasyLoading.showSuccess(
+        "Présence signalée avec succès !",
+      );
+    }
+  });
+}
+
+Future<void> closePatrol({String comment = ""}) async {
+  var manager = HttpManager();
+  tagsController.isLoading.value = true;
+  manager.stopPendingPatrol(comment).then((value) {
+    tagsController.isLoading.value = false;
+    tagsController.faceResult.value = "";
+    tagsController.face.value = null;
+    if (value is String) {
+      EasyLoading.showToast(value);
+    } else {
+      EasyLoading.showSuccess(
+        "Données transmises avec succès !",
+      );
+      Get.back();
+    }
+  });
+}
+
+Future<void> startPatrol({String comment = ""}) async {
+  var manager = HttpManager();
+  tagsController.isLoading.value = true;
+  manager.beginPatrol(comment).then((value) {
+    tagsController.isLoading.value = false;
+    tagsController.faceResult.value = "";
+    tagsController.face.value = null;
+    if (value is String) {
+      EasyLoading.showToast(value);
+    } else {
+      EasyLoading.showSuccess(
+        "Zone patrouille scanné avec succès !",
+      );
+      Get.back();
+    }
+  });
 }

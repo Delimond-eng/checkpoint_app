@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
+import 'package:checkpoint_app/modals/recognition_face_modal.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -105,7 +106,10 @@ Future<void> showScanningCompleter(context) async {
               child: SubmitButton(
                 label: "Soumettre",
                 loading: tagsController.isLoading.value,
-                onPressed: () async {},
+                onPressed: () async {
+                  showRecognitionModal(context,
+                      key: "patrol", comment: commentController.text);
+                },
               ),
             )
           ],

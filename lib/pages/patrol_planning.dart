@@ -41,7 +41,7 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
           child: Column(
             children: [
               const Text(
-                "Votre emploi du temps de patrouille. Le respect des horaires est essentiel pour éviter des pénalités.",
+                "Votre emploi du temps de patrouille. veuillez cliquer sur un planning pour commencer une patrouille.",
                 style: TextStyle(
                   color: primaryMaterialColor,
                   fontWeight: FontWeight.w500,
@@ -58,7 +58,6 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
                       return ListView.builder(
                         shrinkWrap: true,
                         itemCount: snapshot.data!.length,
-                        padding: const EdgeInsets.all(10.0),
                         itemBuilder: (context, index) {
                           var item = snapshot.data![index];
                           return PlanningCard(
@@ -120,54 +119,93 @@ class PlanningCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: greyColor60,
-            width: 1,
-          ),
-        ),
+      margin: const EdgeInsets.only(bottom: 10.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4.0),
+        color: Colors.transparent,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Row(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: whiteColor,
-                borderRadius: BorderRadius.circular(5.0),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.timer_sharp,
-                      size: 14.0,
-                      color: primaryColor,
-                    ),
-                    Text(
-                      "${data!.startTime} - ${data!.endTime}",
-                      style: const TextStyle(
-                        fontSize: 10.0,
-                        fontWeight: FontWeight.w700,
-                        color: darkColor,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(4.0),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(4.0),
+          onTap: () {
+            print("is taped");
+          },
+          child: Column(
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(4.0),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_month,
+                            size: 14.0,
+                            color: Colors.blue,
+                          ),
+                          Text(
+                            data!.date!,
+                            style: const TextStyle(
+                              fontSize: 10.0,
+                              fontWeight: FontWeight.w700,
+                              color: darkColor,
+                            ),
+                          )
+                        ],
                       ),
-                    )
-                  ],
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.access_time_filled_sharp,
+                            size: 14.0,
+                            color: Colors.blue,
+                          ),
+                          Text(
+                            "${data!.startTime} - ${data!.endTime}",
+                            style: const TextStyle(
+                              fontSize: 10.0,
+                              fontWeight: FontWeight.w700,
+                              color: darkColor,
+                            ),
+                          )
+                        ],
+                      )
+                    ],
+                  ),
                 ),
               ),
-            ).paddingRight(8.0),
-            Expanded(
-              child: Text(
-                data!.libelle!,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: darkColor,
+              Container(
+                width: MediaQuery.of(context).size.width,
+                decoration: const BoxDecoration(
+                  color: whiteColor,
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(4.0),
+                  ),
                 ),
-              ),
-            )
-          ],
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    data!.libelle!,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: darkColor,
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

@@ -304,38 +304,18 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
     }
   }
 
-  /* Future<void> _capturePhoto() async {
-    final picker = ImagePicker();
-
-    setState(() {
-      isLoading = true;
-    });
-
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 60,
-      maxHeight: 200,
-      maxWidth: 200,
-      preferredCameraDevice: CameraDevice.front,
-    );
-    if (image == null) {
-      EasyLoading.showInfo(
-          "Veuillez prendre une capture du visage à enroler !");
-      setState(() => isLoading = false);
-      return;
-    } else {
-      setState(() {
-        isLoading = false;
-        pickedImage = image;
-        tagsController.face.value = image;
-      });
-    }
-  } */
-
   Future<void> _enroll() async {
     final matricule = _matriculeController.text.trim();
     if (matricule.isEmpty) {
       EasyLoading.showToast("Entrez le matricule de l'agent !");
+      return;
+    }
+
+    final embedding = faceRecognitionController.getEmbedding(pickedImage!);
+    // ignore: unnecessary_null_comparison
+    if (embedding == null) {
+      EasyLoading.showInfo(
+          "Aucun visage détecté. veuillez prendre une photo du visage !");
       return;
     }
 

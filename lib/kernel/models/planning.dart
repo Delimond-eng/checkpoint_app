@@ -3,6 +3,7 @@ import 'package:checkpoint_app/kernel/models/user.dart';
 class Planning {
   int? id;
   String? libelle;
+  String? date;
   String? startTime;
   String? endTime;
   int? siteId;
@@ -12,6 +13,7 @@ class Planning {
   Planning(
       {this.id,
       this.libelle,
+      this.date,
       this.startTime,
       this.endTime,
       this.siteId,
@@ -21,6 +23,7 @@ class Planning {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'date': date,
       'libelle': libelle,
       'start_time': startTime,
       'end_time': endTime,
@@ -30,6 +33,7 @@ class Planning {
   factory Planning.fromJson(Map<String, dynamic> json) {
     return Planning(
         id: json['id'],
+        date: json['date'],
         libelle: json['libelle'],
         startTime: json['start_time'].toString().substring(0, 5),
         endTime: json['end_time'].toString().substring(0, 5),

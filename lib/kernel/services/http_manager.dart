@@ -55,7 +55,7 @@ class HttpManager {
         "agent_id": authController.userSession.value.id,
         "scan_agent_id": authController.userSession.value.id,
         "area_id": tagsController.scannedArea.value.id,
-        "matricule": faceRecognitionController.faceResult.value,
+        "matricule": tagsController.faceResult.value,
         "comment": comment,
         "latlng": latlng,
       };
@@ -156,7 +156,7 @@ class HttpManager {
     var latlng = await _getCurrentLocation();
     try {
       Map<String, dynamic> data = {
-        "matricule": faceRecognitionController.faceResult.value,
+        "matricule": tagsController.faceResult.value,
         "heure": "${DateTime.now().hour}:${DateTime.now().minute}",
         "status_photo": "success",
         "coordonnees": latlng,

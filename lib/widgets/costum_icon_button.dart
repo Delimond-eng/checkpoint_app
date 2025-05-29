@@ -8,10 +8,12 @@ class CostumIconButton extends StatelessWidget {
   final double size;
   final String svg;
   final Color? color;
+  final bool isLoading;
   final VoidCallback onPress;
   const CostumIconButton({
     super.key,
     this.size = 50.0,
+    this.isLoading = false,
     required this.svg,
     this.color,
     required this.onPress,
@@ -30,7 +32,7 @@ class CostumIconButton extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: onPress,
+            onTap: isLoading ? null : onPress,
             borderRadius: BorderRadius.circular(size),
             child: Container(
               height: size,
@@ -41,11 +43,21 @@ class CostumIconButton extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Svg(
-                    path: svg,
-                    size: 22.0,
-                    color: whiteColor,
-                  )
+                  if (isLoading) ...[
+                    const SizedBox(
+                      height: 22.0,
+                      width: 22.0,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.0,
+                        color: whiteColor,
+                      ),
+                    )
+                  ] else
+                    Svg(
+                      path: svg,
+                      size: 22.0,
+                      color: whiteColor,
+                    )
                 ],
               ).paddingAll(5.0),
             ),

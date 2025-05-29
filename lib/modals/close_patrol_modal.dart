@@ -3,11 +3,10 @@ import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
-import '../kernel/services/http_manager.dart';
 import '../widgets/submit_button.dart';
+import 'recognition_face_modal.dart';
 import 'utils.dart';
 
 Future<void> showClosePatrolModal(context) async {
@@ -86,22 +85,8 @@ Future<void> showClosePatrolModal(context) async {
                 label: "Clôturer",
                 loading: tagsController.isLoading.value,
                 onPressed: () async {
-                  var manager = HttpManager();
-                  tagsController.isLoading.value = true;
-                  manager
-                      .stopPendingPatrol(commentController.text)
-                      .then((value) {
-                    tagsController.isLoading.value = false;
-
-                    if (value is String) {
-                      EasyLoading.showToast(value);
-                    } else {
-                      EasyLoading.showSuccess(
-                        "Données transmises avec succès !",
-                      );
-                      Get.back();
-                    }
-                  });
+                  showRecognitionModal(context,
+                      key: "close", comment: commentController.text);
                 },
               ),
             ),
