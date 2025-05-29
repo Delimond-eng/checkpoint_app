@@ -7,6 +7,7 @@ import 'package:checkpoint_app/kernel/models/announce.dart';
 import 'package:checkpoint_app/kernel/models/planning.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
 import 'package:checkpoint_app/kernel/services/api.dart';
+import 'package:checkpoint_app/kernel/services/firebase_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
@@ -28,6 +29,8 @@ class HttpManager {
           var agent = User.fromJson(response["agent"]);
           localStorage.write("user_session", agent.toJson());
           authController.userSession.value = agent;
+          var token = await FirebaseService.getToken();
+          await updateSiteTOKEN(token, agent.siteId);
           return agent;
         }
       } else {
@@ -45,6 +48,7 @@ class HttpManager {
   Future<dynamic> beginPatrol(String comment) async {
     var latlng = await _getCurrentLocation();
     var patrolId = tagsController.patrolId.value;
+    var planningId = tagsController.planningId.value;
 
     try {
       // Construction du body
@@ -55,6 +59,7 @@ class HttpManager {
         "agent_id": authController.userSession.value.id,
         "scan_agent_id": authController.userSession.value.id,
         "area_id": tagsController.scannedArea.value.id,
+        "schedule_id": planningId,
         "matricule": tagsController.faceResult.value,
         "comment": comment,
         "latlng": latlng,
@@ -224,6 +229,32 @@ class HttpManager {
     try {
       var response = await Api.request(
         url: "request.create",
+        method: "post",
+        body: data,
+      );
+      if (response != null) {
+        if (response.containsKey("errors")) {
+          return response["errors"].toString();
+        } else {
+          return response["result"];
+        }
+      } else {
+        return response["errors"].toString();
+      }
+    } catch (e) {
+      return "Echec de traitement de la requête !";
+    }
+  }
+
+  //update notification token
+  Future<dynamic> updateSiteTOKEN(String? token, id) async {
+    var data = {
+      "site_id": id,
+      "fcm_token": token,
+    };
+    try {
+      var response = await Api.request(
+        url: "site.token",
         method: "post",
         body: data,
       );

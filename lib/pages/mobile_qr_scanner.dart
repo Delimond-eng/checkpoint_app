@@ -24,7 +24,7 @@ class MobileQrScannerPage extends StatefulWidget {
 class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
   var scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final controller = MobileScannerController(autoZoom: true);
+  final controller = MobileScannerController(autoStart: true);
 
   bool isLigthing = false;
 

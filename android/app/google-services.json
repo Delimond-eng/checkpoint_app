@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "956891353379",
+    "project_id": "salama-d1d31",
+    "storage_bucket": "salama-d1d31.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:956891353379:android:88cb2a09a85299d0b6bc96",
+        "android_client_info": {
+          "package_name": "com.example.checkpoint_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCILAvBYuIaVei5p-gHcoHjsyamOhhS0ic"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

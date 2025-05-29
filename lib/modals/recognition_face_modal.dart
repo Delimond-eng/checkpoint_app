@@ -17,10 +17,12 @@ import '../widgets/svg.dart';
 import 'utils.dart';
 
 Future<void> showRecognitionModal(context,
-    {String key = "", String comment = ""}) async {
+    {String key = "", String comment = "", VoidCallback? onClosed}) async {
   List<CameraDescription> cameras = [];
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
+
+  await Future.delayed(Duration.zero);
   try {
     cameras = await availableCameras();
     _controller = CameraController(
@@ -38,6 +40,7 @@ Future<void> showRecognitionModal(context,
       tagsController.face.value = null;
       tagsController.faceResult.value = "";
       _controller.dispose();
+      onClosed!();
     },
     title: "Reconnaissance faciale",
     child: Padding(
@@ -247,15 +250,18 @@ Future<void> showRecognitionModal(context,
                                 if (key.isEmpty) {
                                   await checkPresence();
                                   _controller.dispose();
+                                  onClosed!();
                                 } else {
                                   if (key == "patrol") {
                                     await startPatrol(comment: comment);
                                     _controller.dispose();
+                                    onClosed!();
                                     Get.back();
                                   }
                                   if (key == "close") {
                                     await closePatrol(comment: comment);
                                     _controller.dispose();
+                                    onClosed!();
                                     Get.back();
                                   }
                                 }
@@ -300,6 +306,8 @@ Future<void> closePatrol({String comment = ""}) async {
   tagsController.isLoading.value = true;
   manager.stopPendingPatrol(comment).then((value) {
     tagsController.isLoading.value = false;
+    tagsController.isScanningModalOpen.value = false;
+    tagsController.isQrcodeScanned.value = false;
     tagsController.faceResult.value = "";
     tagsController.face.value = null;
     if (value is String) {
@@ -320,6 +328,8 @@ Future<void> startPatrol({String comment = ""}) async {
     tagsController.isLoading.value = false;
     tagsController.faceResult.value = "";
     tagsController.face.value = null;
+    tagsController.isScanningModalOpen.value = false;
+    tagsController.isQrcodeScanned.value = false;
     if (value is String) {
       EasyLoading.showToast(value);
     } else {

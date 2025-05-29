@@ -18,6 +18,7 @@ class TagsController extends GetxController {
   var faceResult = "".obs;
   var isFlashOn = false.obs;
   var cameraIndex = 1.obs;
+  var planningId = "".obs;
 
   @override
   void onInit() {

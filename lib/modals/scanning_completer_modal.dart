@@ -1,27 +1,21 @@
-import 'dart:io';
-
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/modals/recognition_face_modal.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/widgets/costum_button.dart';
-import 'package:dotted_border/dotted_border.dart';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
-import '../kernel/services/http_manager.dart';
 import '../widgets/submit_button.dart';
 import 'utils.dart';
 
-Future<void> showScanningCompleter(context) async {
+Future<void> showScanningCompleter(context, {VoidCallback? onClosed}) async {
   final commentController = TextEditingController();
   tagsController.isScanningModalOpen.value = true;
   showCustomModal(
     context,
     onClosed: () {
       tagsController.isScanningModalOpen.value = false;
+      onClosed!();
     },
     title: "Patrouille zone QRCODE",
     child: Padding(
@@ -108,7 +102,9 @@ Future<void> showScanningCompleter(context) async {
                 loading: tagsController.isLoading.value,
                 onPressed: () async {
                   showRecognitionModal(context,
-                      key: "patrol", comment: commentController.text);
+                      key: "patrol",
+                      comment: commentController.text,
+                      onClosed: onClosed);
                 },
               ),
             )
@@ -119,12 +115,14 @@ Future<void> showScanningCompleter(context) async {
   );
 }
 
-Future<void> showPatrolRecognitionModal(context, String comment) async {
+/* Future<void> showPatrolRecognitionModal(context, String comment,
+    {VoidCallback? onClosed}) async {
   showCustomModal(
     context,
     onClosed: () {
       tagsController.face.value = null;
       tagsController.faceResult.value = "";
+      onClosed!();
     },
     title: "Reconnaissance faciale",
     child: Padding(
@@ -278,4 +276,4 @@ Future<void> showPatrolRecognitionModal(context, String comment) async {
       ),
     ),
   );
-}
+} */

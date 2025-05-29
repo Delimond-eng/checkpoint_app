@@ -1,4 +1,6 @@
+import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/services/http_manager.dart';
+import 'package:checkpoint_app/pages/mobile_qr_scanner.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -130,7 +132,14 @@ class PlanningCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(4.0),
           onTap: () {
-            print("is taped");
+            tagsController.planningId.value = data!.id.toString();
+            Get.back();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MobileQrScannerPage(),
+              ),
+            );
           },
           child: Column(
             children: [

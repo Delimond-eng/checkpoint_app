@@ -230,6 +230,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           tooltip: "Appuyez longtemps pour déclencher un alèrte !",
           elevation: 10,
           onPressed: () {
+            EasyLoading.showToast("Ce service n'est pas encore disponible !");
+            /* FirebaseService.showLocalNotification("Nouvelle notification Test",
+                "Ceci est un nouvelle notification test...");
+            FirebaseService.readMessage(
+                "Ceci est un nouvelle notification test"); */
             /* Navigator.push(
               context,
               MaterialPageRoute(
