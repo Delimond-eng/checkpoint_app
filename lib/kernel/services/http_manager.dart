@@ -82,7 +82,7 @@ class HttpManager {
             localStorage.write("patrol_id", response["result"]["id"]);
           }
           tagsController.refreshPending();
-          return "success";
+          return "Patrouille enregistrée avec succès. Veuillez passer à la zone suivante ou clôturer la patrouille.";
         }
       } else {
         return "Erreur réseau ou serveur injoignable.";
@@ -114,7 +114,7 @@ class HttpManager {
             localStorage.write("patrol_id", response["result"]["id"]);
           }
           tagsController.refreshPending();
-          return "success";
+          return "Zone completée avec succès.";
         }
       } else {
         return response["errors"].toString();
@@ -179,7 +179,7 @@ class HttpManager {
         if (response.containsKey("errors")) {
           return response["errors"].toString();
         } else {
-          return "success";
+          return "Données de présence enregistrées avec succès";
         }
       } else {
         return response["errors"].toString();
@@ -208,7 +208,7 @@ class HttpManager {
         } else {
           localStorage.remove("patrol_id");
           tagsController.refreshPending();
-          return response["result"];
+          return "Patrouille clôturée avec succès.";
         }
       } else {
         return response["errors"].toString();
@@ -361,7 +361,7 @@ class HttpManager {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best,
       ).timeout(
-        const Duration(seconds: 60),
+        const Duration(seconds: 200),
         onTimeout: () {
           EasyLoading.showInfo("GPS trop lent, délai dépassé.");
           throw TimeoutException("GPS trop lent, délai dépassé.");

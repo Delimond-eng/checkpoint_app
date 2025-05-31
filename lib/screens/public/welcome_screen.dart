@@ -1,6 +1,6 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/modals/close_patrol_modal.dart';
+import 'package:checkpoint_app/global/store.dart';
 import 'package:checkpoint_app/pages/enroll_face_page.dart';
 import 'package:checkpoint_app/pages/tasks_page.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
@@ -89,10 +89,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       onPress: () {
                         if (authController.userSession.value.role == 'guard') {
                           if (tagsController.patrolId.value != 0) {
-                            _showBottonPatrolChoice(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const MobileQrScannerPage(),
+                              ),
+                            );
                           } else {
-                            EasyLoading.showInfo(
+                            EasyLoading.showToast(
                                 "Veuillez sélectionner votre planning de patrouille !");
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PatrolPlanning(),
+                              ),
+                            );
                           }
                         } else {
                           Navigator.push(
@@ -230,6 +242,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           tooltip: "Appuyez longtemps pour déclencher un alèrte !",
           elevation: 10,
           onPressed: () {
+            localStorage.remove("patrol_id");
+            tagsController.refreshPending();
             EasyLoading.showToast("Ce service n'est pas encore disponible !");
             /* FirebaseService.showLocalNotification("Nouvelle notification Test",
                 "Ceci est un nouvelle notification test...");
@@ -288,7 +302,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     labelColor: Colors.white,
                     onPress: () {
                       Get.back();
-                      showClosePatrolModal(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MobileQrScannerPage(),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -321,7 +340,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     bgColor: primaryMaterialColor.shade100,
                     title: "Signer mon arrivée",
                     onPress: () {
-                      Navigator.pop(context);
+                      tagsController.isLoading.value = false;
+                      Get.back();
                       showRecognitionModal(context);
                     },
                   ),
@@ -333,7 +353,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     bgColor: primaryMaterialColor,
                     labelColor: Colors.white,
                     onPress: () {
-                      Navigator.pop(context);
+                      tagsController.isLoading.value = false;
+                      Get.back();
                       showRecognitionModal(context);
                     },
                   ),
@@ -363,8 +384,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               if (tagsController.patrolId.value != 0) {
                 _showBottonPatrolChoice(context);
               } else {
-                EasyLoading.showInfo(
+                EasyLoading.showToast(
                     "Veuillez sélectionner votre planning de patrouille !");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PatrolPlanning(),
+                  ),
+                );
               }
             } else {
               Navigator.push(

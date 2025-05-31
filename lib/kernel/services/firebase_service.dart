@@ -22,8 +22,8 @@ class FirebaseService {
           defaultColor: primaryMaterialColor,
           playSound: true,
           enableVibration: true,
+          soundSource: 'resource://raw/bell',
           enableLights: true,
-          defaultRingtoneType: DefaultRingtoneType.Alarm,
         )
       ],
       debug: true,

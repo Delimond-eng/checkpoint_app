@@ -186,10 +186,11 @@ Future<void> pickImage() async {
   final ImagePicker picker = ImagePicker();
   final XFile? pickedFile = await picker.pickImage(
     source: ImageSource.camera,
-    imageQuality: 100,
+    imageQuality: 60,
   );
 
   if (pickedFile != null) {
+    await Future.delayed(Duration.zero);
     tagsController.mediaFile.value = File(pickedFile.path);
   } else {
     tagsController.mediaFile.value = null;
@@ -204,6 +205,7 @@ Future<void> pickVideo() async {
     maxDuration: const Duration(seconds: 30),
   );
   if (pickedFile != null) {
+    await Future.delayed(Duration.zero);
     tagsController.mediaFile.value = File(pickedFile.path);
   } else {
     tagsController.mediaFile.value = null;
