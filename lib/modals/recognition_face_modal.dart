@@ -7,6 +7,7 @@ import 'package:checkpoint_app/kernel/services/http_manager.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -19,6 +20,7 @@ import 'utils.dart';
 Future<void> showRecognitionModal(context,
     {String key = "", String comment = ""}) async {
   List<CameraDescription> cameras = [];
+  /* final TextEditingController _matriculeText = TextEditingController(); */
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
 
@@ -32,7 +34,9 @@ Future<void> showRecognitionModal(context,
     );
     _initializeControllerFuture = _controller.initialize();
   } catch (e) {
-    print("Erreur d'initialisation de la caméra : $e");
+    if (kDebugMode) {
+      print("Erreur d'initialisation de la caméra : $e");
+    }
   }
   showCustomModal(
     context,
@@ -50,29 +54,61 @@ Future<void> showRecognitionModal(context,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (tagsController.face.value != null) ...[
-              DottedBorder(
-                color: Colors.green.shade400,
-                radius: const Radius.circular(130.0),
-                strokeWidth: 1.2,
-                borderType: BorderType.RRect,
-                dashPattern: const [6, 3],
-                child: CircleAvatar(
-                  radius: 120.0,
-                  backgroundColor: darkColor,
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(240.0),
-                    ),
-                    child: Image.file(
-                      width: 240.0,
-                      height: 240.0,
-                      File(tagsController.face.value!.path),
-                      alignment: Alignment.center,
-                      fit: BoxFit.cover,
+              Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  DottedBorder(
+                    color: tagsController.faceResult.value != 'Inconnu'
+                        ? Colors.green.shade400
+                        : Colors.red,
+                    radius: const Radius.circular(130.0),
+                    strokeWidth: 1.2,
+                    borderType: BorderType.RRect,
+                    dashPattern: const [6, 3],
+                    child: CircleAvatar(
+                      radius: 120.0,
+                      backgroundColor: darkColor,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(240.0),
+                        ),
+                        child: Image.file(
+                          width: 240.0,
+                          height: 240.0,
+                          File(tagsController.face.value!.path),
+                          alignment: Alignment.center,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ).paddingBottom(15.0),
+                  if (tagsController.faceResult.value.isNotEmpty) ...[
+                    Positioned(
+                      bottom: -15.0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20.0, vertical: 8.0),
+                        decoration: BoxDecoration(
+                          color: tagsController.faceResult.value != 'Inconnu'
+                              ? Colors.green.withOpacity(.8)
+                              : Colors.red.withOpacity(.8),
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
+                        child: Text(
+                          tagsController.faceResult.value,
+                          style: const TextStyle(
+                            fontFamily: "Staatliches",
+                            fontSize: 15.0,
+                            color: whiteColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
+                  ]
+                ],
+              ).paddingBottom(25.0),
             ] else ...[
               FutureBuilder(
                 future: _initializeControllerFuture,
@@ -148,6 +184,8 @@ Future<void> showRecognitionModal(context,
                       tagsController.face.value = null;
                       return;
                     }
+                    tagsController.face.value = null;
+                    tagsController.faceResult.value = "";
                     try {
                       final file = await _controller.takePicture();
                       tagsController.face.value = XFile(file.path);
@@ -156,12 +194,21 @@ Future<void> showRecognitionModal(context,
                           true;
                       final faceResult = await faceRecognitionController
                           .recognizeFaceFromImage(file);
-                      tagsController.faceResult.value = faceResult;
-                      faceRecognitionController.isRecognitionLoading.value =
-                          false;
-                      tagsController.isLoading.value = false;
+                      if (faceResult != null) {
+                        /* _matriculeText.text = faceResult; */
+                        tagsController.faceResult.value = faceResult;
+                        faceRecognitionController.isRecognitionLoading.value =
+                            false;
+                        tagsController.isLoading.value = false;
+                      } else {
+                        tagsController.isLoading.value = false;
+                        faceRecognitionController.isRecognitionLoading.value =
+                            false;
+                      }
                     } catch (e) {
-                      print("Erreur capture : $e");
+                      if (kDebugMode) {
+                        print("Erreur capture : $e");
+                      }
                     }
                   },
                 ).paddingRight(8.0),
@@ -194,7 +241,7 @@ Future<void> showRecognitionModal(context,
                   },
                 ),
               ],
-            ).paddingBottom(15.0),
+            ).paddingBottom(10.0),
             if (tagsController.face.value != null) ...[
               Container(
                 padding: const EdgeInsets.all(5.0),
@@ -207,45 +254,35 @@ Future<void> showRecognitionModal(context,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (tagsController.faceResult.value.isNotEmpty &&
-                              tagsController.faceResult.value != "Inconnu")
+                          /* if (tagsController.faceResult.value.isNotEmpty &&
+                              tagsController.faceResult.value != "Inconnu") ...[
                             const Text(
-                              "Reconnaissance faciale résultat ",
+                              "Reconnaissance faciale matricule agent trouvé ",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontFamily: "Poppins",
                                 fontSize: 10.0,
                               ),
                             ),
-                          const SizedBox(height: 4.0),
-                          Text(
-                            tagsController.faceResult.value.isNotEmpty &&
-                                    tagsController.faceResult.value != "Inconnu"
-                                ? "Matricule Agent : ${tagsController.faceResult.value}"
-                                : tagsController.faceResult.value,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: 'Staatliches',
-                              color: tagsController.faceResult.value !=
-                                          "Inconnu" ||
-                                      !tagsController.faceResult.value
-                                          .contains("Impossible")
-                                  ? Colors.green
-                                  : primaryMaterialColor,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 18.0,
-                            ),
-                          ),
+                            const SizedBox(height: 5.0),
+                            //input face result here...
+                            EnrollInput(
+                              controller: _matriculeText,
+                              isActive: _matriculeText.text.isNotEmpty,
+                            )
+                          ], */
                           if ((tagsController.faceResult.value.isNotEmpty &&
                               tagsController.faceResult.value !=
                                   "Inconnu")) ...[
                             CostumButton(
-                              borderColor: Colors.green.shade200,
+                              borderColor: Colors.blue.shade300,
                               title: "Valider",
                               isLoading: tagsController.isLoading.value,
-                              bgColor: Colors.green,
+                              bgColor: Colors.blue,
                               labelColor: Colors.white,
                               onPress: () async {
+                                /* tagsController.faceResult.value =
+                                    _matriculeText.text; */
                                 if (key.isEmpty) {
                                   checkPresence();
                                   _controller.dispose();
@@ -298,6 +335,12 @@ Future<void> checkPresence() async {
 }
 
 Future<void> closePatrol({String comment = ""}) async {
+  if (tagsController.faceResult.value !=
+      authController.userSession.value.matricule) {
+    EasyLoading.showInfo(
+        "Le matricule agent ne correspond pas.connectez-vous avec un compte vous appartenant.");
+    return;
+  }
   var manager = HttpManager();
   tagsController.isLoading.value = true;
   manager.stopPendingPatrol(comment).then((value) {
@@ -317,6 +360,12 @@ Future<void> closePatrol({String comment = ""}) async {
 }
 
 Future<void> startPatrol({String comment = ""}) async {
+  if (tagsController.faceResult.value !=
+      authController.userSession.value.matricule) {
+    EasyLoading.showInfo(
+        "Le matricule agent ne correspond pas.connectez-vous avec un compte vous appartenant.");
+    return;
+  }
   var manager = HttpManager();
   tagsController.isLoading.value = true;
   manager.beginPatrol(comment).then((value) {

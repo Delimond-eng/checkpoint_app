@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
@@ -89,6 +90,8 @@ class FaceRecognitionController extends GetxController {
   Future<void> addKnownFaceFromImage(String matricule, XFile image) async {
     final embedding = await getEmbedding(image);
     if (embedding == null) {
+      EasyLoading.showInfo(
+          "Visage non détecté dans l'image ${image.name}. Enrôlement interrompu.");
       throw Exception(
           "Visage non détecté dans l'image ${image.name}. Enrôlement interrompu.");
     }
@@ -163,13 +166,18 @@ class FaceRecognitionController extends GetxController {
   }
 
   /// Reconnaissance faciale à partir d'une image
-  Future<String> recognizeFaceFromImage(XFile? image) async {
+  Future<dynamic> recognizeFaceFromImage(XFile? image) async {
     try {
-      if (image == null) return "Opération annulée par l'utilisateur";
-      //face.value = image;
+      if (image == null) {
+        EasyLoading.showInfo("Opération annulée par l'utilisateur");
+        return null;
+      }
 
       final embedding = await getEmbedding(image);
-      if (embedding == null) return "Impossible d'obtenir l'empreinte";
+      if (embedding == null) {
+        EasyLoading.showInfo("Impossible d'obtenir l'empreinte du visage");
+        return null;
+      }
 
       String? closestName;
       double minDistance = double.infinity;
@@ -181,9 +189,9 @@ class FaceRecognitionController extends GetxController {
           closestName = entry.key;
         }
       }
-      return (minDistance < 1.0) ? closestName! : "Inconnu";
+      return (minDistance < 0.7) ? closestName! : "Inconnu";
     } catch (e) {
-      return "Erreur de reconnaissance : $e";
+      return null;
     }
   }
 

@@ -6,9 +6,11 @@ import 'package:checkpoint_app/kernel/services/http_manager.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:checkpoint_app/widgets/costum_icon_button.dart';
+import 'package:checkpoint_app/widgets/enroll_input.dart';
 import 'package:checkpoint_app/widgets/svg.dart';
 import 'package:checkpoint_app/widgets/user_status.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -60,7 +62,9 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
       _initializeControllerFuture = _controller.initialize();
       setState(() {});
     } catch (e) {
-      print("Erreur d'initialisation de la caméra : $e");
+      if (kDebugMode) {
+        print("Erreur d'initialisation de la caméra : $e");
+      }
     }
   }
 
@@ -180,32 +184,8 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
                 ],
               ).paddingBottom(15.0),
               if (pickedImage != null) ...[
-                Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.0),
-                    border: Border.all(
-                      color: Colors.grey.shade300,
-                    ),
-                  ),
-                  width: MediaQuery.of(context).size.width,
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: TextField(
-                          controller: _matriculeController,
-                          textAlign: TextAlign.center,
-                          decoration: const InputDecoration(
-                            hintText: "Matricule de l'agent",
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                        ),
-                      )
-                    ],
-                  ).paddingHorizontal(8.0),
-                ).paddingBottom(10.0),
+                EnrollInput(controller: _matriculeController)
+                    .paddingBottom(10.0),
                 SizedBox(
                   width: MediaQuery.of(context).size.width,
                   height: 55.0,
@@ -300,7 +280,9 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
       });
       tagsController.face.value = pickedImage;
     } catch (e) {
-      print("Erreur capture : $e");
+      if (kDebugMode) {
+        print("Erreur capture : $e");
+      }
     }
   }
 
@@ -310,10 +292,9 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
       EasyLoading.showToast("Entrez le matricule de l'agent !");
       return;
     }
-
-    final embedding = faceRecognitionController.getEmbedding(pickedImage!);
-    // ignore: unnecessary_null_comparison
-    if (embedding == null) {
+    final embedding =
+        await faceRecognitionController.getEmbedding(pickedImage!);
+    if (embedding == null || embedding.isEmpty) {
       EasyLoading.showInfo(
           "Aucun visage détecté. veuillez prendre une photo du visage !");
       return;
@@ -330,12 +311,8 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
       pickedImage = null;
       tagsController.face.value = null;
       setState(() => isLoading = false);
-      if (value != "success") {
-        EasyLoading.showInfo(value);
-      } else {
-        EasyLoading.showSuccess(
-          "Données transmises avec succès !",
-        );
+      if (value != null) {
+        EasyLoading.showSuccess(value);
       }
     });
   }

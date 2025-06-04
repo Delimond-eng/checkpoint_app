@@ -19,7 +19,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   /* await FirebaseMessaging.instance.requestPermission(); */
   await FirebaseService.initFCM();
-  await FirebaseService.getToken();
+  // await FirebaseService.getToken();
   // Initialiser les notifications locales
   await GetStorage.init();
   Get.put(TagsController());

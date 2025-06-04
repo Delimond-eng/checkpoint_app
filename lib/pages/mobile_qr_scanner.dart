@@ -48,6 +48,7 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
           tagsController.scannedArea.value = area;
           tagsController.isLoading.value = false;
           tagsController.isQrcodeScanned.value = true;
+          tagsController.isScanningModalOpen.value = true;
           controller.stop();
           showScanningCompleter(context);
         }
@@ -59,7 +60,6 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
 
   @override
   Widget build(BuildContext context) {
-    tagsController.isScanningModalOpen.value = false;
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
@@ -83,71 +83,68 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
           () => Stack(
             alignment: Alignment.center,
             children: [
-              !tagsController.isScanningModalOpen.value
-                  ? MobileScanner(
-                      controller: controller,
-                      onDetect: _handleBarcode,
-                    )
-                  : Center(
-                      child: DottedBorder(
-                        color: primaryMaterialColor.shade100,
-                        radius: const Radius.circular(12.0),
-                        strokeWidth: 1,
-                        borderType: BorderType.RRect,
-                        dashPattern: const [6, 3],
-                        child: ClipRRect(
+              if (!tagsController.isScanningModalOpen.value) ...[
+                MobileScanner(
+                  controller: controller,
+                  onDetect: _handleBarcode,
+                )
+              ] else ...[
+                Center(
+                  child: DottedBorder(
+                    color: primaryMaterialColor.shade100,
+                    radius: const Radius.circular(12.0),
+                    strokeWidth: 1,
+                    borderType: BorderType.RRect,
+                    dashPattern: const [6, 3],
+                    child: ClipRRect(
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(12.0)),
+                      child: Container(
+                        height: 150.0,
+                        width: 150.0,
+                        color: Colors.white,
+                        child: Material(
                           borderRadius:
                               const BorderRadius.all(Radius.circular(12.0)),
-                          child: Container(
-                            height: 150.0,
-                            width: 150.0,
-                            color: Colors.white,
-                            child: Material(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(12.0)),
-                              color: Colors.white,
-                              child: InkWell(
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(12.0)),
-                                onTap: () {
-                                  //restart scan here
-                                  tagsController.isScanningModalOpen.value =
-                                      false;
-                                  controller
-                                      .stop(); // Arrête d'abord proprement
-                                  Future.delayed(
-                                      const Duration(milliseconds: 300), () {
-                                    controller
-                                        .start(); // Puis redémarre le scanner
-                                  });
-                                },
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.refresh_rounded,
-                                      color: primaryMaterialColor,
-                                    ).paddingBottom(10.0),
-                                    const Text(
-                                      "Relancer la caméra",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 10.0,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
+                          color: Colors.white,
+                          child: InkWell(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(12.0)),
+                            onTap: () {
+                              //restart scan here
+                              tagsController.isScanningModalOpen.value = false;
+                              controller.stop(); // Arrête d'abord proprement
+                              Future.delayed(const Duration(milliseconds: 300),
+                                  () {
+                                controller.start(); // Puis redémarre le scanner
+                              });
+                            },
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.refresh_rounded,
+                                  color: primaryMaterialColor,
+                                ).paddingBottom(10.0),
+                                const Text(
+                                  "Relancer la caméra",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 10.0,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                )
+                              ],
                             ),
                           ),
                         ),
                       ),
                     ),
-
+                  ),
+                )
+              ],
               // Overlay avec fenêtre transparente
-
               tagsController.patrolId.value != 0
                   ? Positioned(
                       bottom: 15.0,

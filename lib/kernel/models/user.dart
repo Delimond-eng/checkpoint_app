@@ -7,19 +7,20 @@ class User {
   int? siteId;
   String? status;
   String? role;
+  String? photo;
   Site? site;
 
-  User({
-    this.id,
-    this.matricule,
-    this.fullname,
-    this.password,
-    this.agencyId,
-    this.siteId,
-    this.status,
-    this.role,
-    this.site,
-  });
+  User(
+      {this.id,
+      this.matricule,
+      this.fullname,
+      this.password,
+      this.agencyId,
+      this.siteId,
+      this.status,
+      this.role,
+      this.site,
+      this.photo});
 
   // Factory method to create an instance of Agent from JSON
   factory User.fromJson(Map<String, dynamic> json) {
@@ -27,6 +28,7 @@ class User {
       id: json['id'],
       matricule: json['matricule'],
       fullname: json['fullname'],
+      photo: json['photo'].toString().replaceAll("127.0.0.1", "192.168.4.47"),
       password: json['password'],
       agencyId: json['agency_id'],
       siteId: json['site_id'],
@@ -42,6 +44,7 @@ class User {
       'id': id,
       'matricule': matricule,
       'fullname': fullname,
+      'photo': photo,
       'password': password,
       'agency_id': agencyId,
       'site_id': siteId,

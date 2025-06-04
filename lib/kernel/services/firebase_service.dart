@@ -11,49 +11,56 @@ final FlutterTts flutterTts = FlutterTts();
 class FirebaseService {
   static Future<void> initFCM() async {
     // Initialiser les notifications Awesome
-    AwesomeNotifications().initialize(
-      null,
-      [
-        NotificationChannel(
-          channelKey: 'basic_channel',
-          channelName: 'Notifications',
-          channelDescription: 'Canal de notifications de base',
-          importance: NotificationImportance.High,
-          defaultColor: primaryMaterialColor,
-          playSound: true,
-          enableVibration: true,
-          soundSource: 'resource://raw/bell',
-          enableLights: true,
-        )
-      ],
-      debug: true,
-    );
+    try {
+      AwesomeNotifications().initialize(
+        null,
+        [
+          NotificationChannel(
+            channelKey: 'basic_channel',
+            channelName: 'Notifications',
+            channelDescription: 'Canal de notifications de base',
+            importance: NotificationImportance.High,
+            defaultColor: primaryMaterialColor,
+            playSound: true,
+            enableVibration: true,
+            soundSource: 'resource://raw/bell',
+            enableLights: true,
+          )
+        ],
+        debug: true,
+      );
 
-    // Demander la permission (obligatoire pour Android 13+ et iOS)
-    await AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-      if (!isAllowed) {
-        AwesomeNotifications().requestPermissionToSendNotifications();
-      }
-    });
+      // Demander la permission (obligatoire pour Android 13+ et iOS)
+      await AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
+        if (!isAllowed) {
+          AwesomeNotifications().requestPermissionToSendNotifications();
+        }
+      });
 
-    // Écouter les messages en premier plan
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      final title = message.notification?.title ?? "Nouvelle notification";
-      final body = message.notification?.body ?? "";
+      // Écouter les messages en premier plan
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        final title = message.notification?.title ?? "Nouvelle notification";
+        final body = message.notification?.body ?? "";
 
+        if (kDebugMode) {
+          print("title : $title, body : $body");
+          EasyLoading.showToast(body);
+        }
+        // Afficher la notification avec Awesome
+        showLocalNotification(title, body);
+
+        // Lire le message à voix haute
+        readMessage(body);
+      });
+
+      // Messages en arrière-plan
+      FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler);
+    } catch (e) {
       if (kDebugMode) {
-        print("title : $title, body : $body");
-        EasyLoading.showToast(body);
+        print("Firebase init error $e");
       }
-      // Afficher la notification avec Awesome
-      showLocalNotification(title, body);
-
-      // Lire le message à voix haute
-      readMessage(body);
-    });
-
-    // Messages en arrière-plan
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    }
   }
 
   static Future<void> _firebaseMessagingBackgroundHandler(
