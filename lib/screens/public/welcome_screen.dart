@@ -2,7 +2,6 @@ import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/global/store.dart';
 import 'package:checkpoint_app/pages/enroll_face_page.dart';
-import 'package:checkpoint_app/pages/tasks_page.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:checkpoint_app/widgets/user_status.dart';
@@ -18,8 +17,9 @@ import '../../pages/announce_page.dart';
 import '../../pages/mobile_qr_scanner.dart' show MobileQrScannerPage;
 import '../../pages/patrol_planning.dart';
 import '../../pages/profil_page.dart';
-import '../../pages/setting_page.dart';
-import '../../pages/supervisor_home.dart';
+import '../../pages/supervisor_planning.dart';
+import '../../pages/supervisor_qrcode_completer.dart';
+
 import '../../widgets/home_menu_btn.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -42,6 +42,135 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isGuard =
+        authController.userSession.value.role!.toLowerCase() == 'guard';
+    final isSupervisor =
+        authController.userSession.value.role!.toLowerCase() == 'supervisor';
+
+    // Liste des boutons
+    final List<Widget> menuButtons = [
+      HomeMenuBtn(
+        icon: "presence",
+        title: "Présence",
+        onPress: () {
+          _showBottonPresenceChoice(context);
+        },
+      ),
+      if (isGuard) ...[
+        HomeMenuBtn(
+          icon: "qrcode",
+          title: "Patrouille",
+          onPress: () {
+            if (tagsController.patrolId.value != 0) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MobileQrScannerPage(),
+                ),
+              );
+            } else {
+              EasyLoading.showToast(
+                  "Veuillez sélectionner votre planning de patrouille !");
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PatrolPlanning(),
+                ),
+              );
+            }
+          },
+        ),
+        HomeMenuBtn(
+          icon: "planning",
+          title: "Planning",
+          onPress: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PatrolPlanning(),
+              ),
+            );
+          },
+        ),
+      ] else ...[
+        HomeMenuBtn(
+          icon: "supervision-3",
+          title: "Supervision",
+          onPress: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SupervisorPlanning(),
+              ),
+            );
+          },
+        ),
+      ],
+      HomeMenuBtn(
+        icon: "request-2",
+        title: "Requêtes",
+        onPress: () {
+          showRequestModal(context);
+        },
+      ),
+      HomeMenuBtn(
+        icon: "incident",
+        title: "Signalements",
+        onPress: () {
+          showSignalementModal(context);
+        },
+      ),
+      HomeMenuBtn(
+        icon: "notify",
+        title: "Communiqués",
+        onPress: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AnnouncePage(),
+            ),
+          );
+        },
+      ),
+      HomeMenuBtn(
+        icon: "user-1",
+        title: "Profil",
+        onPress: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProfilPage(),
+            ),
+          );
+        },
+      ),
+      if (isSupervisor) ...[
+        HomeMenuBtn(
+          icon: "face-2",
+          title: "Enrôlement",
+          onPress: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const EnrollFacePage(),
+              ),
+            );
+          },
+        ),
+        HomeMenuBtn(
+          icon: "qrcode",
+          title: "Completer zone",
+          onPress: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SupervisorQRCODECompleter(),
+              ),
+            );
+          },
+        ),
+      ]
+    ];
     return Scaffold(
         appBar: AppBar(
           backgroundColor: darkColor,
@@ -73,166 +202,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             return Column(
               children: [
                 _btnPatrolPending().paddingBottom(20.0).paddingTop(10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    HomeMenuBtn(
-                      icon: "presence",
-                      title: "Présence",
-                      onPress: () {
-                        _showBottonPresenceChoice(context);
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "qrcode",
-                      title: "Patrouille",
-                      onPress: () {
-                        if (authController.userSession.value.role == 'guard') {
-                          if (tagsController.patrolId.value != 0) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const MobileQrScannerPage(),
-                              ),
-                            );
-                          } else {
-                            EasyLoading.showToast(
-                                "Veuillez sélectionner votre planning de patrouille !");
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const PatrolPlanning(),
-                              ),
-                            );
-                          }
-                        } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SupervisorHome(),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "planning",
-                      title: "Planning",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PatrolPlanning(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ).paddingBottom(15.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    HomeMenuBtn(
-                      icon: "tasks",
-                      title: "Tâches",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const TaskPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "request-2",
-                      title: "Requêtes",
-                      onPress: () {
-                        showRequestModal(context);
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "incident",
-                      title: "Signalements",
-                      onPress: () {
-                        showSignalementModal(context);
-                      },
-                    ),
-                  ],
-                ).paddingBottom(15.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    HomeMenuBtn(
-                      icon: "notify",
-                      title: "Communiqués",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AnnouncePage(),
-                          ),
-                        );
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "user-1",
-                      title: "Profil",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ProfilPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    HomeMenuBtn(
-                      icon: "settings",
-                      title: "Paramètres",
-                      onPress: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingPage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ).paddingBottom(15.0),
-                if (authController.userSession.value.role == 'supervisor') ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      HomeMenuBtn(
-                        icon: "face-2",
-                        title: "Enrôlement",
-                        onPress: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const EnrollFacePage(),
-                            ),
-                          );
-                        },
-                      ).paddingRight(15.0),
-                      HomeMenuBtn(
-                        icon: "qrcode",
-                        title: "Completer zone",
-                        onPress: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SupervisorHome(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  )
-                ]
+                GridView.count(
+                  crossAxisCount: 3,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  children: menuButtons,
+                )
               ],
             );
           }),
@@ -397,7 +374,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SupervisorHome(),
+                  builder: (context) => const SupervisorQRCODECompleter(),
                 ),
               );
             }

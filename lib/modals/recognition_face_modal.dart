@@ -38,6 +38,9 @@ Future<void> showRecognitionModal(context,
       print("Erreur d'initialisation de la caméra : $e");
     }
   }
+  tagsController.face.value = null;
+  tagsController.faceResult.value = "";
+
   showCustomModal(
     context,
     onClosed: () {
@@ -281,8 +284,6 @@ Future<void> showRecognitionModal(context,
                               bgColor: Colors.blue,
                               labelColor: Colors.white,
                               onPress: () async {
-                                /* tagsController.faceResult.value =
-                                    _matriculeText.text; */
                                 if (key.isEmpty) {
                                   checkPresence();
                                   _controller.dispose();
@@ -320,8 +321,10 @@ Future<void> checkPresence() async {
   tagsController.isLoading.value = true;
   manager.checkPresence().then((value) {
     tagsController.isLoading.value = false;
+    tagsController.faceResult.value = "";
+    tagsController.face.value = null;
     if (value != "success") {
-      EasyLoading.showInfo(value);
+      EasyLoading.showSuccess(value);
       Get.back();
     } else {
       tagsController.faceResult.value = "";
@@ -360,8 +363,8 @@ Future<void> closePatrol({String comment = ""}) async {
 }
 
 Future<void> startPatrol({String comment = ""}) async {
-  if (tagsController.faceResult.value !=
-      authController.userSession.value.matricule) {
+  if (authController.userSession.value.matricule!.trim() !=
+      tagsController.faceResult.value.trim()) {
     EasyLoading.showInfo(
         "Le matricule agent ne correspond pas.connectez-vous avec un compte vous appartenant.");
     return;

@@ -107,7 +107,9 @@ Future<void> showSupervisorCompleter(context) async {
                   tagsController.isLoading.value = true;
                   manager.completeArea(areaLibelle.text).then((value) {
                     tagsController.isLoading.value = false;
+                    tagsController.isScanningModalOpen.value = false;
                     if (value != "success") {
+                      Get.back();
                       EasyLoading.showToast(value);
                     } else {
                       Get.back();

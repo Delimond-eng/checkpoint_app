@@ -29,8 +29,14 @@ class HttpManager {
           var agent = User.fromJson(response["agent"]);
           localStorage.write("user_session", agent.toJson());
           authController.userSession.value = agent;
-          var token = await FirebaseService.getToken();
-          await updateSiteTOKEN(token, agent.siteId);
+          try {
+            var token = await FirebaseService.getToken();
+            await updateSiteTOKEN(token, agent.siteId);
+          } catch (e) {
+            if (kDebugMode) {
+              print('Firebase error $e');
+            }
+          }
           return agent;
         }
       } else {
@@ -255,6 +261,27 @@ class HttpManager {
     try {
       var response = await Api.request(
         url: "site.token",
+        method: "post",
+        body: data,
+      );
+      if (response != null) {
+        if (response.containsKey("errors")) {
+          return response["errors"].toString();
+        } else {
+          return response["result"];
+        }
+      } else {
+        return response["errors"].toString();
+      }
+    } catch (e) {
+      return "Echec de traitement de la requête !";
+    }
+  }
+
+  Future<dynamic> saveLog(Map<String, dynamic> data) async {
+    try {
+      var response = await Api.request(
+        url: "log.create",
         method: "post",
         body: data,
       );

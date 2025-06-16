@@ -19,8 +19,8 @@ class HomeMenuBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final btnSize = (screenWidth - 60) / 3;
+    final screen = MediaQuery.of(context).size;
+    final btnSize = (screen.width - 60) / 3;
 
     return DottedBorder(
       color: primaryMaterialColor.shade500,
@@ -31,8 +31,8 @@ class HomeMenuBtn extends StatelessWidget {
       child: ClipRRect(
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: Container(
-          height: btnSize,
-          width: btnSize,
+          height: screen.height,
+          width: screen.width,
           decoration: const BoxDecoration(
             color: Color.fromARGB(255, 13, 1, 1),
           ),

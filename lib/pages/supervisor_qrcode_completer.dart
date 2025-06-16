@@ -13,14 +13,15 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../modals/supervisor_completer_modal.dart';
 import '../widgets/user_status.dart';
 
-class SupervisorHome extends StatefulWidget {
-  const SupervisorHome({super.key});
+class SupervisorQRCODECompleter extends StatefulWidget {
+  const SupervisorQRCODECompleter({super.key});
 
   @override
-  State<SupervisorHome> createState() => _SupervisorHomeState();
+  State<SupervisorQRCODECompleter> createState() =>
+      _SupervisorQRCODECompleterState();
 }
 
-class _SupervisorHomeState extends State<SupervisorHome> {
+class _SupervisorQRCODECompleterState extends State<SupervisorQRCODECompleter> {
   var scaffoldKey = GlobalKey<ScaffoldState>();
 
   final controller = MobileScannerController(autoStart: true);
@@ -36,7 +37,7 @@ class _SupervisorHomeState extends State<SupervisorHome> {
   void _handleBarcode(BarcodeCapture barcodes) {
     if (mounted) {
       try {
-        if (!tagsController.isScanningModalOpen.value) {
+        if (tagsController.isScanningModalOpen.value == false) {
           // Convertir la chaîne JSON en Map
           Map<String, dynamic> jsonMap =
               jsonDecode(barcodes.barcodes.first.displayValue!);
@@ -82,7 +83,7 @@ class _SupervisorHomeState extends State<SupervisorHome> {
           () => Stack(
             alignment: Alignment.center,
             children: [
-              !tagsController.isScanningModalOpen.value
+              tagsController.isScanningModalOpen.value == false
                   ? MobileScanner(
                       controller: controller,
                       onDetect: _handleBarcode,

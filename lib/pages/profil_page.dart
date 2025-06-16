@@ -66,7 +66,9 @@ class _ProfilPageState extends State<ProfilPage> {
                           radius: 40.0,
                           backgroundColor: blackColor,
                           child:
-                              authController.userSession.value.photo!.isNotEmpty
+                              authController.userSession.value.photo != null &&
+                                      authController
+                                          .userSession.value.photo!.isNotEmpty
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(80.0),
                                       child: Image.network(

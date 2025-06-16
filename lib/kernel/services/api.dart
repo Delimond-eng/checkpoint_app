@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class Api {
-  static String baseUrl = 'http://salama.uco.rod.mybluehost.me/api';
-  //static String baseUrl = 'http://192.168.0.222:8000/api';
+  //static String baseUrl = 'http://salama.uco.rod.mybluehost.me/api';
+  static String baseUrl = 'http://192.168.0.222:8000/api';
 
   static Future<dynamic> request({
     required String method,
@@ -15,9 +15,13 @@ class Api {
     Map<String, File>? files,
   }) async {
     final fullUrl = Uri.parse('$baseUrl/$url');
-    headers ??= {'Content-Type': 'application/json'};
+    const apiKey = "16jA/0l6TBmFoPk64MnrmLzVp2MRL2Do0yD5N6K4e54=";
+    headers = {
+      'Content-Type': 'application/json',
+      'X-API-KEY': apiKey,
+      ...?headers,
+    };
     http.Response response;
-
     try {
       if (files != null && files.isNotEmpty) {
         // --- Gérer Multipart (photo + données imbriquées)
