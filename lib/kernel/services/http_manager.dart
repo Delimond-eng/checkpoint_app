@@ -5,12 +5,17 @@ import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/global/store.dart';
 import 'package:checkpoint_app/kernel/models/announce.dart';
 import 'package:checkpoint_app/kernel/models/planning.dart';
+import 'package:checkpoint_app/kernel/models/supervisor_data.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
 import 'package:checkpoint_app/kernel/services/api.dart';
 import 'package:checkpoint_app/kernel/services/firebase_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
+
+SupervisorDataResponse parseSupervisorData(dynamic json) {
+  return SupervisorDataResponse.fromJson(json as Map<String, dynamic>);
+}
 
 class HttpManager {
   //Agent login
@@ -29,6 +34,7 @@ class HttpManager {
           var agent = User.fromJson(response["agent"]);
           localStorage.write("user_session", agent.toJson());
           authController.userSession.value = agent;
+          authController.refreshUser();
           try {
             var token = await FirebaseService.getToken();
             await updateSiteTOKEN(token, agent.siteId);
@@ -376,7 +382,9 @@ class HttpManager {
         });
       }
     } catch (e) {
-      print("Request Error ${e.toString()}");
+      if (kDebugMode) {
+        print("Request Error ${e.toString()}");
+      }
     }
     return plannings;
   }
@@ -398,6 +406,28 @@ class HttpManager {
     } catch (e) {
       return null;
     }
+  }
+
+  Future<SupervisorDataResponse?> loadSupervisorData() async {
+    SupervisorDataResponse? datas;
+    var agent = authController.userSession.value;
+    try {
+      if (agent.role == 'supervisor') {
+        var response = await Api.request(
+          method: "get",
+          url: "supervisor.datas?_id=${agent.id}",
+        );
+        if (response != null) {
+          var json = response["datas"];
+          datas = await compute(parseSupervisorData, json);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Request Error ${e.toString()}");
+      }
+    }
+    return datas;
   }
 
   // Fonction pour vérifier et demander la permission de localisation

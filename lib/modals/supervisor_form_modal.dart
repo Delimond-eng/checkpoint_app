@@ -1,16 +1,27 @@
 import 'package:checkpoint_app/constants/styles.dart';
+import 'package:checkpoint_app/global/controllers.dart';
+import 'package:checkpoint_app/kernel/models/supervisor_data.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart';
 
 import '../widgets/submit_button.dart';
 import 'utils.dart';
 
 Future<void> showSupervisorFormModal(context) async {
+  final agentId = authController.selectedAgentId.value;
+  final elementList = authController.agentElementsMap[agentId]!;
   showCustomModal(
     context,
     onClosed: () {
-      //tagsController.isScanningModalOpen.value = false;
+      final allChecked =
+          elementList.every((element) => element.selectedNote != null);
+      if (!allChecked) {
+        authController.supervisedAgent.remove(agentId);
+        authController.supervisedAgent.refresh();
+      }
     },
     title: "Elémenent à superviser",
     child: Padding(
@@ -25,9 +36,9 @@ Future<void> showSupervisorFormModal(context) async {
                 .bodySmall!
                 .copyWith(color: primaryMaterialColor),
           ).paddingBottom(8.0),
-          for (int i = 0; i < 5; i++) ...[
-            const ElementCard().paddingBottom(5.0),
-          ],
+          ...elementList
+              .map((e) => ElementCard(data: e).paddingBottom(4))
+              .toList(),
           const SizedBox(
             height: 5.0,
           ),
@@ -37,7 +48,25 @@ Future<void> showSupervisorFormModal(context) async {
             child: SubmitButton(
               label: "Valider",
               loading: false,
-              onPressed: () async {},
+              onPressed: () async {
+                final allChecked = elementList
+                    .every((element) => element.selectedNote != null);
+
+                if (allChecked) {
+                  if (!authController.supervisedAgent.contains(agentId)) {
+                    authController.supervisedAgent.add(agentId);
+                    authController.supervisedAgent.refresh();
+                    authController.update();
+                    Get.back();
+                  }
+                } else {
+                  authController.supervisedAgent.remove(agentId);
+                  authController.supervisedAgent.refresh();
+                  EasyLoading.showInfo(
+                      "Veuillez completer tous les éléments pour valider !");
+                  return;
+                }
+              },
             ),
           )
         ],
@@ -46,11 +75,15 @@ Future<void> showSupervisorFormModal(context) async {
   );
 }
 
-class ElementCard extends StatelessWidget {
-  const ElementCard({
-    super.key,
-  });
+class ElementCard extends StatefulWidget {
+  final ElementModel data;
+  const ElementCard({super.key, required this.data});
 
+  @override
+  State<ElementCard> createState() => _ElementCardState();
+}
+
+class _ElementCardState extends State<ElementCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -66,13 +99,13 @@ class ElementCard extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Gauche
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Placeat nemo corporis.".toUpperCase(),
+                    widget.data.libelle,
                     style: const TextStyle(
                       color: darkGreyColor,
                       fontSize: 12.0,
@@ -80,28 +113,32 @@ class ElementCard extends StatelessWidget {
                     ),
                   ).paddingBottom(4.0),
                   Text(
-                    "Lorem ipsum dolor sit amet consectetur, adipisicing elit.",
-                    style: TextStyle(
-                      color: Colors.grey.shade800,
-                      fontSize: 8.0,
-                    ),
+                    widget.data.description,
+                    style:
+                        TextStyle(color: Colors.grey.shade800, fontSize: 8.0),
                   )
                 ],
               ),
             ),
+            // Droite : boutons B / P / M
             Row(
-              children: [
-                const TaskCheck(
-                  label: "B",
-                ).paddingRight(5.0),
-                const TaskCheck(
-                  label: "P",
-                ).paddingRight(5.0),
-                const TaskCheck(
-                  label: "M",
-                ),
-              ],
-            ).paddingLeft(5.0)
+              children: widget.data.checkTasks.map((task) {
+                return Row(
+                  children: [
+                    TaskCheck(
+                      label: task["label"],
+                      isActive: task["isActive"],
+                      onActived: () {
+                        setState(() {
+                          widget.data.activateNote(task["label"]);
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 5.0),
+                  ],
+                );
+              }).toList(),
+            ).paddingLeft(5.0),
           ],
         ),
       ),
@@ -112,7 +149,9 @@ class ElementCard extends StatelessWidget {
 class TaskCheck extends StatelessWidget {
   final String? label;
   final bool isActive;
-  const TaskCheck({super.key, this.label, this.isActive = false});
+  final VoidCallback onActived;
+  const TaskCheck(
+      {super.key, this.label, this.isActive = false, required this.onActived});
 
   @override
   Widget build(BuildContext context) {
@@ -124,59 +163,80 @@ class TaskCheck extends StatelessWidget {
           color: Colors.white,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(5.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              label!,
-              style: const TextStyle(
-                fontFamily: "Staatliches",
-                fontWeight: FontWeight.w800,
-                fontSize: 12.0,
-              ),
-            ).paddingBottom(3.0),
-            if (isActive) ...[
-              AnimatedContainer(
-                height: 25.0,
-                width: 25.0,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25.0),
-                  gradient: LinearGradient(
-                    colors: [Colors.blue, Colors.blue.shade200],
+      child: Material(
+        borderRadius: BorderRadius.circular(5.0),
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(5.0),
+          onTap: onActived,
+          child: Padding(
+            padding: const EdgeInsets.all(2.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  label!,
+                  style: const TextStyle(
+                    fontFamily: "Poppins",
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black,
+                    fontSize: 10.0,
                   ),
-                ),
-                duration: const Duration(milliseconds: 100),
-                child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.check_rounded,
-                      size: 10.0,
-                      color: whiteColor,
-                    )
-                  ],
-                ),
-              ),
-            ] else ...[
-              AnimatedContainer(
-                height: 25.0,
-                width: 25.0,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25.0),
-                  border: Border.all(
-                    color: Colors.blue.shade300,
+                ).paddingBottom(3.0),
+                if (isActive) ...[
+                  AnimatedContainer(
+                    height: 25.0,
+                    width: 25.0,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25.0),
+                      gradient: LinearGradient(
+                        colors: [color, color.shade400],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    duration: const Duration(milliseconds: 100),
+                    child: const Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_rounded,
+                          size: 10.0,
+                          color: whiteColor,
+                        )
+                      ],
+                    ),
                   ),
-                ),
-                duration: const Duration(milliseconds: 100),
-              )
-            ]
-          ],
+                ] else ...[
+                  AnimatedContainer(
+                    height: 25.0,
+                    width: 25.0,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25.0),
+                      border: Border.all(
+                        color: color,
+                      ),
+                    ),
+                    duration: const Duration(milliseconds: 100),
+                  )
+                ]
+              ],
+            ),
+          ),
         ),
       ),
     );
+  }
+
+  MaterialColor get color {
+    if (label == "B") {
+      return Colors.green;
+    } else if (label == "P") {
+      return Colors.amber;
+    } else {
+      return Colors.deepOrange;
+    }
   }
 }

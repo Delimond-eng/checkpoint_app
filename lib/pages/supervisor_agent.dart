@@ -1,5 +1,6 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
+import 'package:checkpoint_app/kernel/models/supervisor_data.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -42,43 +43,48 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
           const UserStatus(name: "Gaston delimond").marginAll(8.0),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          children: [
-            Text(
-              "Veuillez sélectionner l'agent que vous êtes en train de superviser.",
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                    color: primaryMaterialColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ).paddingBottom(15.0),
-            ListView.separated(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemBuilder: (__, _) {
-                return const SupervisorAgentCard();
-              },
-              separatorBuilder: (__, _) {
-                return const SizedBox(
-                  height: 8,
-                );
-              },
-              itemCount: 5,
-            ),
-            const SizedBox(
-              height: 10.0,
-            ),
-            SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: 55.0,
-              child: SubmitButton(
-                label: "Cloturer supervision",
-                loading: tagsController.isLoading.value,
-                onPressed: () async {},
+      body: Obx(
+        () => SingleChildScrollView(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              Text(
+                "Veuillez sélectionner l'agent que vous êtes en train de superviser.",
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                      color: primaryMaterialColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ).paddingBottom(15.0),
+              ListView.separated(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  var data = authController.selectedSupervisorAgents[index];
+                  return SupervisorAgentCard(
+                    data: data,
+                  );
+                },
+                separatorBuilder: (__, _) {
+                  return const SizedBox(
+                    height: 8,
+                  );
+                },
+                itemCount: authController.selectedSupervisorAgents.length,
               ),
-            )
-          ],
+              const SizedBox(
+                height: 10.0,
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: 55.0,
+                child: SubmitButton(
+                  label: "Cloturer supervision",
+                  loading: tagsController.isLoading.value,
+                  onPressed: () async {},
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -86,10 +92,10 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
 }
 
 class SupervisorAgentCard extends StatelessWidget {
-  final bool isActive;
+  final AgentModel data;
   const SupervisorAgentCard({
     super.key,
-    this.isActive = false,
+    required this.data,
   });
 
   @override
@@ -106,6 +112,13 @@ class SupervisorAgentCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(8.0),
           onTap: () {
+            authController.selectedAgentId.value = data.id;
+            if (!authController.agentElementsMap.containsKey(data.id)) {
+              authController.agentElementsMap[data.id] =
+                  authController.supervisorElements.map((element) {
+                return ElementModel.cloneFrom(element);
+              }).toList();
+            }
             showSupervisorFormModal(context);
           },
           child: Padding(
@@ -119,68 +132,80 @@ class SupervisorAgentCard extends StatelessWidget {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(40.0),
-                        child: Image.asset(
-                          "assets/images/profil-2.png",
-                          height: 40.0,
-                          width: 40.0,
-                        ),
+                        child: data.photo != null
+                            ? Image.network(
+                                data.photo!
+                                    .replaceAll("127.0.0.1", "192.168.211.223"),
+                                height: 40.0,
+                                width: 40.0,
+                              )
+                            : Image.asset(
+                                "assets/images/profil-2.png",
+                                height: 40.0,
+                                width: 40.0,
+                              ),
                       ).paddingRight(8.0),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Gaston delimond",
-                              style: TextStyle(
+                              data.fullname.toUpperCase(),
+                              style: const TextStyle(
                                 fontFamily: "Staatliches",
                                 fontSize: 18.0,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
                             Text(
-                              "ST00002",
-                              style: TextStyle(),
+                              data.matricule,
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        height: 25.0,
-                        width: 25.0,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5.0),
-                          border: Border.all(
-                            width: 2.0,
-                            color: primaryMaterialColor.shade200,
-                          ),
-                        ),
-                        child: isActive
-                            ? Container(
-                                margin: const EdgeInsets.all(2.0),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(5.0),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      primaryMaterialColor,
-                                      primaryMaterialColor.shade200
-                                    ],
-                                  ),
-                                ),
-                                child: const Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.check_rounded,
-                                      size: 10.0,
-                                      color: whiteColor,
-                                    )
-                                  ],
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                      )
+                      Obx(() => Container(
+                            height: 25.0,
+                            width: 25.0,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5.0),
+                              border: Border.all(
+                                width: 2.0,
+                                color: authController.supervisedAgent
+                                        .contains(data.id)
+                                    ? Colors.green.shade400
+                                    : Colors.grey.shade400,
+                              ),
+                            ),
+                            child: authController.supervisedAgent
+                                    .contains(data.id)
+                                ? Container(
+                                    margin: const EdgeInsets.all(2.0),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(3.0),
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Colors.green,
+                                          Colors.greenAccent
+                                        ],
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.check_rounded,
+                                          size: 10.0,
+                                          color: whiteColor,
+                                        )
+                                      ],
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                          ))
                     ],
                   ),
                 ),

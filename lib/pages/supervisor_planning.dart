@@ -1,5 +1,6 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
+import 'package:checkpoint_app/kernel/models/supervisor_data.dart';
 import 'package:checkpoint_app/pages/supervisor_agent.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/svg.dart';
@@ -42,39 +43,46 @@ class _SupervisorPlanningState extends State<SupervisorPlanning> {
           const UserStatus(name: "Gaston delimond").marginAll(8.0),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          children: [
-            Text(
-              "Veuillez sélectionner le site que vous êtes en train d'inspecter afin de poursuivre l'inspection.",
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                    color: primaryMaterialColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ).paddingBottom(15.0),
-            ListView.separated(
-              shrinkWrap: true,
-              itemBuilder: (__, _) {
-                return const SupervisionPlanningSiteCard();
-              },
-              separatorBuilder: (__, _) {
-                return const SizedBox(
-                  height: 8,
-                );
-              },
-              itemCount: 5,
-            )
-          ],
-        ),
-      ),
+      body: Obx(() {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              Text(
+                "Veuillez sélectionner le site que vous êtes en train d'inspecter afin de poursuivre l'inspection.",
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                      color: primaryMaterialColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ).paddingBottom(15.0),
+              ListView.separated(
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  var item = authController.supervisorSites[index];
+                  return SupervisionPlanningSiteCard(
+                    data: item,
+                  );
+                },
+                separatorBuilder: (__, _) {
+                  return const SizedBox(
+                    height: 8,
+                  );
+                },
+                itemCount: authController.supervisorSites.length,
+              )
+            ],
+          ),
+        );
+      }),
     );
   }
 }
 
 class SupervisionPlanningSiteCard extends StatelessWidget {
+  final SiteModel data;
   const SupervisionPlanningSiteCard({
     super.key,
+    required this.data,
   });
 
   @override
@@ -90,6 +98,7 @@ class SupervisionPlanningSiteCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(4.0),
           onTap: () {
+            authController.selectedSupervisorAgents.value = data.agents;
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -107,9 +116,18 @@ class SupervisionPlanningSiteCard extends StatelessWidget {
                     top: Radius.circular(4.0),
                   ),
                 ),
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text("SECTEUR KIN EST"),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(data.planningTitle),
+                      Text(
+                        data.planningDate,
+                        style: const TextStyle(color: Colors.blue),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Container(
@@ -132,22 +150,21 @@ class SupervisionPlanningSiteCard extends StatelessWidget {
                               size: 40.0,
                               color: primaryMaterialColor,
                             ).paddingRight(8.0),
-                            const Expanded(
+                            Expanded(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "SITE VATICAN",
-                                    style: TextStyle(
+                                    data.siteLibelle.toUpperCase(),
+                                    style: const TextStyle(
                                       fontFamily: "Staatliches",
                                       fontSize: 18.0,
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                   Text(
-                                    "ST00002",
-                                    style: TextStyle(),
+                                    data.siteCode,
                                   ),
                                 ],
                               ),
