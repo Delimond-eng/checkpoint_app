@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/models/supervisor_data.dart';
@@ -80,7 +81,28 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                 child: SubmitButton(
                   label: "Cloturer supervision",
                   loading: tagsController.isLoading.value,
-                  onPressed: () async {},
+                  onPressed: () async {
+                    List<Map<String, dynamic>> elements = [];
+                    int? agentId;
+                    authController.agentElementsMap.forEach((id, elementList) {
+                      agentId = id;
+                      for (var element in elementList) {
+                        elements.add({
+                          "element_id": element.id,
+                          "note": element.selectedNote
+                        });
+                      }
+                    });
+                    var data = {
+                      "presence_id": authController.pendingSupervisionMap["id"],
+                      "agent_id": agentId,
+                      "elements": elements,
+                      "schedule_id":
+                          authController.pendingSupervisionMap["schedule_id"]
+                    };
+
+                    print(data);
+                  },
                 ),
               )
             ],
@@ -133,11 +155,23 @@ class SupervisorAgentCard extends StatelessWidget {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(40.0),
                         child: data.photo != null
-                            ? Image.network(
-                                data.photo!
-                                    .replaceAll("127.0.0.1", "192.168.211.223"),
+                            ? CachedNetworkImage(
                                 height: 40.0,
                                 width: 40.0,
+                                fit: BoxFit.cover,
+                                imageUrl: data.photo!
+                                    .replaceAll("127.0.0.1", "192.168.211.223"),
+                                placeholder: (context, url) => Image.asset(
+                                  "assets/images/profil-2.png",
+                                  height: 40.0,
+                                  width: 40.0,
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    Image.asset(
+                                  "assets/images/profil-2.png",
+                                  height: 40.0,
+                                  width: 40.0,
+                                ),
                               )
                             : Image.asset(
                                 "assets/images/profil-2.png",

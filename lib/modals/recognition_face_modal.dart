@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
+import 'package:checkpoint_app/global/modal.dart';
 import 'package:checkpoint_app/kernel/services/http_manager.dart';
+import 'package:checkpoint_app/pages/supervisor_agent.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -18,7 +20,10 @@ import '../widgets/svg.dart';
 import 'utils.dart';
 
 Future<void> showRecognitionModal(context,
-    {String key = "", String comment = ""}) async {
+    {String key = "",
+    String comment = "",
+    siteId = "",
+    scheduleId = ""}) async {
   List<CameraDescription> cameras = [];
   /* final TextEditingController _matriculeText = TextEditingController(); */
   late CameraController _controller;
@@ -298,6 +303,32 @@ Future<void> showRecognitionModal(context,
                                     _controller.dispose();
                                     Get.back();
                                   }
+
+                                  if (key == "supervize-in") {
+                                    DGCustomDialog.showInteraction(context,
+                                        message:
+                                            "Etes-vous sûr de vouloir commencer cette supervision ?",
+                                        onValidated: () {
+                                      supervizeStart(siteId, scheduleId)
+                                          .then((v) {
+                                        tagsController.isLoading.value = false;
+                                        if (v == "success") {
+                                          _controller.dispose();
+                                          Get.back();
+                                          Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const SupervisorAgent(),
+                                            ),
+                                          );
+                                        } else {
+                                          EasyLoading.showInfo(
+                                              "Echec de traitement, veuillez recommencer SVP !");
+                                        }
+                                      });
+                                    });
+                                  }
                                 }
                               },
                             ).paddingTop(10.0)
@@ -385,4 +416,32 @@ Future<void> startPatrol({String comment = ""}) async {
       Get.back();
     }
   });
+}
+
+Future<dynamic> supervizeStart(siteId, scheduleId) async {
+  if (kDebugMode) {
+    print("start supervision...");
+    print("siteID : $siteId");
+    print("planningID : $scheduleId");
+  }
+  if (authController.userSession.value.matricule!.trim() !=
+      tagsController.faceResult.value.trim()) {
+    EasyLoading.showInfo(
+        "Le matricule agent ne correspond pas.connectez-vous avec un compte vous appartenant.");
+    return;
+  }
+  var manager = HttpManager();
+  tagsController.isLoading.value = true;
+  var value = await manager.makeSupervision(siteId, scheduleId);
+  tagsController.isLoading.value = false;
+  tagsController.faceResult.value = "";
+  tagsController.face.value = null;
+  if (value is String) {
+    return "errors";
+  } else {
+    EasyLoading.showSuccess(
+      "Bienvenue, vous avez commencer une nouvelle supervision !",
+    );
+    return "success";
+  }
 }

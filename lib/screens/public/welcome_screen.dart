@@ -1,7 +1,8 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/global/store.dart';
+import 'package:checkpoint_app/kernel/services/http_manager.dart';
 import 'package:checkpoint_app/pages/enroll_face_page.dart';
+import 'package:checkpoint_app/pages/supervisor_agent.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:checkpoint_app/widgets/user_status.dart';
@@ -97,12 +98,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           icon: "supervision-3",
           title: "Supervision",
           onPress: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SupervisorPlanning(),
-              ),
-            );
+            if (authController.pendingSupervisionMap.isEmpty) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SupervisorPlanning(),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SupervisorAgent(),
+                ),
+              );
+            }
           },
         ),
       ],
@@ -219,9 +229,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           tooltip: "Appuyez longtemps pour déclencher un alèrte !",
           elevation: 10,
           onPressed: () {
-            localStorage.remove("patrol_id");
+            /* localStorage.remove("patrol_id");
             tagsController.refreshPending();
-            EasyLoading.showToast("Ce service n'est pas encore disponible !");
+            EasyLoading.showToast("Ce service n'est pas encore disponible !"); */
+            HttpManager().sendData().then((res) => {});
             /* FirebaseService.showLocalNotification("Nouvelle notification Test",
                 "Ceci est un nouvelle notification test...");
             FirebaseService.readMessage(

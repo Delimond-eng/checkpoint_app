@@ -1,11 +1,13 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/models/supervisor_data.dart';
+import 'package:checkpoint_app/modals/recognition_face_modal.dart';
 import 'package:checkpoint_app/pages/supervisor_agent.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/svg.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 import '../widgets/user_status.dart';
@@ -26,6 +28,7 @@ class _SupervisorPlanningState extends State<SupervisorPlanning> {
   @override
   Widget build(BuildContext context) {
     tagsController.isScanningModalOpen.value = false;
+    tagsController.isLoading.value = false;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: darkColor,
@@ -74,6 +77,26 @@ class _SupervisorPlanningState extends State<SupervisorPlanning> {
           ),
         );
       }),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          authController.refreshUser();
+        },
+        child: Obx(
+          () => tagsController.isLoading.value
+              ? const SizedBox(
+                  height: 20.0,
+                  width: 20.0,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3.0,
+                    color: primaryMaterialColor,
+                  ),
+                )
+              : const Icon(
+                  CupertinoIcons.refresh,
+                  color: primaryMaterialColor,
+                ),
+        ),
+      ),
     );
   }
 }
@@ -98,13 +121,28 @@ class SupervisionPlanningSiteCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(4.0),
           onTap: () {
-            authController.selectedSupervisorAgents.value = data.agents;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SupervisorAgent(),
-              ),
-            );
+            if (authController.pendingSupervisionMap.isEmpty) {
+              authController.selectedSupervisorAgents.value = data.agents;
+              showRecognitionModal(
+                context,
+                key: "supervize-in",
+                siteId: data.siteId,
+                scheduleId: data.planningId,
+              );
+            } else {
+              if (data.planningId.toString() ==
+                  authController.pendingSupervisionMap["schedule_id"]) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SupervisorAgent(),
+                  ),
+                );
+              } else {
+                EasyLoading.showInfo(
+                    "Vous avez une supervision en cours et non cloturée !");
+              }
+            }
           },
           child: Column(
             children: [

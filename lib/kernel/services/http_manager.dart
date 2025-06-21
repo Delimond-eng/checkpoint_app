@@ -396,12 +396,15 @@ class HttpManager {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best,
       ).timeout(
-        const Duration(seconds: 200),
+        const Duration(seconds: 60),
         onTimeout: () {
           EasyLoading.showInfo("GPS trop lent, délai dépassé.");
           throw TimeoutException("GPS trop lent, délai dépassé.");
         },
       );
+      if (kDebugMode) {
+        print("${position.latitude},${position.longitude}");
+      }
       return "${position.latitude},${position.longitude}";
     } catch (e) {
       return null;
@@ -428,6 +431,73 @@ class HttpManager {
       }
     }
     return datas;
+  }
+
+  Future<dynamic> makeSupervision(siteId, planningId) async {
+    try {
+      var latlng = await _getCurrentLocation();
+      var data = <String, dynamic>{
+        "site_id": siteId,
+        "schedule_id": planningId,
+        "latlng": latlng,
+        "matricule": authController.userSession.value.matricule,
+        "comment": ""
+      };
+      var response = await Api.request(
+        url: "supervisor.visit.create",
+        method: "post",
+        body: data,
+        files: {
+          "photo": File(tagsController.face.value!.path),
+        },
+      );
+      if (kDebugMode) {
+        print(response);
+      }
+      if (response != null) {
+        if (response.containsKey("errors")) {
+          return response["errors"].toString();
+        } else {
+          localStorage.write("pending_supervision", response["result"]);
+          authController.refreshPendingSupervisionMap();
+          return response["result"];
+        }
+      } else {
+        return response["errors"].toString();
+      }
+    } catch (e) {
+      return "Echec de traitement de la requête !";
+    }
+  }
+
+  Future<dynamic> sendData() async {
+    var data = <String, dynamic>{
+      "data_1": "Hello",
+      "data_2": {
+        "data": [
+          {"id": "22", "label": "Lorem"},
+          {"id": "23", "label": "Ipsum"},
+        ],
+        "test": 1
+      }
+    };
+
+    try {
+      var response = await Api.request(
+        method: "post",
+        url: "data.test",
+        body: data,
+      );
+
+      if (kDebugMode) {
+        print(response);
+      }
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error $e");
+      }
+    }
   }
 
   // Fonction pour vérifier et demander la permission de localisation

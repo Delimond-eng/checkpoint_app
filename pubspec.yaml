@@ -49,6 +49,7 @@ dependencies:
   flutter_tts: ^4.2.2
   awesome_notifications: ^0.10.1
   shared_preferences: ^2.5.3
+  cached_network_image: ^3.4.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

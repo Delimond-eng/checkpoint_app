@@ -51,9 +51,13 @@ Future<void> showSupervisorFormModal(context) async {
               onPressed: () async {
                 final allChecked = elementList
                     .every((element) => element.selectedNote != null);
-
                 if (allChecked) {
                   if (!authController.supervisedAgent.contains(agentId)) {
+                    authController.supervisedAgent.add(agentId);
+                    authController.supervisedAgent.refresh();
+                    authController.update();
+                    Get.back();
+                  } else {
                     authController.supervisedAgent.add(agentId);
                     authController.supervisedAgent.refresh();
                     authController.update();
