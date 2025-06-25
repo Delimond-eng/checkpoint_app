@@ -19,11 +19,12 @@ import '../widgets/costum_icon_button.dart';
 import '../widgets/svg.dart';
 import 'utils.dart';
 
-Future<void> showRecognitionModal(context,
+Future<dynamic> showRecognitionModal(context,
     {String key = "",
     String comment = "",
     siteId = "",
-    scheduleId = ""}) async {
+    scheduleId = "",
+    VoidCallback? onValidate}) async {
   List<CameraDescription> cameras = [];
   /* final TextEditingController _matriculeText = TextEditingController(); */
   late CameraController _controller;
@@ -328,6 +329,11 @@ Future<void> showRecognitionModal(context,
                                         }
                                       });
                                     });
+                                  }
+
+                                  if (key == "supervize-out") {
+                                    Get.back();
+                                    onValidate!.call();
                                   }
                                 }
                               },

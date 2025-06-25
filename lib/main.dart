@@ -1,5 +1,6 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -15,11 +16,17 @@ import 'kernel/services/firebase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  /* await FirebaseMessaging.instance.requestPermission(); */
-  await FirebaseService.initFCM();
-  // await FirebaseService.getToken();
+  try {
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
+    /* await FirebaseMessaging.instance.requestPermission(); */
+    await FirebaseService.initFCM();
+    // await FirebaseService.getToken();
+  } catch (e) {
+    if (kDebugMode) {
+      print(e);
+    }
+  }
   // Initialiser les notifications locales
   await GetStorage.init();
   Get.put(TagsController());

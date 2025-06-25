@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:checkpoint_app/global/controllers.dart';
@@ -433,16 +434,21 @@ class HttpManager {
     return datas;
   }
 
-  Future<dynamic> makeSupervision(siteId, planningId) async {
+  Future<dynamic> makeSupervision(siteId, planningId,
+      {List<Map<String, dynamic>>? elements}) async {
     try {
       var latlng = await _getCurrentLocation();
       var data = <String, dynamic>{
+        if (authController.pendingSupervisionMap.isNotEmpty)
+          "id": authController.pendingSupervisionMap["id"],
         "site_id": siteId,
         "schedule_id": planningId,
         "latlng": latlng,
         "matricule": authController.userSession.value.matricule,
-        "comment": ""
+        "comment": "",
+        if (elements != null) "elements": jsonEncode(elements)
       };
+
       var response = await Api.request(
         url: "supervisor.visit.create",
         method: "post",

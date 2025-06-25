@@ -1,4 +1,5 @@
 import 'package:checkpoint_app/constants/styles.dart';
+import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -150,6 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
         isLoading = false;
       });
       if (res is User) {
+        faceRecognitionController.enrollUserFaceFromUrl();
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
@@ -158,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
           (route) => false,
         );
       } else {
-        EasyLoading.showToast(res.toString());
+        EasyLoading.showInfo(res.toString());
         return;
       }
     });

@@ -50,6 +50,7 @@ class AuthController extends GetxController {
       pendingSupervisionMap.value = data as Map<String, dynamic>;
     } else {
       pendingSupervisionMap.value = {};
+      agentElementsMap = {};
     }
   }
 }

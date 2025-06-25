@@ -289,7 +289,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
   Future<void> _enroll() async {
     final matricule = _matriculeController.text.trim();
     if (matricule.isEmpty) {
-      EasyLoading.showToast("Entrez le matricule de l'agent !");
+      EasyLoading.showInfo("Entrez le matricule de l'agent !");
       return;
     }
     final embedding =
@@ -312,7 +312,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
       tagsController.face.value = null;
       setState(() => isLoading = false);
       if (value != null) {
-        EasyLoading.showSuccess(value);
+        EasyLoading.showSuccess("Visage enrollé avec succès !");
       }
     });
   }

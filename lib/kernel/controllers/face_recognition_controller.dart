@@ -1,15 +1,19 @@
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:checkpoint_app/global/controllers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 import '/kernel/models/face.dart';
 import '/kernel/services/database_helper.dart';
+import 'package:http/http.dart' as http;
 
 List<List<List<List<double>>>> processImage(Map<String, dynamic> args) {
   final Uint8List bytes = args['bytes'];
@@ -101,6 +105,42 @@ class FaceRecognitionController extends GetxController {
     await DatabaseHelper().insertFace(
       FacePicture(matricule: matricule, embedding: embedding),
     );
+  }
+
+  Future<void> enrollUserFaceFromUrl() async {
+    String imageUrl = authController.userSession.value.photo!;
+    String matricule = authController.userSession.value.matricule!;
+    try {
+      // Télécharger l'image depuis l'URL
+      final response = await http.get(Uri.parse(imageUrl));
+      if (response.statusCode != 200) {
+        throw Exception("Impossible de télécharger l'image depuis l'URL.");
+      }
+      // Sauvegarder temporairement l'image localement
+      final tempDir = await getTemporaryDirectory();
+      final tempFilePath = '${tempDir.path}/$matricule.jpg';
+      final tempFile = File(tempFilePath);
+      await tempFile.writeAsBytes(response.bodyBytes);
+      // Convertir en XFile pour compatibilité avec getEmbedding
+      final xfileImage = XFile(tempFile.path);
+
+      // Obtenir l'empreinte faciale
+      final embedding = await getEmbedding(xfileImage);
+      if (embedding == null) {
+        throw Exception(
+            "Visage non détecté dans l'image depuis l'URL. Enrôlement interrompu.");
+      }
+      // Sauvegarder dans la mémoire locale et en base de données
+      _knownFaces[matricule] = embedding;
+      await DatabaseHelper().insertFace(
+        FacePicture(matricule: matricule, embedding: embedding),
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print("Erreur : ${e.toString()}");
+      }
+      rethrow;
+    }
   }
 
   Future<void> recognize(XFile? image) async {

@@ -232,7 +232,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             /* localStorage.remove("patrol_id");
             tagsController.refreshPending();
             EasyLoading.showToast("Ce service n'est pas encore disponible !"); */
-            HttpManager().sendData().then((res) => {});
+            //HttpManager().sendData().then((res) => {});
             /* FirebaseService.showLocalNotification("Nouvelle notification Test",
                 "Ceci est un nouvelle notification test...");
             FirebaseService.readMessage(
@@ -243,6 +243,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 builder: (context) => const QRcodeScannerPage(),
               ),
             ); */
+            print(authController.pendingSupervisionMap);
           },
           child: Image.asset(
             "assets/icons/sirene.png",

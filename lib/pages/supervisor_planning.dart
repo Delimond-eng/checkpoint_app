@@ -47,35 +47,62 @@ class _SupervisorPlanningState extends State<SupervisorPlanning> {
         ],
       ),
       body: Obx(() {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(10.0),
-          child: Column(
-            children: [
-              Text(
-                "Veuillez sélectionner le site que vous êtes en train d'inspecter afin de poursuivre l'inspection.",
-                style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      color: primaryMaterialColor,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ).paddingBottom(15.0),
-              ListView.separated(
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  var item = authController.supervisorSites[index];
-                  return SupervisionPlanningSiteCard(
-                    data: item,
-                  );
-                },
-                separatorBuilder: (__, _) {
-                  return const SizedBox(
-                    height: 8,
-                  );
-                },
-                itemCount: authController.supervisorSites.length,
-              )
-            ],
-          ),
-        );
+        if (authController.supervisorSites.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Svg(
+                    path: "events.svg",
+                    size: 80.0,
+                    color: primaryColor,
+                  ).paddingBottom(8.0),
+                  Text(
+                    "Vous n'avez pas des sites à superviser programmés, veuillez actualiser pour voir votre planning !",
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: primaryMaterialColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  )
+                ],
+              ),
+            ),
+          );
+        } else {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              children: [
+                Text(
+                  "Veuillez sélectionner le site que vous êtes en train d'inspecter afin de poursuivre l'inspection.",
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        color: primaryMaterialColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ).paddingBottom(15.0),
+                ListView.separated(
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    var item = authController.supervisorSites[index];
+                    return SupervisionPlanningSiteCard(
+                      data: item,
+                    );
+                  },
+                  separatorBuilder: (__, _) {
+                    return const SizedBox(
+                      height: 8,
+                    );
+                  },
+                  itemCount: authController.supervisorSites.length,
+                )
+              ],
+            ),
+          );
+        }
       }),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
