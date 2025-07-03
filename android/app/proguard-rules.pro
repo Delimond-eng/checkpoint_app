@@ -3,3 +3,4 @@
 -dontwarn org.tensorflow.lite.**
 -keep class com.dexterous.** { *; }
 -keep class me.carda.awesome_notifications.** { *; }
+-dontwarn me.carda.awesome_notifications.**

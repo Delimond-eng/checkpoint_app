@@ -476,34 +476,24 @@ class HttpManager {
     }
   }
 
-  Future<dynamic> sendData() async {
-    var data = <String, dynamic>{
-      "data_1": "Hello",
-      "data_2": {
-        "data": [
-          {"id": "22", "label": "Lorem"},
-          {"id": "23", "label": "Ipsum"},
-        ],
-        "test": 1
-      }
-    };
-
+  Future<List<Map<String, dynamic>>> checkPending() async {
+    List<Map<String, dynamic>> data = [];
+    var siteId = authController.userSession.value.siteId;
     try {
       var response = await Api.request(
-        method: "post",
-        url: "data.test",
-        body: data,
-      );
-
-      if (kDebugMode) {
-        print(response);
+          method: "get", url: "site.patrol.pending?id=$siteId");
+      if (response != null) {
+        var patrol = response["patrol"];
+        for (var e in patrol) {
+          data.add(e as Map<String, dynamic>);
+        }
       }
-      return response;
     } catch (e) {
       if (kDebugMode) {
         print("Error $e");
       }
     }
+    return data;
   }
 
   // Fonction pour vérifier et demander la permission de localisation
