@@ -31,10 +31,12 @@ class AuthController extends GetxController {
     if (userObject != null) {
       userSession.value = User.fromJson(userObject);
       tagsController.isLoading.value = true;
-      var datas = await HttpManager().loadSupervisorData();
-      tagsController.isLoading.value = false;
-      supervisorSites.value = datas!.sites;
-      supervisorElements.value = datas.elements;
+      try {
+        var datas = await HttpManager().loadSupervisorData();
+        tagsController.isLoading.value = false;
+        supervisorSites.value = datas!.sites;
+        supervisorElements.value = datas.elements;
+      } catch (e) {}
       return userSession.value;
     } else {
       return User();

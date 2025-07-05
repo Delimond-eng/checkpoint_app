@@ -1,5 +1,7 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
+import 'package:checkpoint_app/kernel/services/log_service.dart';
+import 'package:checkpoint_app/modals/utils.dart';
 import 'package:checkpoint_app/pages/enroll_face_page.dart';
 import 'package:checkpoint_app/pages/supervisor_agent.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
@@ -10,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
-import '../../global/store.dart';
 import '../../modals/recognition_face_modal.dart' show showRecognitionModal;
 import '../../modals/request_modal.dart';
 import '../../modals/signalement_modal.dart';
@@ -34,6 +35,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      showCostumLoading(context);
+      await LogService.loadPowerEvents();
+      if (mounted) Get.back();
+      LogService.startActivityHeartbeat();
+    });
   }
 
   @override
@@ -228,24 +236,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           backgroundColor: primaryMaterialColor.shade500,
           tooltip: "Appuyez longtemps pour déclencher un alèrte !",
           elevation: 10,
-          onPressed: () {
-            localStorage.remove("patrol_id");
-            tagsController.refreshPending();
-            /* 
-            EasyLoading.showToast("Ce service n'est pas encore disponible !"); */
-            //HttpManager().sendData().then((res) => {});
-            /* FirebaseService.showLocalNotification("Nouvelle notification Test",
-                "Ceci est un nouvelle notification test...");
-            FirebaseService.readMessage(
-                "Ceci est un nouvelle notification test"); */
-            /* Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const QRcodeScannerPage(),
-              ),
-            ); */
-            print(authController.pendingSupervisionMap);
-          },
+          onPressed: () async {},
           child: Image.asset(
             "assets/icons/sirene.png",
             height: 35.0,

@@ -1,5 +1,6 @@
 package com.example.checkpoint_app
 
+
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
@@ -12,7 +13,6 @@ class MainActivity : FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
             val componentName = ComponentName(this, MyDeviceAdminReceiver::class.java)
@@ -50,4 +50,5 @@ class MainActivity : FlutterActivity() {
     override fun onBackPressed() {
         // Désactive le bouton retour
     }
+
 }

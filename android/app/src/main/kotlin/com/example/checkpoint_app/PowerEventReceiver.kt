@@ -6,13 +6,17 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import android.util.Log
+import android.widget.Toast
+import android.preference.PreferenceManager
 
 class PowerEventReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        val prefs = context.getSharedPreferences("shutdown_log", Context.MODE_PRIVATE)
+        val action = intent?.action
+        Log.d("PowerEventReceiver", "Action reçue : $action")
+
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val editor = prefs.edit()
 
-        val action = intent?.action
         val timestamp = System.currentTimeMillis()
         val batteryLevel = getBatteryLevel(context)
 
@@ -20,12 +24,14 @@ class PowerEventReceiver : BroadcastReceiver() {
             Intent.ACTION_SHUTDOWN -> {
                 editor.putLong("shutdown_time", timestamp)
                 editor.putInt("shutdown_battery", batteryLevel)
+                Toast.makeText(context, "Extinction détectée !", Toast.LENGTH_LONG).show()
                 Log.d("PowerEventReceiver", "Extinction détectée : $timestamp, $batteryLevel%")
             }
 
             Intent.ACTION_BOOT_COMPLETED -> {
                 editor.putLong("boot_time", timestamp)
                 editor.putInt("boot_battery", batteryLevel)
+                Toast.makeText(context, "Allumage détecté !", Toast.LENGTH_LONG).show()
                 Log.d("PowerEventReceiver", "Allumage détecté : $timestamp, $batteryLevel%")
             }
         }

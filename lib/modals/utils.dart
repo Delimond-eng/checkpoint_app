@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -87,6 +88,46 @@ void showCustomModal(context,
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+showCostumLoading(BuildContext context) {
+  showDialog(
+    barrierDismissible: false,
+    barrierColor: Colors.black38,
+    context: context,
+    useRootNavigator: true,
+    builder: (BuildContext context) {
+      return SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(10.0),
+                  alignment: Alignment.center,
+                  child: Container(
+                    height: 70.0,
+                    width: 70.0,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: darkColor,
+                    ),
+                    child: const CircularProgressIndicator(
+                      color: primaryMaterialColor,
+                      strokeWidth: 3.0,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),

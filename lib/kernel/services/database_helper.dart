@@ -1,5 +1,4 @@
 import 'package:checkpoint_app/kernel/models/face.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -34,9 +33,6 @@ class DatabaseHelper {
 
   Future<List<FacePicture>> getAllFaces() async {
     final List<Map<String, dynamic>> maps = await _db!.query('faces');
-    if (kDebugMode) {
-      print(maps);
-    }
     return maps.map(FacePicture.fromMap).toList();
   }
 
