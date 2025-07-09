@@ -1,7 +1,6 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/services/log_service.dart';
-import 'package:checkpoint_app/modals/utils.dart';
 import 'package:checkpoint_app/pages/enroll_face_page.dart';
 import 'package:checkpoint_app/pages/supervisor_agent.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
@@ -35,13 +34,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      showCostumLoading(context);
-      await LogService.loadPowerEvents();
-      if (mounted) Get.back();
-      LogService.startActivityHeartbeat();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handlePowerEventAndStartHeartbeat(context); // ← passe le context ici
     });
+  }
+
+  Future<void> _handlePowerEventAndStartHeartbeat(BuildContext context) async {
+    await LogService.loadPowerEvents();
+    LogService.startActivityHeartbeat();
   }
 
   @override

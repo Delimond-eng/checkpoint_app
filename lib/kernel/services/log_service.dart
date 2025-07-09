@@ -8,12 +8,16 @@ import 'battery_service.dart';
 
 class LogService {
   static void startActivityHeartbeat() {
-    Timer.periodic(const Duration(seconds: 30), (timer) async {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final battery = await BatteryService.getBatteryLevel();
-      localStorage.write('last_active_time', now);
-      localStorage.write('last_active_battery', battery);
+    Timer.periodic(const Duration(seconds: 30), (timer) {
+      _updateHeartbeat();
     });
+  }
+
+  static Future<void> _updateHeartbeat() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final battery = await BatteryService.getBatteryLevel();
+    localStorage.write('last_active_time', now);
+    localStorage.write('last_active_battery', battery);
   }
 
   static Future<bool> loadPowerEvents() async {
@@ -26,6 +30,10 @@ class LogService {
 
     List<Map<String, dynamic>> data = [];
 
+    print("Now: $now");
+    print("Last active: $lastActiveTime");
+    print("Diff: ${now - lastActiveTime}");
+
     if (lastActiveTime != null && now - lastActiveTime > 60 * 1000) {
       // > 1 minute
       data.add({
@@ -33,7 +41,8 @@ class LogService {
         "site_id": authController.userSession.value.siteId,
         "reason": "shutdown",
         "battery_level": lastActiveBattery?.toString() ?? "-",
-        "date_and_time": _formatTime(int.parse(lastActiveTime.toString()))
+        "date_and_time": _formatTime(
+            int.parse(lastActiveTime.toString())) // <-- ancienne date
       });
 
       data.add({
@@ -41,7 +50,7 @@ class LogService {
         "site_id": authController.userSession.value.siteId,
         "reason": "boot",
         "battery_level": currentBattery.toString(),
-        "date_and_time": _formatTime(int.parse(lastActiveTime.toString()))
+        "date_and_time": _formatTime(now) // <-- nouvelle date (maintenant)
       });
     }
 
@@ -54,6 +63,7 @@ class LogService {
       localStorage.remove('last_active_time');
       localStorage.remove('last_active_battery');
     }
+
     return true;
   }
 

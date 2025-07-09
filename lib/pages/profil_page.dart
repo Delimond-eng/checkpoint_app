@@ -76,6 +76,7 @@ class _ProfilPageState extends State<ProfilPage> {
                                         fit: BoxFit.cover,
                                         alignment: Alignment.center,
                                         height: 80.0,
+                                        width: 80.0,
                                       ),
                                     )
                                   : Image.asset(

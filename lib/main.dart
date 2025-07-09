@@ -16,8 +16,6 @@ import 'kernel/services/firebase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await GetStorage.init();
-
   try {
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
@@ -29,8 +27,7 @@ void main() async {
       print(e);
     }
   }
-  // Initialiser les notifications locales
-
+  await GetStorage.init();
   Get.put(TagsController());
   Get.put(AuthController());
   Get.put(FaceRecognitionController());
