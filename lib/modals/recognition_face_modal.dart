@@ -290,51 +290,55 @@ Future<dynamic> showRecognitionModal(context,
                               bgColor: Colors.blue,
                               labelColor: Colors.white,
                               onPress: () async {
-                                if (key.isEmpty) {
-                                  checkPresence();
+                                if (key == "check-in") {
+                                  checkPresence("check-in");
                                   _controller.dispose();
-                                } else {
-                                  if (key == "patrol") {
-                                    await startPatrol(comment: comment);
-                                    _controller.dispose();
-                                    Get.back();
-                                  }
-                                  if (key == "close") {
-                                    await closePatrol(comment: comment);
-                                    _controller.dispose();
-                                    Get.back();
-                                  }
+                                }
+                                if (key == "check-out") {
+                                  checkPresence("check-out");
+                                  _controller.dispose();
+                                }
 
-                                  if (key == "supervize-in") {
-                                    DGCustomDialog.showInteraction(context,
-                                        message:
-                                            "Etes-vous sûr de vouloir commencer cette supervision ?",
-                                        onValidated: () {
-                                      supervizeStart(siteId, scheduleId)
-                                          .then((v) {
-                                        tagsController.isLoading.value = false;
-                                        if (v == "success") {
-                                          _controller.dispose();
-                                          Get.back();
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const SupervisorAgent(),
-                                            ),
-                                          );
-                                        } else {
-                                          EasyLoading.showInfo(
-                                              "Echec de traitement, veuillez recommencer SVP !");
-                                        }
-                                      });
+                                if (key == "patrol") {
+                                  await startPatrol(comment: comment);
+                                  _controller.dispose();
+                                  Get.back();
+                                }
+                                if (key == "close") {
+                                  await closePatrol(comment: comment);
+                                  _controller.dispose();
+                                  Get.back();
+                                }
+
+                                if (key == "supervize-in") {
+                                  DGCustomDialog.showInteraction(context,
+                                      message:
+                                          "Etes-vous sûr de vouloir commencer cette supervision ?",
+                                      onValidated: () {
+                                    supervizeStart(siteId, scheduleId)
+                                        .then((v) {
+                                      tagsController.isLoading.value = false;
+                                      if (v == "success") {
+                                        _controller.dispose();
+                                        Get.back();
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const SupervisorAgent(),
+                                          ),
+                                        );
+                                      } else {
+                                        EasyLoading.showInfo(
+                                            "Echec de traitement, veuillez recommencer SVP !");
+                                      }
                                     });
-                                  }
+                                  });
+                                }
 
-                                  if (key == "supervize-out") {
-                                    Get.back();
-                                    onValidate!.call();
-                                  }
+                                if (key == "supervize-out") {
+                                  Get.back();
+                                  onValidate!.call();
                                 }
                               },
                             ).paddingTop(10.0)
@@ -353,10 +357,10 @@ Future<dynamic> showRecognitionModal(context,
   );
 }
 
-Future<void> checkPresence() async {
+Future<void> checkPresence(String key) async {
   var manager = HttpManager();
   tagsController.isLoading.value = true;
-  manager.checkPresence().then((value) {
+  manager.checkPresence(key: key).then((value) {
     tagsController.isLoading.value = false;
     tagsController.faceResult.value = "";
     tagsController.face.value = null;

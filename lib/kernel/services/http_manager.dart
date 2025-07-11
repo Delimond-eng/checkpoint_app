@@ -170,13 +170,14 @@ class HttpManager {
   }
 
   //Presence signal
-  Future<dynamic> checkPresence() async {
+  Future<dynamic> checkPresence({String? key}) async {
     var latlng = await _getCurrentLocation();
     try {
       Map<String, dynamic> data = {
         "matricule": tagsController.faceResult.value,
         "heure": "${DateTime.now().hour}:${DateTime.now().minute}",
         "status_photo": "success",
+        "key": key!,
         "coordonnees": latlng,
       };
 

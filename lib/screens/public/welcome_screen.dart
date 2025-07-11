@@ -323,7 +323,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     onPress: () {
                       tagsController.isLoading.value = false;
                       Get.back();
-                      showRecognitionModal(context);
+                      showRecognitionModal(context, key: "check-in");
                     },
                   ),
                 ),
@@ -336,7 +336,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     onPress: () {
                       tagsController.isLoading.value = false;
                       Get.back();
-                      showRecognitionModal(context);
+                      showRecognitionModal(context, key: "check-out");
                     },
                   ),
                 ),
