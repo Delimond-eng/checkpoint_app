@@ -30,38 +30,36 @@ class LogService {
 
     List<Map<String, dynamic>> data = [];
 
-    print("Now: $now");
-    print("Last active: $lastActiveTime");
-    print("Diff: ${now - lastActiveTime}");
+    if (lastActiveTime != null && lastActiveTime != null) {
+      if (lastActiveTime != null && now - lastActiveTime > 60 * 1000) {
+        // > 1 minute
+        data.add({
+          "agent_id": authController.userSession.value.id,
+          "site_id": authController.userSession.value.siteId,
+          "reason": "shutdown",
+          "battery_level": lastActiveBattery?.toString() ?? "-",
+          "date_and_time": _formatTime(
+              int.parse(lastActiveTime.toString())) // <-- ancienne date
+        });
 
-    if (lastActiveTime != null && now - lastActiveTime > 60 * 1000) {
-      // > 1 minute
-      data.add({
-        "agent_id": authController.userSession.value.id,
-        "site_id": authController.userSession.value.siteId,
-        "reason": "shutdown",
-        "battery_level": lastActiveBattery?.toString() ?? "-",
-        "date_and_time": _formatTime(
-            int.parse(lastActiveTime.toString())) // <-- ancienne date
-      });
-
-      data.add({
-        "agent_id": authController.userSession.value.id,
-        "site_id": authController.userSession.value.siteId,
-        "reason": "boot",
-        "battery_level": currentBattery.toString(),
-        "date_and_time": _formatTime(now) // <-- nouvelle date (maintenant)
-      });
-    }
-
-    // Envoi
-    if (data.isNotEmpty) {
-      for (var e in data) {
-        await httpManager.saveLog(e);
+        data.add({
+          "agent_id": authController.userSession.value.id,
+          "site_id": authController.userSession.value.siteId,
+          "reason": "boot",
+          "battery_level": currentBattery.toString(),
+          "date_and_time": _formatTime(now) // <-- nouvelle date (maintenant)
+        });
       }
-      // Nettoyer après
-      localStorage.remove('last_active_time');
-      localStorage.remove('last_active_battery');
+
+      // Envoi
+      if (data.isNotEmpty) {
+        for (var e in data) {
+          await httpManager.saveLog(e);
+        }
+        // Nettoyer après
+        localStorage.remove('last_active_time');
+        localStorage.remove('last_active_battery');
+      }
     }
 
     return true;

@@ -1,5 +1,6 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
+import 'package:checkpoint_app/kernel/services/app_update_service.dart';
 import 'package:checkpoint_app/kernel/services/log_service.dart';
 import 'package:checkpoint_app/pages/enroll_face_page.dart';
 import 'package:checkpoint_app/pages/supervisor_agent.dart';
@@ -31,15 +32,33 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
+  final AppUpdateService _updateService = AppUpdateService();
+
   @override
+  void initState() {
+    super.initState();
+    // Lancement du check périodique toutes les 24h
+    _updateService.startPeriodicCheck(const Duration(hours: 24), () {
+      if (mounted) {
+        _updateService.checkForUpdate(context);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _updateService.stopPeriodicCheck();
+    super.dispose();
+  }
+/*   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _handlePowerEventAndStartHeartbeat(context); // ← passe le context ici
     });
-  }
+  } */
 
-  Future<void> _handlePowerEventAndStartHeartbeat(BuildContext context) async {
+  Future<void> handlePowerEventAndStartHeartbeat(BuildContext context) async {
     await LogService.loadPowerEvents();
     LogService.startActivityHeartbeat();
   }

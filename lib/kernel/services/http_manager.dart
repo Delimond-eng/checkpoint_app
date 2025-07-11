@@ -176,8 +176,7 @@ class HttpManager {
       Map<String, dynamic> data = {
         "matricule": tagsController.faceResult.value,
         "heure": "${DateTime.now().hour}:${DateTime.now().minute}",
-        "status_photo": "success",
-        "key": key!,
+        "key": key,
         "coordonnees": latlng,
       };
 
@@ -193,7 +192,7 @@ class HttpManager {
         if (response.containsKey("errors")) {
           return response["errors"].toString();
         } else {
-          return "Données de présence enregistrées avec succès";
+          return response["message"];
         }
       } else {
         return response["errors"].toString();

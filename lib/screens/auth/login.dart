@@ -4,6 +4,7 @@ import 'package:checkpoint_app/kernel/models/user.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '/screens/public/welcome_screen.dart';
 import 'package:checkpoint_app/widgets/costum_field.dart';
 import 'package:flutter/material.dart';
@@ -21,10 +22,19 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   final txtUserName = TextEditingController();
   final txtUserPass = TextEditingController();
+  String version = "";
 
   @override
   void initState() {
     super.initState();
+  }
+
+  intAppVesion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    int currentVersion = int.parse(packageInfo.buildNumber);
+    setState(() {
+      version = currentVersion.toString();
+    });
   }
 
   @override
@@ -126,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Positioned(
               bottom: 10.0,
               child: Text(
-                "Salama plateforme version 1.0.0",
+                "Salama plateforme version $version",
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             )
