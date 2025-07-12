@@ -2,7 +2,6 @@ import 'package:checkpoint_app/constants/styles.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -28,12 +27,11 @@ void main() async {
     }
   }
   await GetStorage.init();
-  Get.put(TagsController());
   Get.put(AuthController());
+  Get.put(TagsController());
   Get.put(FaceRecognitionController());
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  runApp(const Application());
   configEasyLoading();
+  runApp(const Application());
 }
 
 void configEasyLoading() {

@@ -24,7 +24,7 @@ class AppUpdateService {
   void startPeriodicCheck(Duration interval, Function() onUpdateAvailable) {
     _periodicTimer?.cancel();
     _periodicTimer = Timer.periodic(interval, (timer) async {
-      if (_isUpdating) return; // Pas de check si une maj est en cours
+      if (_isUpdating) return;
       bool hasUpdate = await _hasUpdate();
       if (hasUpdate) {
         onUpdateAvailable();
@@ -61,7 +61,9 @@ class AppUpdateService {
 
   /// Vérifie et lance la mise à jour (avec UI et installation)
   Future<void> checkForUpdate(BuildContext context) async {
-    if (_isUpdating) return; // Empêche chevauchement
+    if (_isUpdating) {
+      return;
+    }
     _isUpdating = true;
     try {
       final packageInfo = await PackageInfo.fromPlatform();
@@ -80,7 +82,9 @@ class AppUpdateService {
         if (latestVersion > currentVersion) {
           final confirm = await _showUpdateDialog(context, changelog);
           if (confirm) {
-            await _downloadAndInstallApk(context, apkUrl);
+            await Future.delayed(const Duration(milliseconds: 300));
+            final fixedUrl = apkUrl.replaceAll("127.0.0.1", "192.168.32.247");
+            await _downloadAndInstallApk(context, fixedUrl);
           }
         }
       }
@@ -124,14 +128,13 @@ class AppUpdateService {
       }
 
       showCostumLoading(context);
-
       await Dio().download(apkUrl, filePath);
-
-      Get.back();
       await InstallPlugin.installApk(filePath,
           appId: 'com.example.checkpoint_app');
     } catch (e) {
-      Get.back();
+      debugPrint("Erreur téléchargement ou installation APK: $e");
+    } finally {
+      Get.back(); // Ferme le loading s'il est encore ouvert
     }
   }
 }

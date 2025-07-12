@@ -70,6 +70,7 @@ class FaceRecognitionController extends GetxController {
   }
 
   Future<void> initializeModel() async {
+    await Future.delayed(const Duration(seconds: 30));
     if (isModelLoaded.value || isModelInitializing.value) return;
     isModelInitializing.value = true;
     try {

@@ -89,7 +89,7 @@ class HttpManager {
 
       if (response != null) {
         if (response.containsKey("errors")) {
-          return response["errors"].toString();
+          return response["errors"][0].toString();
         } else {
           if (localStorage.read("patrol_id") == null) {
             localStorage.write("patrol_id", response["result"]["id"]);
@@ -121,7 +121,7 @@ class HttpManager {
       );
       if (response != null) {
         if (response.containsKey("errors")) {
-          return response["errors"].toString();
+          return response["errors"][0].toString();
         } else {
           if (localStorage.read("patrol_id") == null) {
             localStorage.write("patrol_id", response["result"]["id"]);
@@ -130,7 +130,7 @@ class HttpManager {
           return "Zone completée avec succès.";
         }
       } else {
-        return response["errors"].toString();
+        return response["errors"][0].toString();
       }
     } catch (e) {
       return "Echec de traitement de la requête !";
@@ -153,7 +153,7 @@ class HttpManager {
       );
       if (response != null) {
         if (response.containsKey("errors")) {
-          return response["errors"].toString();
+          return response["errors"][0].toString();
         } else {
           if (localStorage.read("patrol_id") == null) {
             localStorage.write("patrol_id", response["result"]["id"]);
@@ -162,7 +162,7 @@ class HttpManager {
           return "success";
         }
       } else {
-        return response["errors"].toString();
+        return response["errors"][0].toString();
       }
     } catch (e) {
       return "Echec de traitement de la requête !";
@@ -190,12 +190,12 @@ class HttpManager {
       );
       if (response != null) {
         if (response.containsKey("errors")) {
-          return response["errors"].toString();
+          return response["errors"][0].toString();
         } else {
           return response["message"];
         }
       } else {
-        return response["errors"].toString();
+        return response["errors"][0].toString();
       }
     } catch (e) {
       return "Echec de traitement de la requête !";
@@ -217,14 +217,14 @@ class HttpManager {
       );
       if (response != null) {
         if (response.containsKey("errors")) {
-          return response["errors"].toString();
+          return response["errors"][0].toString();
         } else {
           localStorage.remove("patrol_id");
           tagsController.refreshPending();
           return "Patrouille clôturée avec succès.";
         }
       } else {
-        return response["errors"].toString();
+        return response["errors"][0].toString();
       }
     } catch (e) {
       return "Echec de traitement de la requête $e!";
@@ -247,12 +247,12 @@ class HttpManager {
       );
       if (response != null) {
         if (response.containsKey("errors")) {
-          return response["errors"].toString();
+          return response["errors"][0].toString();
         } else {
           return response["result"];
         }
       } else {
-        return response["errors"].toString();
+        return response["errors"][0].toString();
       }
     } catch (e) {
       return "Echec de traitement de la requête !";
@@ -273,12 +273,12 @@ class HttpManager {
       );
       if (response != null) {
         if (response.containsKey("errors")) {
-          return response["errors"].toString();
+          return response["errors"][0].toString();
         } else {
           return response["result"];
         }
       } else {
-        return response["errors"].toString();
+        return response["errors"][0].toString();
       }
     } catch (e) {
       return "Echec de traitement de la requête !";
@@ -294,12 +294,12 @@ class HttpManager {
       );
       if (response != null) {
         if (response.containsKey("errors")) {
-          return response["errors"].toString();
+          return response["errors"][0].toString();
         } else {
           return response["result"];
         }
       } else {
-        return response["errors"].toString();
+        return response["errors"][0].toString();
       }
     } catch (e) {
       return "Echec de traitement de la requête !";
@@ -328,12 +328,12 @@ class HttpManager {
 
       if (response != null) {
         if (response.containsKey("errors")) {
-          return response["errors"].toString();
+          return response["errors"][0].toString();
         } else {
           return response["result"];
         }
       } else {
-        return response["errors"].toString();
+        return response["errors"][0].toString();
       }
     } catch (e) {
       if (kDebugMode) {
@@ -462,14 +462,14 @@ class HttpManager {
       }
       if (response != null) {
         if (response.containsKey("errors")) {
-          return response["errors"].toString();
+          return response["errors"][0].toString();
         } else {
           localStorage.write("pending_supervision", response["result"]);
           authController.refreshPendingSupervisionMap();
           return response["result"];
         }
       } else {
-        return response["errors"].toString();
+        return response["errors"][0].toString();
       }
     } catch (e) {
       return "Echec de traitement de la requête !";

@@ -27,9 +27,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    initAppVesion();
   }
 
-  intAppVesion() async {
+  initAppVesion() async {
     final packageInfo = await PackageInfo.fromPlatform();
     int currentVersion = int.parse(packageInfo.buildNumber);
     setState(() {

@@ -20,7 +20,8 @@ class Api {
     headers = {
       'Content-Type': 'application/json',
       'X-API-KEY': apiKey,
-      ...?headers,
+      'Accept': 'application/json',
+      ...?headers
     };
     http.Response response;
     try {

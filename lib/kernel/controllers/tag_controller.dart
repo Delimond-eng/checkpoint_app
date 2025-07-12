@@ -38,7 +38,7 @@ class TagsController extends GetxController {
   }
 
   void _startPatrolStream() {
-    const Duration interval = Duration(seconds: 5);
+    const Duration interval = Duration(seconds: 30);
 
     _patrolStreamSubscription = Stream.periodic(interval).asyncMap((_) async {
       try {

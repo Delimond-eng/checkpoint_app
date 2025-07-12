@@ -34,29 +34,159 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   final AppUpdateService _updateService = AppUpdateService();
 
+  // Liste des boutons
+  List<Widget> menuButtons = [];
+
   @override
   void initState() {
     super.initState();
-    // Lancement du check périodique toutes les 24h
-    _updateService.startPeriodicCheck(const Duration(hours: 24), () {
+    initMenus();
+  }
+
+  initMenus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final isGuard =
+          authController.userSession.value.role!.toLowerCase() == 'guard';
+      final isSupervisor =
+          authController.userSession.value.role!.toLowerCase() == 'supervisor';
       if (mounted) {
-        _updateService.checkForUpdate(context);
+        setState(() {
+          menuButtons = [
+            HomeMenuBtn(
+              icon: "presence",
+              title: "Présence",
+              onPress: () {
+                _showBottonPresenceChoice(context);
+              },
+            ),
+            if (isGuard) ...[
+              HomeMenuBtn(
+                icon: "qrcode",
+                title: "Patrouille",
+                onPress: () {
+                  if (tagsController.patrolId.value != 0) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MobileQrScannerPage(),
+                      ),
+                    );
+                  } else {
+                    EasyLoading.showToast(
+                        "Veuillez sélectionner votre planning de patrouille !");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PatrolPlanning(),
+                      ),
+                    );
+                  }
+                },
+              ),
+              HomeMenuBtn(
+                icon: "planning",
+                title: "Planning",
+                onPress: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PatrolPlanning(),
+                    ),
+                  );
+                },
+              ),
+            ] else ...[
+              HomeMenuBtn(
+                icon: "supervision-3",
+                title: "Supervision",
+                onPress: () {
+                  if (authController.pendingSupervisionMap.isEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SupervisorPlanning(),
+                      ),
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SupervisorAgent(),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+            HomeMenuBtn(
+              icon: "request-2",
+              title: "Requêtes",
+              onPress: () {
+                showRequestModal(context);
+              },
+            ),
+            HomeMenuBtn(
+              icon: "incident",
+              title: "Signalements",
+              onPress: () {
+                showSignalementModal(context);
+              },
+            ),
+            HomeMenuBtn(
+              icon: "notify",
+              title: "Communiqués",
+              onPress: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AnnouncePage(),
+                  ),
+                );
+              },
+            ),
+            HomeMenuBtn(
+              icon: "user-1",
+              title: "Profil",
+              onPress: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfilPage(),
+                  ),
+                );
+              },
+            ),
+            if (isSupervisor) ...[
+              HomeMenuBtn(
+                icon: "face-2",
+                title: "Enrôlement",
+                onPress: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EnrollFacePage(),
+                    ),
+                  );
+                },
+              ),
+              HomeMenuBtn(
+                icon: "qrcode",
+                title: "Completer zone",
+                onPress: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SupervisorQRCODECompleter(),
+                    ),
+                  );
+                },
+              ),
+            ]
+          ];
+        });
       }
     });
   }
-
-  @override
-  void dispose() {
-    _updateService.stopPeriodicCheck();
-    super.dispose();
-  }
-/*   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _handlePowerEventAndStartHeartbeat(context); // ← passe le context ici
-    });
-  } */
 
   Future<void> handlePowerEventAndStartHeartbeat(BuildContext context) async {
     await LogService.loadPowerEvents();
@@ -64,150 +194,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final isGuard =
-        authController.userSession.value.role!.toLowerCase() == 'guard';
-    final isSupervisor =
-        authController.userSession.value.role!.toLowerCase() == 'supervisor';
-
-    // Liste des boutons
-    final List<Widget> menuButtons = [
-      HomeMenuBtn(
-        icon: "presence",
-        title: "Présence",
-        onPress: () {
-          _showBottonPresenceChoice(context);
-        },
-      ),
-      if (isGuard) ...[
-        HomeMenuBtn(
-          icon: "qrcode",
-          title: "Patrouille",
-          onPress: () {
-            if (tagsController.patrolId.value != 0) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MobileQrScannerPage(),
-                ),
-              );
-            } else {
-              EasyLoading.showToast(
-                  "Veuillez sélectionner votre planning de patrouille !");
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PatrolPlanning(),
-                ),
-              );
-            }
-          },
-        ),
-        HomeMenuBtn(
-          icon: "planning",
-          title: "Planning",
-          onPress: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const PatrolPlanning(),
-              ),
-            );
-          },
-        ),
-      ] else ...[
-        HomeMenuBtn(
-          icon: "supervision-3",
-          title: "Supervision",
-          onPress: () {
-            if (authController.pendingSupervisionMap.isEmpty) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SupervisorPlanning(),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SupervisorAgent(),
-                ),
-              );
-            }
-          },
-        ),
-      ],
-      HomeMenuBtn(
-        icon: "request-2",
-        title: "Requêtes",
-        onPress: () {
-          showRequestModal(context);
-        },
-      ),
-      HomeMenuBtn(
-        icon: "incident",
-        title: "Signalements",
-        onPress: () {
-          showSignalementModal(context);
-        },
-      ),
-      HomeMenuBtn(
-        icon: "notify",
-        title: "Communiqués",
-        onPress: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AnnouncePage(),
-            ),
-          );
-        },
-      ),
-      HomeMenuBtn(
-        icon: "user-1",
-        title: "Profil",
-        onPress: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const ProfilPage(),
-            ),
-          );
-        },
-      ),
-      if (isSupervisor) ...[
-        HomeMenuBtn(
-          icon: "face-2",
-          title: "Enrôlement",
-          onPress: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const EnrollFacePage(),
-              ),
-            );
-          },
-        ),
-        HomeMenuBtn(
-          icon: "qrcode",
-          title: "Completer zone",
-          onPress: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SupervisorQRCODECompleter(),
-              ),
-            );
-          },
-        ),
-      ]
-    ];
     return Scaffold(
         appBar: AppBar(
           backgroundColor: darkColor,
@@ -252,10 +239,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           }),
         ),
         floatingActionButton: FloatingActionButton(
-          backgroundColor: primaryMaterialColor.shade500,
+          backgroundColor: primaryMaterialColor,
           tooltip: "Appuyez longtemps pour déclencher un alèrte !",
           elevation: 10,
-          onPressed: () async {},
+          onPressed: () async {
+            _updateService.checkForUpdate(context);
+          },
           child: Image.asset(
             "assets/icons/sirene.png",
             height: 35.0,

@@ -1,3 +1,4 @@
+import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/store.dart';
 import 'package:checkpoint_app/screens/auth/login.dart';
 import 'package:checkpoint_app/screens/public/welcome_screen.dart';
@@ -36,29 +37,61 @@ Future<void> checkPermission() async {
   }
 }
 
-class Application extends StatelessWidget {
+class Application extends StatefulWidget {
   const Application({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    checkPermission();
-    // Lire la session utilisateur une seule fois
-    final userSession = localStorage.read("user_session");
-    // Déterminer l'écran d'accueil en fonction du rôle
-    Widget getHomeScreen() {
-      if (userSession != null) {
-        return const WelcomeScreen();
-      }
-      return const LoginScreen();
-    }
+  State<Application> createState() => _ApplicationState();
+}
 
+class _ApplicationState extends State<Application> {
+  late final Future<Widget> _startupFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _startupFuture = _initApp(); // ← créé UNE fois
+  }
+
+  Future<Widget> _initApp() async {
+    final userSession = localStorage.read("user_session");
+    return (userSession != null) ? const WelcomeScreen() : const LoginScreen();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Salama Plateforme',
       theme: AppTheme.lightTheme(context),
       themeMode: ThemeMode.light,
       builder: EasyLoading.init(),
-      home: getHomeScreen(),
+      home: FutureBuilder<Widget>(
+        future: _startupFuture, // ← réutilisé
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              backgroundColor: darkGreyColor,
+              body: Center(
+                child: CircularProgressIndicator(
+                  color: primaryMaterialColor,
+                ),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return Scaffold(
+              body: Center(
+                child: Text(
+                  'Erreur : ${snapshot.error}',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            );
+          } else {
+            return snapshot.data!;
+          }
+        },
+      ),
     );
   }
 }
