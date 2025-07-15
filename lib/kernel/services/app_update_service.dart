@@ -13,8 +13,10 @@ import 'package:path_provider/path_provider.dart';
 import '../../modals/utils.dart';
 
 class AppUpdateService {
+  /* static const String _updateUrl =
+      'http://192.168.32.247:8000/api/check.update'; */
   static const String _updateUrl =
-      'http://192.168.32.247:8000/api/check.update';
+      'https://mamba.salama-drc.com/api/check.update';
 
   Timer? _periodicTimer;
   bool _isUpdating = false;

@@ -56,6 +56,12 @@ class FirebaseService {
       // Messages en arrière-plan
       FirebaseMessaging.onBackgroundMessage(
           _firebaseMessagingBackgroundHandler);
+
+      var token = await getToken();
+
+      if (kDebugMode) {
+        print(token);
+      }
     } catch (e) {
       if (kDebugMode) {
         print("Firebase init error $e");
