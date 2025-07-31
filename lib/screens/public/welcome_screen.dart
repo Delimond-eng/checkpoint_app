@@ -3,6 +3,7 @@ import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/kernel/services/app_update_service.dart';
 import 'package:checkpoint_app/kernel/services/log_service.dart';
 import 'package:checkpoint_app/pages/enroll_face_page.dart';
+import 'package:checkpoint_app/pages/mobile_qr_scanner_011.dart';
 import 'package:checkpoint_app/pages/supervisor_agent.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
@@ -181,7 +182,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   );
                 },
               ),
-            ]
+            ],
+            HomeMenuBtn(
+              icon: "car-scan-1",
+              title: "Ronde 011",
+              onPress: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MobileQrScannerPage011(),
+                  ),
+                );
+              },
+            ),
           ];
         });
       }

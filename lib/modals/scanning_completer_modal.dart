@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 import '../widgets/submit_button.dart';
 import 'utils.dart';
 
-Future<void> showScanningCompleter(context) async {
+Future<void> showScanningCompleter(context, {String key = "patrol"}) async {
   final commentController = TextEditingController();
   tagsController.isScanningModalOpen.value = true;
   showCustomModal(
@@ -42,22 +42,44 @@ Future<void> showScanningCompleter(context) async {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Zone scannée libellé",
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(color: whiteColor),
-                          ).paddingBottom(5),
-                          Text(
-                            tagsController.scannedArea.value.libelle!
-                                .toUpperCase(),
-                            style:
-                                Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                      color: whiteColor,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                          )
+                          if (key == "ronde011") ...[
+                            Text(
+                              "RONDE 011 AU SITE",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(color: whiteColor),
+                            ).paddingBottom(5),
+                            Text(
+                              "${tagsController.scannedSite.value.code!.toUpperCase()} ${tagsController.scannedSite.value.name!.toUpperCase()}",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge!
+                                  .copyWith(
+                                    color: whiteColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            )
+                          ] else ...[
+                            Text(
+                              "Zone scannée libellé",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(color: whiteColor),
+                            ).paddingBottom(5),
+                            Text(
+                              tagsController.scannedArea.value.libelle!
+                                  .toUpperCase(),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge!
+                                  .copyWith(
+                                    color: whiteColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            )
+                          ]
                         ],
                       ),
                     )
@@ -102,7 +124,7 @@ Future<void> showScanningCompleter(context) async {
                 onPressed: () async {
                   showRecognitionModal(
                     context,
-                    key: "patrol",
+                    key: key,
                     comment: commentController.text,
                   );
                 },

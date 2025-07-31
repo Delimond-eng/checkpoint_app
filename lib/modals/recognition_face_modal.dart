@@ -304,6 +304,7 @@ Future<dynamic> showRecognitionModal(context,
                                   _controller.dispose();
                                   Get.back();
                                 }
+
                                 if (key == "close") {
                                   await closePatrol(comment: comment);
                                   _controller.dispose();
@@ -339,6 +340,11 @@ Future<dynamic> showRecognitionModal(context,
                                 if (key == "supervize-out") {
                                   Get.back();
                                   onValidate!.call();
+                                }
+
+                                if (key == "ronde011") {
+                                  await confirmRonde(comment: comment);
+                                  _controller.dispose();
                                 }
                               },
                             ).paddingTop(10.0)
@@ -423,6 +429,31 @@ Future<void> startPatrol({String comment = ""}) async {
       EasyLoading.showSuccess(
         "Zone patrouille scanné avec succès !",
       );
+      Get.back();
+    }
+  });
+}
+
+Future<void> confirmRonde({String comment = ""}) async {
+  var manager = HttpManager();
+  tagsController.isLoading.value = true;
+  manager.confirm011Ronde(comment).then((value) {
+    tagsController.isLoading.value = false;
+    tagsController.faceResult.value = "";
+    tagsController.face.value = null;
+    if (value is String) {
+      if (value == "success") {
+        EasyLoading.showSuccess(
+          "Ronde 011 effectué avec succès !",
+        );
+        Get.back();
+        Get.back();
+      } else {
+        EasyLoading.showInfo("Echec de traitement de la requête.");
+        Get.back();
+      }
+    } else {
+      EasyLoading.showInfo("Echec de traitement de la requête.");
       Get.back();
     }
   });

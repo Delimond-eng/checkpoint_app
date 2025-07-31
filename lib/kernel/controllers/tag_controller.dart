@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:checkpoint_app/global/store.dart';
 import 'package:checkpoint_app/kernel/models/area.dart';
+import 'package:checkpoint_app/kernel/models/user.dart';
 import 'package:checkpoint_app/kernel/services/http_manager.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,6 +12,7 @@ class TagsController extends GetxController {
   static TagsController instance = Get.find();
 
   var scannedArea = Area().obs;
+  var scannedSite = Site().obs;
   var isQrcodeScanned = false.obs;
   var patrolId = 0.obs;
   var isLoading = false.obs;

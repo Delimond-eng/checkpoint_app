@@ -1,5 +1,8 @@
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/store.dart';
+import 'package:checkpoint_app/kernel/controllers/auth_controller.dart';
+import 'package:checkpoint_app/kernel/controllers/face_recognition_controller.dart';
+import 'package:checkpoint_app/kernel/controllers/tag_controller.dart';
 import 'package:checkpoint_app/screens/auth/login.dart';
 import 'package:checkpoint_app/screens/public/welcome_screen.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -63,6 +66,7 @@ class _ApplicationState extends State<Application> {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Salama Plateforme',
+      initialBinding: InitialBinding(),
       theme: AppTheme.lightTheme(context),
       themeMode: ThemeMode.light,
       builder: EasyLoading.init(),
@@ -93,5 +97,14 @@ class _ApplicationState extends State<Application> {
         },
       ),
     );
+  }
+}
+
+class InitialBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.put(AuthController());
+    Get.put(TagsController());
+    Get.put(FaceRecognitionController());
   }
 }

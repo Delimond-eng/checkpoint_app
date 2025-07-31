@@ -105,6 +105,42 @@ class HttpManager {
     }
   }
 
+  //Confirm 011 Ronde
+  Future<dynamic> confirm011Ronde(String comment) async {
+    var latlng = await _getCurrentLocation();
+
+    try {
+      // Construction du body
+      var data = {
+        "site_id": tagsController.scannedSite.value.id,
+        "matricule": tagsController.faceResult.value,
+        "comment": comment,
+        "latlng": latlng,
+      };
+
+      var response = await Api.request(
+        url: "ronde.scan",
+        method: "post",
+        body: data,
+        files: {
+          "photo": File(tagsController.face.value!.path),
+        },
+      );
+
+      if (response != null) {
+        if (response.containsKey("errors")) {
+          return response["errors"];
+        } else {
+          return "success";
+        }
+      } else {
+        return "errors";
+      }
+    } catch (e) {
+      return "errors";
+    }
+  }
+
   //Complete Area
   Future<dynamic> completeArea(String libelle) async {
     var latlng = await _getCurrentLocation();
