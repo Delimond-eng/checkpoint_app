@@ -4,7 +4,6 @@ import 'package:checkpoint_app/themes/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../global/controllers.dart';
-import '../routes/app_routes.dart';
 import '../screens/auth/login.dart';
 import '../screens/public/welcome_screen.dart';
 
@@ -43,9 +42,8 @@ class _ApplicationState extends State<Application> {
         primarySwatch: Palette.kPrimarySwatch,
         fontFamily: 'Ubuntu',
       ),
-      getPages: AppRoutes.routes,
       home: Obx(() {
-        return authController.userSession.value.id != null
+        return authController.userSession.value?.id != null
             ? const WelcomeScreen()
             : const LoginScreen();
       }),
