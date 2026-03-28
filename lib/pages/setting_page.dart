@@ -1,8 +1,8 @@
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/global/modal.dart';
-import 'package:checkpoint_app/global/store.dart';
-import 'package:checkpoint_app/screens/auth/login.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
+import '/global/controllers.dart';
+import '/global/modal.dart';
+import '/global/store.dart';
+import '/screens/auth/login.dart';
+import '/themes/app_theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

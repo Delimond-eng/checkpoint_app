@@ -1,8 +1,8 @@
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/models/announce.dart';
-import 'package:checkpoint_app/kernel/services/http_manager.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/widgets/svg.dart';
+import '/global/controllers.dart';
+import '/kernel/models/announce.dart';
+import '/kernel/services/http_manager.dart';
+import '/themes/app_theme.dart';
+import '/widgets/svg.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
               radius: 30,
               backgroundColor: Colors.blue,
               child: Text(
-                authController.userSession.value.fullname!.substring(0, 1),
+                authController.userSession.value!.fullname!.substring(0, 1),
                 style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ).marginAll(8.0),

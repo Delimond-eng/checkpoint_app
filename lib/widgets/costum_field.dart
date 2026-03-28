@@ -1,4 +1,4 @@
-import 'package:checkpoint_app/constants/styles.dart';
+import '/constants/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -34,11 +34,7 @@ class CustomField extends StatelessWidget {
         width: MediaQuery.of(context).size.width,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15.0),
-          color: Colors.white,
-          border: Border.all(
-            color: greyColor40,
-            width: 1,
-          ),
+          color: Colors.white.withOpacity(.7),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -70,7 +66,7 @@ class CustomField extends StatelessWidget {
                         controller: controller,
                         keyboardType: inputType ?? TextInputType.text,
                         style: const TextStyle(
-                          fontFamily: 'Poppins',
+                          fontFamily: 'Ubuntu',
                           fontSize: 12.0,
                           color: Colors.black,
                           fontWeight: FontWeight.w500,
@@ -79,12 +75,12 @@ class CustomField extends StatelessWidget {
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
+                          fillColor: Colors.transparent,
                           hintText: hintText,
                           hintStyle: const TextStyle(
-                            fontFamily: 'Poppins',
+                            fontFamily: 'Ubuntu',
                             fontSize: 12.0,
-                            fontStyle: FontStyle.italic,
-                            color: greyColor80,
+                            color: darkGreyColor,
                             fontWeight: FontWeight.w400,
                           ),
                           counterText: '',
@@ -100,7 +96,7 @@ class CustomField extends StatelessWidget {
                         keyboardAppearance: Brightness.dark,
                         controller: controller,
                         style: const TextStyle(
-                          fontFamily: 'Poppins',
+                          fontFamily: 'Ubuntu',
                           fontSize: 12.0,
                           color: Colors.black,
                           fontWeight: FontWeight.w500,
@@ -109,12 +105,12 @@ class CustomField extends StatelessWidget {
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
+                          fillColor: Colors.transparent,
                           hintText: hintText,
                           hintStyle: const TextStyle(
-                            fontFamily: 'Poppins',
+                            fontFamily: 'Ubuntu',
                             fontSize: 12.0,
-                            fontStyle: FontStyle.italic,
-                            color: greyColor80,
+                            color: darkGreyColor,
                             fontWeight: FontWeight.w400,
                           ),
                           counterText: '',

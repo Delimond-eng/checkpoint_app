@@ -1,246 +1,226 @@
+import 'dart:io';
+import 'dart:ui';
+
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/models/supervisor_data.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-
+import 'package:checkpoint_app/kernel/models/supervision_element.dart';
+import 'package:checkpoint_app/modals/photo_capture_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 import '../widgets/submit_button.dart';
-import 'utils.dart';
 
-Future<void> showSupervisorFormModal(context) async {
-  final agentId = authController.selectedAgentId.value;
-  final elementList = authController.agentElementsMap[agentId]!;
-  showCustomModal(
-    context,
-    onClosed: () {
-      final allChecked =
-          elementList.every((element) => element.selectedNote != null);
-      if (!allChecked) {
-        authController.supervisedAgent.remove(agentId);
-        authController.supervisedAgent.refresh();
-      }
-    },
-    title: "Elémenent à superviser",
-    child: Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Veuillez completer les éléments si dessous en guise de rapport !",
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall!
-                .copyWith(color: primaryMaterialColor),
-          ).paddingBottom(8.0),
-          ...elementList
-              .map((e) => ElementCard(data: e).paddingBottom(4))
-              .toList(),
-          const SizedBox(
-            height: 5.0,
-          ),
-          SizedBox(
-            width: MediaQuery.of(context).size.width,
-            height: 55.0,
-            child: SubmitButton(
-              label: "Valider",
-              loading: false,
-              onPressed: () async {
-                final allChecked = elementList
-                    .every((element) => element.selectedNote != null);
-                if (allChecked) {
-                  if (!authController.supervisedAgent.contains(agentId)) {
-                    authController.supervisedAgent.add(agentId);
-                    authController.supervisedAgent.refresh();
-                    authController.update();
-                    Get.back();
-                  } else {
-                    authController.supervisedAgent.add(agentId);
-                    authController.supervisedAgent.refresh();
-                    authController.update();
-                    Get.back();
-                  }
-                } else {
-                  authController.supervisedAgent.remove(agentId);
-                  authController.supervisedAgent.refresh();
-                  EasyLoading.showInfo(
-                      "Veuillez completer tous les éléments pour valider !");
-                  return;
-                }
-              },
+Future<void> showSupervisorFormModal(BuildContext context) async {
+  int agentId = authController.selectedAgentId.value;
+  var existingData = authController.supervisedDatas.firstWhereOrNull((item) => item['agent_id'] == agentId);
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 40, height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 15),
+              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
             ),
-          )
-        ],
+            const Text(
+              "COTATION AGENT",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'Staatliches', letterSpacing: 1.5, color: Color(0xFF16161E)),
+            ),
+            const SizedBox(height: 5),
+            Text("Évaluez les critères de performance de l'agent.", style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontFamily: 'Ubuntu')),
+            const SizedBox(height: 25),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Photo Section
+                    StatefulBuilder(
+                      builder: (context, setter) {
+                        File? photo = authController.supervisedDatas.firstWhereOrNull((e) => e['agent_id'] == agentId)?['photo'];
+                        return GestureDetector(
+                          onTap: () {
+                            showPhotoCaptureModal(context, onValidate: (file) {
+                              setter(() => photo = file);
+                              authController.updateAgentPhoto(agentId, file);
+                            });
+                          },
+                          child: Stack(
+                            children: [
+                              Container(
+                                height: 120, width: 120,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: const Color(0xFFF8F9FA),
+                                  border: Border.all(color: primaryMaterialColor.withOpacity(0.2), width: 3),
+                                  image: photo != null ? DecorationImage(image: FileImage(photo), fit: BoxFit.cover) : null,
+                                ),
+                                child: photo == null ? const Icon(Icons.add_a_photo_rounded, color: primaryMaterialColor, size: 35) : null,
+                              ),
+                              Positioned(
+                                bottom: 0, right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(color: primaryMaterialColor, shape: BoxShape.circle),
+                                  child: const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 30),
+
+                    // Criteria List
+                    ...authController.supervisorElements.map((e) {
+                      var existingNote = existingData?['notes']?.firstWhere((n) => n['control_element_id'] == e.id, orElse: () => null);
+                      return ElementCard(
+                        data: e,
+                        initialNote: existingNote?['note'],
+                        onNoteSelected: (noteLabel) {
+                          existingData?['notes']?.removeWhere((n) => n['control_element_id'] == e.id);
+                          existingData?['notes']?.add({'control_element_id': e.id, 'note': noteLabel, 'comment': ''});
+                        },
+                      );
+                    }).toList(),
+
+                    const SizedBox(height: 20),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("OBSERVATIONS", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu')),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      maxLines: 3,
+                      style: const TextStyle(fontFamily: 'Ubuntu', fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: "Remarques sur la tenue ou le comportement...",
+                        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                        filled: true,
+                        fillColor: const Color(0xFFF8F9FA),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                      ),
+                      onChanged: (val) {
+                        var index = authController.supervisedDatas.indexWhere((e) => e['agent_id'] == agentId);
+                        if (index != -1) authController.supervisedDatas[index]['comment'] = val;
+                      },
+                    ),
+                    const SizedBox(height: 35),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: SubmitButton(
+                        label: "ENREGISTRER LA NOTE",
+                        color: primaryMaterialColor,
+                        onPressed: () {
+                          var index = authController.supervisedDatas.indexWhere((e) => e['agent_id'] == agentId);
+                          var notes = authController.supervisedDatas[index]['notes'] as List;
+                          bool allChecked = authController.supervisorElements.every((e) => notes.any((n) => n['control_element_id'] == e.id));
+                          if (allChecked && !authController.supervisedAgent.contains(agentId)) {
+                            authController.supervisedAgent.add(agentId);
+                            EasyLoading.showSuccess("Note enregistrée");
+                          }
+                          Get.back();
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );
 }
 
 class ElementCard extends StatefulWidget {
-  final ElementModel data;
-  const ElementCard({super.key, required this.data});
+  final SupElement data;
+  final String? initialNote;
+  final Function(String) onNoteSelected;
+  const ElementCard({super.key, required this.data, this.initialNote, required this.onNoteSelected});
 
   @override
   State<ElementCard> createState() => _ElementCardState();
 }
 
 class _ElementCardState extends State<ElementCard> {
+  String? selectedNote;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedNote = widget.initialNote;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width,
+      margin: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8.0),
-        color: scaffoldColor,
-        border: Border.all(
-            color: const Color.fromARGB(255, 216, 224, 246), width: 2.0),
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(5.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.data.libelle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF16161E), fontFamily: 'Ubuntu')),
+          const SizedBox(height: 4),
+          Text(widget.data.description, style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontFamily: 'Ubuntu')),
+          const SizedBox(height: 15),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildGradeBtn("B", "BON", Colors.green, selectedNote == "B"),
+              _buildGradeBtn("P", "PASSABLE", Colors.orange, selectedNote == "P"),
+              _buildGradeBtn("M", "MAUVAIS", Colors.red, selectedNote == "M"),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGradeBtn(String code, String label, Color color, bool isActive) {
+    return GestureDetector(
+      onTap: () {
+        setState(() => selectedNote = code);
+        widget.onNoteSelected(code);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? color : color.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isActive ? color : color.withOpacity(0.2)),
+        ),
+        child: Column(
           children: [
-            // Gauche
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.data.libelle,
-                    style: const TextStyle(
-                      color: darkGreyColor,
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ).paddingBottom(4.0),
-                  Text(
-                    widget.data.description,
-                    style:
-                        TextStyle(color: Colors.grey.shade800, fontSize: 8.0),
-                  )
-                ],
-              ),
-            ),
-            // Droite : boutons B / P / M
-            Row(
-              children: widget.data.checkTasks.map((task) {
-                return Row(
-                  children: [
-                    TaskCheck(
-                      label: task["label"],
-                      isActive: task["isActive"],
-                      onActived: () {
-                        setState(() {
-                          widget.data.activateNote(task["label"]);
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 5.0),
-                  ],
-                );
-              }).toList(),
-            ).paddingLeft(5.0),
+            Text(code, style: TextStyle(fontWeight: FontWeight.bold, color: isActive ? Colors.white : color, fontSize: 16, fontFamily: 'Staatliches')),
+            Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: isActive ? Colors.white70 : color.withOpacity(0.5), fontSize: 8, fontFamily: 'Ubuntu')),
           ],
         ),
       ),
     );
-  }
-}
-
-class TaskCheck extends StatelessWidget {
-  final String? label;
-  final bool isActive;
-  final VoidCallback onActived;
-  const TaskCheck(
-      {super.key, this.label, this.isActive = false, required this.onActived});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(5.0),
-        border: Border.all(
-          width: 1.5,
-          color: Colors.white,
-        ),
-      ),
-      child: Material(
-        borderRadius: BorderRadius.circular(5.0),
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(5.0),
-          onTap: onActived,
-          child: Padding(
-            padding: const EdgeInsets.all(2.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  label!,
-                  style: const TextStyle(
-                    fontFamily: "Poppins",
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black,
-                    fontSize: 10.0,
-                  ),
-                ).paddingBottom(3.0),
-                if (isActive) ...[
-                  AnimatedContainer(
-                    height: 25.0,
-                    width: 25.0,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25.0),
-                      gradient: LinearGradient(
-                        colors: [color, color.shade400],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                    duration: const Duration(milliseconds: 100),
-                    child: const Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.check_rounded,
-                          size: 10.0,
-                          color: whiteColor,
-                        )
-                      ],
-                    ),
-                  ),
-                ] else ...[
-                  AnimatedContainer(
-                    height: 25.0,
-                    width: 25.0,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25.0),
-                      border: Border.all(
-                        color: color,
-                      ),
-                    ),
-                    duration: const Duration(milliseconds: 100),
-                  )
-                ]
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  MaterialColor get color {
-    if (label == "B") {
-      return Colors.green;
-    } else if (label == "P") {
-      return Colors.amber;
-    } else {
-      return Colors.deepOrange;
-    }
   }
 }

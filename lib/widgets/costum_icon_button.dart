@@ -1,6 +1,6 @@
-import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/widgets/svg.dart';
+import '/constants/styles.dart';
+import '/themes/app_theme.dart';
+import '/widgets/svg.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 

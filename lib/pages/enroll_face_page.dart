@@ -1,21 +1,17 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/services/http_manager.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/widgets/costum_button.dart';
-import 'package:checkpoint_app/widgets/costum_icon_button.dart';
-import 'package:checkpoint_app/widgets/enroll_input.dart';
-import 'package:checkpoint_app/widgets/svg.dart';
-import 'package:checkpoint_app/widgets/user_status.dart';
-import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
-import 'package:screen_brightness/screen_brightness.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
+import '/global/controllers.dart';
+import '/kernel/services/http_manager.dart';
+import '/themes/app_theme.dart';
+import '/widgets/user_status.dart';
 import '../constants/styles.dart';
 
 class EnrollFacePage extends StatefulWidget {
@@ -26,18 +22,19 @@ class EnrollFacePage extends StatefulWidget {
 }
 
 class _EnrollFacePageState extends State<EnrollFacePage> {
+  CameraController? _controller;
+  XFile? _capturedImage;
+  bool _isDetecting = false;
+  bool _facePresent = false;
+  bool _isCapturing = false;
   final TextEditingController _matriculeController = TextEditingController();
-
-  List<CameraDescription> cameras = [];
-  late CameraController _controller;
-  Future<void>? _initializeControllerFuture;
-  int _cameraIndex = 1; // 1 = front, 0 = back
-  bool _isFlashOn = false;
-
-  String result = '';
-  bool isLoading = false;
-
-  XFile? pickedImage;
+  
+  final FaceDetector _faceDetector = FaceDetector(
+    options: FaceDetectorOptions(
+      enableClassification: true,
+      performanceMode: FaceDetectorMode.fast,
+    ),
+  );
 
   @override
   void initState() {
@@ -45,275 +42,283 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
     _initCamera();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    _controller.dispose();
+  Future<void> _initCamera() async {
+    final cameras = await availableCameras();
+    if (cameras.isEmpty) return;
+
+    _controller = CameraController(
+      cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      ),
+      ResolutionPreset.medium,
+      enableAudio: false,
+      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
+    );
+
+    try {
+      await _controller!.initialize();
+      if (mounted) setState(() {});
+
+      _controller!.startImageStream((image) {
+        if (_isDetecting || _capturedImage != null) return;
+        _isDetecting = true;
+        _checkFacePresence(image);
+      });
+    } catch (e) {
+      debugPrint("Camera init error: $e");
+    }
   }
 
-  Future<void> _initCamera() async {
-    try {
-      cameras = await availableCameras();
-      _controller = CameraController(
-        cameras[_cameraIndex],
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-      _initializeControllerFuture = _controller.initialize();
-      setState(() {});
-    } catch (e) {
-      if (kDebugMode) {
-        print("Erreur d'initialisation de la caméra : $e");
-      }
+  Future<void> _checkFacePresence(CameraImage image) async {
+    final inputImage = _inputImageFromCameraImage(image);
+    if (inputImage == null) {
+      _isDetecting = false;
+      return;
     }
+
+    try {
+      final faces = await _faceDetector.processImage(inputImage);
+      if (mounted) {
+        setState(() {
+          _facePresent = faces.isNotEmpty;
+        });
+      }
+    } catch (e) {
+      debugPrint("Face detection error: $e");
+    }
+    _isDetecting = false;
+  }
+
+  InputImage? _inputImageFromCameraImage(CameraImage image) {
+    try {
+      final bytes = Uint8List.fromList(
+        image.planes.fold<List<int>>([], (buffer, plane) => buffer..addAll(plane.bytes)),
+      );
+
+      return InputImage.fromBytes(
+        bytes: bytes,
+        metadata: InputImageMetadata(
+          size: Size(image.width.toDouble(), image.height.toDouble()),
+          rotation: InputImageRotation.rotation270deg,
+          format: InputImageFormat.nv21,
+          bytesPerRow: image.planes[0].bytesPerRow,
+        ),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _capturePhoto() async {
+    if (_isCapturing || !_facePresent) return;
+
+    setState(() => _isCapturing = true);
+    try {
+      final photo = await _controller!.takePicture();
+      setState(() {
+        _capturedImage = photo;
+      });
+      await _controller!.stopImageStream();
+    } catch (e) {
+      EasyLoading.showError("Erreur lors de la capture");
+    } finally {
+      setState(() => _isCapturing = false);
+    }
+  }
+
+  Future<void> _submitEnroll() async {
+    final matricule = _matriculeController.text.trim();
+    if (matricule.isEmpty) {
+      EasyLoading.showInfo("Matricule requis");
+      return;
+    }
+    
+    EasyLoading.show(status: 'Analyse biométrique...');
+    
+    try {
+      // 1. Extraire l'embedding (le vecteur) pour la reconnaissance locale et serveur
+      final embedding = await faceRecognitionController.getEmbedding(_capturedImage!);
+      if (embedding == null || embedding.isEmpty) {
+        EasyLoading.showError("Échec de l'analyse faciale.");
+        return;
+      }
+
+      // 2. Préparer l'envoi au serveur avec l'embedding inclus
+      tagsController.face.value = _capturedImage;
+      final response = await HttpManager().enrollAgent(matricule, embedding);
+      
+      if (response == "success") {
+        // 3. Stocker également localement le visage et son vecteur
+        await faceRecognitionController.addKnownFaceFromImage(
+          matricule,
+          _capturedImage!,
+        );
+
+        EasyLoading.showSuccess("Agent $matricule enrôlé avec succès");
+        Get.back();
+      } else {
+        EasyLoading.showError(response.toString());
+      }
+    } catch (e) {
+      EasyLoading.showError("Échec : $e");
+    } finally {
+      EasyLoading.dismiss();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    _faceDetector.close();
+    _matriculeController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0B0B0F), // Dark Theme
       appBar: AppBar(
-        backgroundColor: darkColor,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
-          "Enrôlement visage",
-          style: TextStyle(
-            fontSize: 30.0,
-            fontWeight: FontWeight.w900,
-            color: whiteColor,
-            fontFamily: 'Staatliches',
-            letterSpacing: 1.2,
-          ),
+          "ENRÔLEMENT VISAGE",
+          style: TextStyle(fontFamily: 'Staatliches', letterSpacing: 1.5, color: Colors.white),
         ),
         actions: [
-          const UserStatus(name: "Gaston delimond").marginAll(8.0),
+          const Padding(
+            padding: EdgeInsets.only(right: 12.0),
+            child: UserStatus(name: ""),
+          ),
         ],
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                "Cliquez pour prendre la photo du visage de l'agent à enroller.",
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: primaryMaterialColor,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ).paddingBottom(15.0),
-              if (pickedImage != null) ...[
-                DottedBorder(
-                  color: Colors.green.shade400,
-                  radius: const Radius.circular(130.0),
-                  strokeWidth: 1.2,
-                  borderType: BorderType.RRect,
-                  dashPattern: const [6, 3],
-                  child: CircleAvatar(
-                    radius: 120.0,
-                    backgroundColor: darkColor,
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.all(
-                        Radius.circular(240.0),
-                      ),
-                      child: Image.file(
-                        width: 240.0,
-                        height: 240.0,
-                        File(pickedImage!.path),
-                        alignment: Alignment.center,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Text(
+              _capturedImage != null 
+                ? "Vérifiez les informations" 
+                : (_facePresent ? "Visage détecté : Prêt" : "Positionnez le visage dans le cercle"),
+              style: TextStyle(
+                color: _facePresent ? Colors.greenAccent : Colors.white70,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Ubuntu',
+              ),
+            ),
+            const SizedBox(height: 30),
+            
+            // Camera / Preview Circle
+            Center(
+              child: Container(
+                width: 280,
+                height: 280,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: _capturedImage != null 
+                      ? Colors.greenAccent 
+                      : (_facePresent ? Colors.greenAccent : Colors.blueAccent.withOpacity(0.5)), 
+                    width: 4
                   ),
-                ).paddingBottom(15.0),
-              ] else ...[
-                FutureBuilder(
-                  future: _initializeControllerFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return ClipOval(
-                        child: SizedBox(
-                          width: 250,
-                          height: 250,
-                          child: FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width:
-                                  _controller.value.previewSize?.height ?? 250,
-                              height:
-                                  _controller.value.previewSize?.width ?? 250,
-                              child: CameraPreview(_controller),
-                            ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (_facePresent ? Colors.greenAccent : Colors.blueAccent).withOpacity(0.2),
+                      blurRadius: 20,
+                    )
+                  ],
+                ),
+                child: ClipOval(
+                  child: _capturedImage != null
+                    ? Image.file(File(_capturedImage!.path), fit: BoxFit.cover)
+                    : (_controller != null && _controller!.value.isInitialized)
+                        ? CameraPreview(_controller!)
+                        : const Center(child: CircularProgressIndicator()),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 40),
+
+            if (_capturedImage == null)
+              ElevatedButton.icon(
+                onPressed: (_isCapturing || !_facePresent) ? null : _capturePhoto,
+                icon: _isCapturing 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.camera_alt_rounded),
+                label: const Text("CAPTURER LE VISAGE", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Staatliches')),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryMaterialColor,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.white10,
+                  minimumSize: const Size(240, 60),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+              )
+            else
+              Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    ),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _matriculeController,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu'),
+                          decoration: InputDecoration(
+                            labelText: "Matricule de l'agent",
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            hintText: "Saisir le matricule",
+                            hintStyle: const TextStyle(color: Colors.white24),
+                            prefixIcon: const Icon(Icons.badge_rounded, color: primaryMaterialColor),
+                            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
+                            focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: primaryMaterialColor)),
                           ),
                         ),
-                      );
-                    } else {
-                      return _loaderWidget();
-                    }
-                  },
-                ).paddingBottom(15.0),
-              ],
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CostumIconButton(
-                    color: Colors.blue.shade800,
-                    svg: "camera-toggle.svg",
-                    size: 60.0,
-                    onPress: _switchCamera,
-                  ).paddingRight(8.0),
-                  CostumIconButton(
-                    svg: pickedImage == null
-                        ? "camera-capture.svg"
-                        : "camera-refresh.svg",
-                    color: pickedImage == null
-                        ? Colors.deepPurple
-                        : Colors.green.shade400,
-                    size: 80.0,
-                    onPress: _capturePhoto,
-                  ).paddingRight(8.0),
-                  CostumIconButton(
-                    svg: _isFlashOn ? "flash-on-2.svg" : "flash-on-1.svg",
-                    size: 60.0,
-                    color: _cameraIndex == 1
-                        ? Colors.blue.shade200
-                        : Colors.blue.shade800,
-                    onPress: _toggleFlash,
+                        const SizedBox(height: 25),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _capturedImage = null;
+                                    _initCamera(); // Relance le stream
+                                  });
+                                },
+                                child: const Text("REPRENDRE", style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                            const SizedBox(width: 15),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _submitEnroll,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.greenAccent.shade700,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size(0, 50),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                ),
+                                child: const Text("VALIDER", style: TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
-              ).paddingBottom(15.0),
-              if (pickedImage != null) ...[
-                EnrollInput(controller: _matriculeController)
-                    .paddingBottom(10.0),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  height: 55.0,
-                  child: CostumButton(
-                    title: "Enroller",
-                    bgColor: primaryMaterialColor,
-                    labelColor: whiteColor,
-                    isLoading: isLoading,
-                    onPress: _enroll,
-                  ),
-                )
-              ]
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
-  }
-
-  Widget _loaderWidget() {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        SizedBox(
-          height: 220.0,
-          width: 220.0,
-          child: CircularProgressIndicator(
-            strokeWidth: 4.0,
-            color: primaryMaterialColor.shade300,
-          ),
-        ),
-        SizedBox(
-          height: 220.0,
-          width: 220.0,
-          child: DottedBorder(
-            color: primaryMaterialColor.shade500,
-            radius: const Radius.circular(110.0),
-            strokeWidth: 1.2,
-            borderType: BorderType.RRect,
-            dashPattern: const [6, 3],
-            child: const Center(
-              child: Svg(
-                size: 40.0,
-                path: "camera-refresh.svg",
-                color: primaryMaterialColor,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _toggleFlash() async {
-    if (_cameraIndex == 0) {
-      setState(() {
-        _isFlashOn = !_isFlashOn;
-      });
-      await _controller
-          .setFlashMode(_isFlashOn ? FlashMode.torch : FlashMode.off);
-    } else {
-      setState(() {
-        _isFlashOn = !_isFlashOn;
-      });
-      if (_isFlashOn) {
-        await ScreenBrightness().setScreenBrightness(1.0);
-      } else {
-        await ScreenBrightness().resetApplicationScreenBrightness();
-      }
-    }
-  }
-
-  void _switchCamera() async {
-    _cameraIndex = (_cameraIndex + 1) % cameras.length;
-    await _controller.dispose();
-    await _initCamera();
-  }
-
-  Future<void> _capturePhoto() async {
-    if (!_controller.value.isInitialized) return;
-
-    if (pickedImage != null) {
-      setState(() {
-        pickedImage = null;
-      });
-      return;
-    }
-    try {
-      final file = await _controller.takePicture();
-      setState(() {
-        pickedImage = XFile(file.path);
-      });
-      tagsController.face.value = pickedImage;
-    } catch (e) {
-      if (kDebugMode) {
-        print("Erreur capture : $e");
-      }
-    }
-  }
-
-  Future<void> _enroll() async {
-    final matricule = _matriculeController.text.trim();
-    if (matricule.isEmpty) {
-      EasyLoading.showInfo("Entrez le matricule de l'agent !");
-      return;
-    }
-    final embedding =
-        await faceRecognitionController.getEmbedding(pickedImage!);
-    if (embedding == null || embedding.isEmpty) {
-      EasyLoading.showInfo(
-          "Aucun visage détecté. veuillez prendre une photo du visage !");
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    var manager = HttpManager();
-    tagsController.isLoading.value = true;
-    await faceRecognitionController.addKnownFaceFromImage(
-        matricule, pickedImage!);
-    manager.enrollAgent(matricule).then((value) {
-      _matriculeController.clear();
-      pickedImage = null;
-      tagsController.face.value = null;
-      setState(() => isLoading = false);
-      if (value != null) {
-        EasyLoading.showSuccess("Visage enrollé avec succès !");
-      }
-    });
   }
 }

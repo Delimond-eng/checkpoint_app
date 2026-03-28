@@ -6,10 +6,13 @@ import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/global/store.dart';
 import 'package:checkpoint_app/kernel/models/announce.dart';
 import 'package:checkpoint_app/kernel/models/planning.dart';
+import 'package:checkpoint_app/kernel/models/supervision_element.dart';
 import 'package:checkpoint_app/kernel/models/supervisor_data.dart';
 import 'package:checkpoint_app/kernel/models/user.dart';
 import 'package:checkpoint_app/kernel/services/api.dart';
 import 'package:checkpoint_app/kernel/services/firebase_service.dart';
+import 'package:checkpoint_app/kernel/services/local_db_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
@@ -57,51 +60,194 @@ class HttpManager {
     }
   }
 
-  //Start scanning for patrol
+  //Start scanning for patrol (with Offline Support)
   Future<dynamic> beginPatrol(String comment) async {
     var latlng = await _getCurrentLocation();
     var patrolId = tagsController.patrolId.value;
     var planningId = tagsController.planningId.value;
+    var user = authController.userSession.value!;
+    var now = DateTime.now().toIso8601String();
+
+    var data = {
+      "patrol_id": patrolId != 0 ? patrolId.toString() : "",
+      "site_id": user.siteId,
+      "agency_id": user.agencyId,
+      "agent_id": user.id,
+      "scan_agent_id": user.id,
+      "area_id": tagsController.scannedArea.value.id,
+      "schedule_id": planningId,
+      "matricule": tagsController.faceResult.value,
+      "comment": comment,
+      "latlng": latlng,
+      "time": now,
+      "started_at": patrolId == 0 ? now : null,
+    };
+
+    var photoPath = tagsController.face.value!.path;
+
+    // Check connectivity
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      // OFFLINE MODE: Save to local DB
+      await LocalDbService.instance.addPendingAction({
+        'type': 'scan',
+        'local_session_id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'patrol_id': data['patrol_id'],
+        'site_id': data['site_id'],
+        'agency_id': data['agency_id'],
+        'agent_id': data['agent_id'],
+        'area_id': data['area_id'],
+        'schedule_id': data['schedule_id'],
+        'matricule': data['matricule'],
+        'comment': data['comment'],
+        'latlng': data['latlng'],
+        'photo_path': photoPath,
+        'created_at': now,
+      });
+      return "Hors-ligne : Scan enregistré localement.";
+    }
 
     try {
-      // Construction du body
-      var data = {
-        "patrol_id": patrolId != 0 ? patrolId : "",
-        "site_id": authController.userSession.value.siteId,
-        "agency_id": authController.userSession.value.agencyId,
-        "agent_id": authController.userSession.value.id,
-        "scan_agent_id": authController.userSession.value.id,
-        "area_id": tagsController.scannedArea.value.id,
-        "schedule_id": planningId,
-        "matricule": tagsController.faceResult.value,
-        "comment": comment,
-        "latlng": latlng,
-      };
-
       var response = await Api.request(
         url: "patrol.scan",
         method: "post",
         body: data,
+        files: {"photo": File(photoPath)},
+      );
+
+      if (response != null && !response.containsKey("errors")) {
+        if (localStorage.read("patrol_id") == null) {
+          localStorage.write("patrol_id", response["result"]["id"]);
+        }
+        tagsController.refreshPending();
+        return "Patrouille enregistrée avec succès.";
+      }
+      return response?["errors"]?[0]?.toString() ?? "Erreur lors de l'enregistrement.";
+    } catch (e) {
+      return "Erreur réseau : $e";
+    }
+  }
+
+  // Clôturer une patrouille (with Offline Support)
+  Future<dynamic> stopPendingPatrol(String? comment) async {
+    var patrolId = localStorage.read("patrol_id");
+    var photoPath = tagsController.face.value!.path;
+    var now = DateTime.now().toIso8601String();
+
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      // OFFLINE MODE
+      await LocalDbService.instance.addPendingAction({
+        'type': 'close',
+        'patrol_id': patrolId.toString(),
+        'comment': comment,
+        'photo_path': photoPath,
+        'created_at': now,
+      });
+      localStorage.remove("patrol_id");
+      tagsController.refreshPending();
+      return "Hors-ligne : Clôture enregistrée localement.";
+    }
+
+    try {
+      var response = await Api.request(
+        url: "patrol.close",
+        method: "post",
+        body: {
+          "patrol_id": patrolId, 
+          "comment_text": comment!,
+          "ended_at": now,
+        },
+        files: {"photo": File(photoPath)},
+      );
+
+      if (response != null && !response.containsKey("errors")) {
+        localStorage.remove("patrol_id");
+        tagsController.refreshPending();
+        return "Patrouille clôturée avec succès.";
+      }
+      return response?["errors"]?[0]?.toString() ?? "Erreur lors de la clôture.";
+    } catch (e) {
+      return "Erreur réseau : $e";
+    }
+  }
+
+  // Logic used by SyncService - returns result Map or status String
+  Future<dynamic> syncLocalAction(Map<String, dynamic> action) async {
+    try {
+      var createdAt = action['created_at'];
+      if (action['type'] == 'scan') {
+        var patrolId = action['patrol_id'];
+        var response = await Api.request(
+          url: "patrol.scan",
+          method: "post",
+          body: {
+            "patrol_id": patrolId,
+            "site_id": action['site_id'],
+            "agency_id": action['agency_id'],
+            "agent_id": action['agent_id'],
+            "scan_agent_id": action['agent_id'],
+            "area_id": action['area_id'],
+            "schedule_id": action['schedule_id'],
+            "matricule": action['matricule'],
+            "comment": action['comment'],
+            "latlng": action['latlng'],
+            "time": createdAt,
+            "started_at": (patrolId == null || patrolId == "" || patrolId == "0") ? createdAt : null,
+          },
+          files: {"photo": File(action['photo_path'])},
+        );
+        
+        if (response != null && !response.containsKey("errors")) {
+          return response["result"] as Map<String, dynamic>; 
+        }
+        return "error";
+      } else if (action['type'] == 'close') {
+        var response = await Api.request(
+          url: "patrol.close",
+          method: "post",
+          body: {
+            "patrol_id": action['patrol_id'], 
+            "comment_text": action['comment'],
+            "ended_at": createdAt,
+          },
+          files: {"photo": File(action['photo_path'])},
+        );
+        return (response != null && !response.containsKey("errors")) ? "success" : "error";
+      }
+      return "error";
+    } catch (e) {
+      return "error";
+    }
+  }
+
+  //Enroll agent image and embedding
+  Future<dynamic> enrollAgent(String matricule, List<double> embedding) async {
+    try {
+      var data = {
+        "matricule": matricule,
+        "embedding": jsonEncode(embedding),
+        "model_version": "facenet_v1",
+      };
+      var response = await Api.request(
+        url: "agent.enroll",
+        method: "post",
         files: {
           "photo": File(tagsController.face.value!.path),
         },
+        body: data,
       );
-
       if (response != null) {
         if (response.containsKey("errors")) {
           return response["errors"][0].toString();
         } else {
-          if (localStorage.read("patrol_id") == null) {
-            localStorage.write("patrol_id", response["result"]["id"]);
-          }
-          tagsController.refreshPending();
-          return "Patrouille enregistrée avec succès. Veuillez passer à la zone suivante ou clôturer la patrouille.";
+          return "success";
         }
       } else {
-        return "Erreur réseau ou serveur injoignable.";
+        return "Erreur serveur";
       }
     } catch (e) {
-      return "Echec de traitement de la requête : $e";
+      return "Echec de traitement de la requête !";
     }
   }
 
@@ -159,10 +305,6 @@ class HttpManager {
         if (response.containsKey("errors")) {
           return response["errors"][0].toString();
         } else {
-          if (localStorage.read("patrol_id") == null) {
-            localStorage.write("patrol_id", response["result"]["id"]);
-          }
-          tagsController.refreshPending();
           return "Zone completée avec succès.";
         }
       } else {
@@ -173,29 +315,24 @@ class HttpManager {
     }
   }
 
-  //Enroll agent image from database online
-  Future<dynamic> enrollAgent(String matricule) async {
+  //Complete site
+  Future<dynamic> completeSite() async {
+    var latlng = await _getCurrentLocation();
     try {
       var data = {
-        "matricule": matricule,
+        "site_id": tagsController.scannedSite.value.id,
+        "latlng": latlng
       };
       var response = await Api.request(
-        url: "agent.enroll",
+        url: "site.complete",
         method: "post",
-        files: {
-          "photo": File(tagsController.face.value!.path),
-        },
         body: data,
       );
       if (response != null) {
         if (response.containsKey("errors")) {
           return response["errors"][0].toString();
         } else {
-          if (localStorage.read("patrol_id") == null) {
-            localStorage.write("patrol_id", response["result"]["id"]);
-          }
-          tagsController.refreshPending();
-          return "success";
+          return "Station GPS completé avec succès.";
         }
       } else {
         return response["errors"][0].toString();
@@ -238,42 +375,13 @@ class HttpManager {
     }
   }
 
-  //close pending patrol
-  Future<dynamic> stopPendingPatrol(String? comment) async {
-    var patrolId = localStorage.read("patrol_id");
-    var data = {"patrol_id": patrolId, "comment_text": comment!};
-    try {
-      var response = await Api.request(
-        url: "patrol.close",
-        method: "post",
-        body: data,
-        files: {
-          "photo": File(tagsController.face.value!.path),
-        },
-      );
-      if (response != null) {
-        if (response.containsKey("errors")) {
-          return response["errors"][0].toString();
-        } else {
-          localStorage.remove("patrol_id");
-          tagsController.refreshPending();
-          return "Patrouille clôturée avec succès.";
-        }
-      } else {
-        return response["errors"][0].toString();
-      }
-    } catch (e) {
-      return "Echec de traitement de la requête $e!";
-    }
-  }
-
   //Create Request by agent
   Future<dynamic> createRequest(String object, String desc) async {
     var data = {
       "object": object,
       "description": desc,
-      "agent_id": authController.userSession.value.id,
-      "agency_id": authController.userSession.value.agencyId
+      "agent_id": authController.userSession.value!.id,
+      "agency_id": authController.userSession.value!.agencyId
     };
     try {
       var response = await Api.request(
@@ -345,7 +453,6 @@ class HttpManager {
   // Create Signalement
   Future<dynamic> createSignalement(String title, String description) async {
     var file = tagsController.mediaFile.value!;
-
     try {
       var response = await Api.request(
         method: "post",
@@ -353,9 +460,9 @@ class HttpManager {
         body: {
           "title": title,
           "description": description,
-          "site_id": authController.userSession.value.siteId.toString(),
-          "agent_id": authController.userSession.value.id.toString(),
-          "agency_id": authController.userSession.value.agencyId.toString(),
+          "site_id": authController.userSession.value!.siteId.toString(),
+          "agent_id": authController.userSession.value!.id.toString(),
+          "agency_id": authController.userSession.value!.agencyId.toString(),
         },
         files: {
           "media": file,
@@ -381,7 +488,7 @@ class HttpManager {
 
   //load announces
   static Future<List<Announce>> getAllAnnounces() async {
-    var user = authController.userSession.value;
+    var user = authController.userSession.value!;
     List<Announce> announces = [];
     try {
       var response = await Api.request(
@@ -404,7 +511,7 @@ class HttpManager {
 
   //load announces
   static Future<List<Planning>> getAllPlannings() async {
-    var user = authController.userSession.value;
+    var user = authController.userSession.value!;
     List<Planning> plannings = [];
     try {
       var response = await Api.request(
@@ -424,6 +531,112 @@ class HttpManager {
       }
     }
     return plannings;
+  }
+
+  //Get supervision elements
+  Future<List<SupElement>> getSupervisionElements() async {
+    List<SupElement> elements = [];
+    try {
+      var response = await Api.request(
+        method: "get",
+        url: "supervision.elements",
+      );
+      if (response != null) {
+        var jsonArr = response["elements"];
+        jsonArr.forEach((e) {
+          elements.add(SupElement.fromJson(e));
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Request Error ${e.toString()}");
+      }
+      return [];
+    }
+    return elements;
+  }
+
+  //Show agent by station to supervize
+  Future<List<User>> getStationAgents(id) async {
+    var siteId = id;
+    List<User> agents = [];
+    try {
+      var response = await Api.request(
+        method: "get",
+        url: "supervision.agents?id=$siteId",
+      );
+      if (response != null) {
+        var jsonArr = response["agents"];
+        jsonArr.forEach((e) {
+          agents.add(User.fromJson(e));
+        });
+      }
+    } catch (e) {
+      tagsController.isLoading.value = false;
+      if (kDebugMode) {
+        print("Request Error ${e.toString()}");
+      }
+    }
+    return agents;
+  }
+
+  //Start supervision
+  Future<dynamic> startSupervison() async {
+    var file = File(tagsController.face.value!.path);
+    var latlng = await _getCurrentLocation();
+    var data = {
+      "site_id": tagsController.scannedSite.value.id,
+      "matricule": tagsController.faceResult.value,
+      "latlng": latlng
+    };
+    try {
+      var response = await Api.request(
+        method: "post",
+        url: "supervision.start",
+        body: data,
+        files: {
+          "photo": file,
+        },
+      );
+
+      if (response != null) {
+        if (response.containsKey("errors")) {
+          return response["errors"][0].toString();
+        } else {
+          var supervision = response["result"]["supervision"];
+          localStorage.write("supervision", supervision);
+          authController.refreshSupervision();
+          return response["result"];
+        }
+      } else {
+        return response["errors"][0].toString();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Erreur createSignalement: $e");
+      }
+      return "Échec de traitement de la requête";
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> checkPending() async {
+    List<Map<String, dynamic>> data = [];
+    var siteId = authController.userSession.value!.siteId;
+    try {
+      var response = await Api.request(
+          method: "get", url: "site.patrol.pending?id=$siteId");
+      if (response != null) {
+        var patrol = response["patrol"];
+        for (var e in patrol) {
+          data.add(e as Map<String, dynamic>);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error $e");
+      }
+    }
+    return data;
   }
 
   // Fonction pour récupérer la position actuelle
@@ -446,90 +659,6 @@ class HttpManager {
     } catch (e) {
       return null;
     }
-  }
-
-  Future<SupervisorDataResponse?> loadSupervisorData() async {
-    SupervisorDataResponse? datas;
-    var agent = authController.userSession.value;
-    try {
-      if (agent.role == 'supervisor') {
-        var response = await Api.request(
-          method: "get",
-          url: "supervisor.datas?_id=${agent.id}",
-        );
-        if (response != null) {
-          var json = response["datas"];
-          datas = await compute(parseSupervisorData, json);
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Request Error ${e.toString()}");
-      }
-    }
-    return datas;
-  }
-
-  Future<dynamic> makeSupervision(siteId, planningId,
-      {List<Map<String, dynamic>>? elements}) async {
-    try {
-      var latlng = await _getCurrentLocation();
-      var data = <String, dynamic>{
-        if (authController.pendingSupervisionMap.isNotEmpty)
-          "id": authController.pendingSupervisionMap["id"],
-        "site_id": siteId,
-        "schedule_id": planningId,
-        "latlng": latlng,
-        "matricule": authController.userSession.value.matricule,
-        "comment": "",
-        if (elements != null) "elements": jsonEncode(elements)
-      };
-
-      var response = await Api.request(
-        url: "supervisor.visit.create",
-        method: "post",
-        body: data,
-        files: {
-          "photo": File(tagsController.face.value!.path),
-        },
-      );
-      if (kDebugMode) {
-        print(response);
-      }
-      if (response != null) {
-        if (response.containsKey("errors")) {
-          return response["errors"][0].toString();
-        } else {
-          localStorage.write("pending_supervision", response["result"]);
-          authController.refreshPendingSupervisionMap();
-          return response["result"];
-        }
-      } else {
-        return response["errors"][0].toString();
-      }
-    } catch (e) {
-      return "Echec de traitement de la requête !";
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> checkPending() async {
-    List<Map<String, dynamic>> data = [];
-    var siteId = authController.userSession.value.siteId;
-    try {
-      var response = await Api.request(
-          method: "get", url: "site.patrol.pending?id=$siteId");
-      if (response != null) {
-        var patrol = response["patrol"];
-        for (var e in patrol) {
-          data.add(e as Map<String, dynamic>);
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error $e");
-      }
-    }
-    return data;
   }
 
   // Fonction pour vérifier et demander la permission de localisation

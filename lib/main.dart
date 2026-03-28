@@ -1,4 +1,4 @@
-import 'package:checkpoint_app/constants/styles.dart';
+import '/constants/styles.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +8,7 @@ import 'package:get_storage/get_storage.dart';
 
 import '/kernel/application.dart';
 import '/kernel/controllers/tag_controller.dart';
+import '/kernel/services/alarm_service.dart'; // Import ajouté
 import 'firebase_options.dart';
 import 'kernel/controllers/auth_controller.dart';
 import 'kernel/controllers/face_recognition_controller.dart';
@@ -15,6 +16,10 @@ import 'kernel/services/firebase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialisation des notifications d'alarme
+  await AlarmService.initializeNotifications();
+
   try {
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
@@ -27,9 +32,12 @@ void main() async {
     }
   }
   await GetStorage.init();
-  Get.put(AuthController());
+  
+  // L'ordre d'initialisation est important car AuthController utilise TagsController dans onInit
   Get.put(TagsController());
+  Get.put(AuthController());
   Get.put(FaceRecognitionController());
+  
   configEasyLoading();
   runApp(const Application());
 }

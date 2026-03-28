@@ -10,8 +10,8 @@ plugins {
 
 android {
     namespace = "com.example.checkpoint_app"
-    compileSdk = 35
-    ndkVersion = "29.0.13113456"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

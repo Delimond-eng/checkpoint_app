@@ -109,8 +109,8 @@ class FaceRecognitionController extends GetxController {
   }
 
   Future<void> enrollUserFaceFromUrl() async {
-    String imageUrl = authController.userSession.value.photo!;
-    String matricule = authController.userSession.value.matricule!;
+    String imageUrl = authController.userSession.value!.photo!;
+    String matricule = authController.userSession.value!.matricule!;
     try {
       // Télécharger l'image depuis l'URL
       final response = await http.get(Uri.parse(imageUrl));

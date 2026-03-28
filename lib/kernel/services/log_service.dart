@@ -34,8 +34,8 @@ class LogService {
       if (lastActiveTime != null && now - lastActiveTime > 60 * 1000) {
         // > 1 minute
         data.add({
-          "agent_id": authController.userSession.value.id,
-          "site_id": authController.userSession.value.siteId,
+          "agent_id": authController.userSession.value!.id,
+          "site_id": authController.userSession.value!.siteId,
           "reason": "shutdown",
           "battery_level": lastActiveBattery?.toString() ?? "-",
           "date_and_time": _formatTime(
@@ -43,8 +43,8 @@ class LogService {
         });
 
         data.add({
-          "agent_id": authController.userSession.value.id,
-          "site_id": authController.userSession.value.siteId,
+          "agent_id": authController.userSession.value!.id,
+          "site_id": authController.userSession.value!.siteId,
           "reason": "boot",
           "battery_level": currentBattery.toString(),
           "date_and_time": _formatTime(now) // <-- nouvelle date (maintenant)

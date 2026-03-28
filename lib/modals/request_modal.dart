@@ -1,116 +1,163 @@
+import 'dart:ui';
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 import '../kernel/services/http_manager.dart';
 import '../widgets/submit_button.dart';
-import 'utils.dart';
 
-Future<void> showRequestModal(context) async {
+Future<void> showRequestModal(BuildContext context) async {
   final textTitle = TextEditingController();
   final textDescription = TextEditingController();
-  showCustomModal(
-    context,
-    onClosed: () {},
-    title: "Faites votre requête",
-    child: Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Obx(
-        () => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(35),
+            topRight: Radius.circular(35),
+          ),
+        ),
+        child: Column(
           children: [
+            // Header Handle
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 15),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            // Modal Title
+            const Text(
+              "NOUVELLE REQUÊTE",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Staatliches',
+                letterSpacing: 1.5,
+                color: Color(0xFF16161E),
+              ),
+            ),
+            const SizedBox(height: 10),
             Text(
-              "Veuillez renseigner tous les champs requis pour effectuer une requête !",
-              style: Theme.of(context).textTheme.bodySmall,
-            ).paddingBottom(8.0),
-            Container(
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(
-                  color: Colors.blue.shade200,
-                ),
+              "Veuillez détailler votre demande administrative.",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+                fontFamily: 'Ubuntu',
               ),
-              width: MediaQuery.of(context).size.width,
-              child: Row(
-                children: [
-                  Flexible(
-                    child: TextField(
+            ),
+            const SizedBox(height: 30),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildFieldLabel("OBJET"),
+                    _buildInputField(
                       controller: textTitle,
-                      decoration: const InputDecoration(
-                        hintText: "Objet de la requête",
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                      ),
+                      hint: "Sujet de votre requête...",
+                      icon: Icons.title_rounded,
                     ),
-                  )
-                ],
-              ).paddingHorizontal(5.0),
-            ).paddingBottom(10.0),
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(
-                  color: Colors.blue.shade200,
+                    const SizedBox(height: 25),
+                    _buildFieldLabel("DESCRIPTION DÉTAILLÉE"),
+                    _buildInputField(
+                      controller: textDescription,
+                      hint: "Expliquez votre situation ici...",
+                      icon: Icons.notes_rounded,
+                      maxLines: 5,
+                    ),
+                    const SizedBox(height: 40),
+                    Obx(() => SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: SubmitButton(
+                        label: "ENVOYER LA REQUÊTE",
+                        loading: tagsController.isLoading.value,
+                        onPressed: () async {
+                          if (textTitle.text.isEmpty || textDescription.text.isEmpty) {
+                            EasyLoading.showToast("Tous les champs sont requis !");
+                            return;
+                          }
+                          tagsController.isLoading.value = true;
+                          var manager = HttpManager();
+                          final response = await manager.createRequest(textTitle.text, textDescription.text);
+                          tagsController.isLoading.value = false;
+                          
+                          if (response is String) {
+                            EasyLoading.showToast(response);
+                          } else {
+                            Get.back();
+                            EasyLoading.showSuccess("Requête soumise avec succès !");
+                          }
+                        },
+                      ),
+                    )),
+                    const SizedBox(height: 30),
+                  ],
                 ),
               ),
-              width: MediaQuery.of(context).size.width,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  controller: textDescription,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(
-                    hintText: "Description...",
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                  ),
-                ),
-              ),
-            ).paddingBottom(10.0),
-            SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: 55.0,
-              child: SubmitButton(
-                label: "Envoyer la requête",
-                loading: tagsController.isLoading.value,
-                onPressed: () async {
-                  if (textTitle.text.isEmpty) {
-                    EasyLoading.showToast("L'objet de la requête requis !");
-                    return;
-                  }
-                  if (textDescription.text.isEmpty) {
-                    EasyLoading.showToast(
-                        "Une Description pour la requête requis !");
-                    return;
-                  }
-                  var manager = HttpManager();
-                  tagsController.isLoading.value = true;
-                  manager
-                      .createRequest(textTitle.text, textDescription.text)
-                      .then((value) {
-                    tagsController.isLoading.value = false;
-                    if (value is String) {
-                      EasyLoading.showToast(value);
-                    } else {
-                      Get.back();
-                      EasyLoading.showSuccess(
-                        "Votre requête a été soumise avec succès !",
-                      );
-                    }
-                  });
-                },
-              ),
-            )
+            ),
           ],
         ),
+      ),
+    ),
+  );
+}
+
+Widget _buildFieldLabel(String label) {
+  return Padding(
+    padding: const EdgeInsets.only(left: 5, bottom: 10),
+    child: Text(
+      label,
+      style: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.bold,
+        color: Colors.grey,
+        letterSpacing: 1.2,
+        fontFamily: 'Ubuntu',
+      ),
+    ),
+  );
+}
+
+Widget _buildInputField({
+  required TextEditingController controller,
+  required String hint,
+  required IconData icon,
+  int maxLines = 1,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      color: const Color(0xFFF8F9FA),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.grey.withOpacity(0.1)),
+    ),
+    child: TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: const TextStyle(fontFamily: 'Ubuntu', fontSize: 14),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+        prefixIcon: Icon(icon, size: 20, color: Colors.blueAccent),
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(vertical: 15),
       ),
     ),
   );

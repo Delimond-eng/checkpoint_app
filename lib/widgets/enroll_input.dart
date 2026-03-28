@@ -1,4 +1,4 @@
-import 'package:checkpoint_app/themes/app_theme.dart';
+import '/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class EnrollInput extends StatelessWidget {

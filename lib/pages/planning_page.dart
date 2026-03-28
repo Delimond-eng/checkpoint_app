@@ -1,4 +1,4 @@
-import 'package:checkpoint_app/themes/app_theme.dart';
+import '/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -36,7 +36,7 @@ class _PlanningPageState extends State<PlanningPage> {
               backgroundColor: Colors.blue,
               radius: 30,
               child: Text(
-                authController.userSession.value.fullname!.substring(0, 1),
+                authController.userSession.value!.fullname!.substring(0, 1),
                 style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ).marginAll(8.0),

@@ -1,10 +1,10 @@
-import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/models/supervisor_data.dart';
-import 'package:checkpoint_app/modals/recognition_face_modal.dart';
-import 'package:checkpoint_app/pages/supervisor_agent.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/widgets/svg.dart';
+import '/constants/styles.dart';
+import '/global/controllers.dart';
+import '/kernel/models/supervisor_data.dart';
+import '/modals/recognition_face_modal.dart';
+import '/pages/supervisor_agent.dart';
+import '/themes/app_theme.dart';
+import '/widgets/svg.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';

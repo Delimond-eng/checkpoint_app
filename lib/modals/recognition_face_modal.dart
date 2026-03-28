@@ -3,9 +3,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:checkpoint_app/constants/styles.dart';
 import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/global/modal.dart';
 import 'package:checkpoint_app/kernel/services/http_manager.dart';
-import 'package:checkpoint_app/pages/supervisor_agent.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
 import 'package:checkpoint_app/widgets/costum_button.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -263,23 +261,6 @@ Future<dynamic> showRecognitionModal(context,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          /* if (tagsController.faceResult.value.isNotEmpty &&
-                              tagsController.faceResult.value != "Inconnu") ...[
-                            const Text(
-                              "Reconnaissance faciale matricule agent trouvé ",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: "Poppins",
-                                fontSize: 10.0,
-                              ),
-                            ),
-                            const SizedBox(height: 5.0),
-                            //input face result here...
-                            EnrollInput(
-                              controller: _matriculeText,
-                              isActive: _matriculeText.text.isNotEmpty,
-                            )
-                          ], */
                           if ((tagsController.faceResult.value.isNotEmpty &&
                               tagsController.faceResult.value !=
                                   "Inconnu")) ...[
@@ -312,39 +293,13 @@ Future<dynamic> showRecognitionModal(context,
                                 }
 
                                 if (key == "supervize-in") {
-                                  DGCustomDialog.showInteraction(context,
-                                      message:
-                                          "Etes-vous sûr de vouloir commencer cette supervision ?",
-                                      onValidated: () {
-                                    supervizeStart(siteId, scheduleId)
-                                        .then((v) {
-                                      tagsController.isLoading.value = false;
-                                      if (v == "success") {
-                                        _controller.dispose();
-                                        Get.back();
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const SupervisorAgent(),
-                                          ),
-                                        );
-                                      } else {
-                                        EasyLoading.showInfo(
-                                            "Echec de traitement, veuillez recommencer SVP !");
-                                      }
-                                    });
-                                  });
+                                  Get.back();
+                                  onValidate!.call();
                                 }
 
                                 if (key == "supervize-out") {
                                   Get.back();
                                   onValidate!.call();
-                                }
-
-                                if (key == "ronde011") {
-                                  await confirmRonde(comment: comment);
-                                  _controller.dispose();
                                 }
                               },
                             ).paddingTop(10.0)
@@ -386,7 +341,7 @@ Future<void> checkPresence(String key) async {
 
 Future<void> closePatrol({String comment = ""}) async {
   if (tagsController.faceResult.value !=
-      authController.userSession.value.matricule) {
+      authController.userSession.value!.matricule) {
     EasyLoading.showInfo(
         "Le matricule agent ne correspond pas.connectez-vous avec un compte vous appartenant.");
     return;
@@ -410,7 +365,7 @@ Future<void> closePatrol({String comment = ""}) async {
 }
 
 Future<void> startPatrol({String comment = ""}) async {
-  if (authController.userSession.value.matricule!.trim() !=
+  if (authController.userSession.value!.matricule!.trim() !=
       tagsController.faceResult.value.trim()) {
     EasyLoading.showInfo(
         "Le matricule agent ne correspond pas.connectez-vous avec un compte vous appartenant.");
@@ -457,32 +412,4 @@ Future<void> confirmRonde({String comment = ""}) async {
       Get.back();
     }
   });
-}
-
-Future<dynamic> supervizeStart(siteId, scheduleId) async {
-  if (kDebugMode) {
-    print("start supervision...");
-    print("siteID : $siteId");
-    print("planningID : $scheduleId");
-  }
-  if (authController.userSession.value.matricule!.trim() !=
-      tagsController.faceResult.value.trim()) {
-    EasyLoading.showInfo(
-        "Le matricule agent ne correspond pas.connectez-vous avec un compte vous appartenant.");
-    return;
-  }
-  var manager = HttpManager();
-  tagsController.isLoading.value = true;
-  var value = await manager.makeSupervision(siteId, scheduleId);
-  tagsController.isLoading.value = false;
-  tagsController.faceResult.value = "";
-  tagsController.face.value = null;
-  if (value is String) {
-    return "errors";
-  } else {
-    EasyLoading.showSuccess(
-      "Bienvenue, vous avez commencer une nouvelle supervision !",
-    );
-    return "success";
-  }
 }

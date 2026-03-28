@@ -1,17 +1,17 @@
-import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/services/app_update_service.dart';
-import 'package:checkpoint_app/kernel/services/log_service.dart';
-import 'package:checkpoint_app/pages/enroll_face_page.dart';
-import 'package:checkpoint_app/pages/mobile_qr_scanner_011.dart';
-import 'package:checkpoint_app/pages/supervisor_agent.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/widgets/costum_button.dart';
-import 'package:checkpoint_app/widgets/user_status.dart';
-import 'package:dotted_border/dotted_border.dart';
+import 'dart:ui';
+import '/constants/styles.dart';
+import '/global/controllers.dart';
+import '/pages/enroll_face_page.dart';
+import '/pages/mobile_qr_scanner_011.dart';
+import '/pages/supervisor_agent.dart';
+import '/widgets/costum_button.dart';
+import '/widgets/user_status.dart';
+import '/kernel/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import '../../modals/recognition_face_modal.dart' show showRecognitionModal;
 import '../../modals/request_modal.dart';
@@ -22,8 +22,7 @@ import '../../pages/patrol_planning.dart';
 import '../../pages/profil_page.dart';
 import '../../pages/supervisor_planning.dart';
 import '../../pages/supervisor_qrcode_completer.dart';
-
-import '../../widgets/home_menu_btn.dart';
+import '../../kernel/models/planning.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -33,285 +32,675 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  final AppUpdateService _updateService = AppUpdateService();
-
-  // Liste des boutons
-  List<Widget> menuButtons = [];
-
   @override
   void initState() {
     super.initState();
-    initMenus();
-  }
-
-  initMenus() {
+    initializeDateFormatting('fr_FR', null);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final isGuard =
-          authController.userSession.value.role!.toLowerCase() == 'guard';
-      final isSupervisor =
-          authController.userSession.value.role!.toLowerCase() == 'supervisor';
-      if (mounted) {
-        setState(() {
-          menuButtons = [
-            HomeMenuBtn(
-              icon: "presence",
-              title: "Présence",
-              onPress: () {
-                _showBottonPresenceChoice(context);
-              },
-            ),
-            if (isGuard) ...[
-              HomeMenuBtn(
-                icon: "qrcode",
-                title: "Patrouille",
-                onPress: () {
-                  if (tagsController.patrolId.value != 0) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MobileQrScannerPage(),
-                      ),
-                    );
-                  } else {
-                    EasyLoading.showToast(
-                        "Veuillez sélectionner votre planning de patrouille !");
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PatrolPlanning(),
-                      ),
-                    );
-                  }
-                },
-              ),
-              HomeMenuBtn(
-                icon: "planning",
-                title: "Planning",
-                onPress: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PatrolPlanning(),
-                    ),
-                  );
-                },
-              ),
-            ] else ...[
-              HomeMenuBtn(
-                icon: "supervision-3",
-                title: "Supervision",
-                onPress: () {
-                  if (authController.pendingSupervisionMap.isEmpty) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SupervisorPlanning(),
-                      ),
-                    );
-                  } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SupervisorAgent(),
-                      ),
-                    );
-                  }
-                },
-              ),
-            ],
-            HomeMenuBtn(
-              icon: "request-2",
-              title: "Requêtes",
-              onPress: () {
-                showRequestModal(context);
-              },
-            ),
-            HomeMenuBtn(
-              icon: "incident",
-              title: "Signalements",
-              onPress: () {
-                showSignalementModal(context);
-              },
-            ),
-            HomeMenuBtn(
-              icon: "notify",
-              title: "Communiqués",
-              onPress: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AnnouncePage(),
-                  ),
-                );
-              },
-            ),
-            HomeMenuBtn(
-              icon: "user-1",
-              title: "Profil",
-              onPress: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfilPage(),
-                  ),
-                );
-              },
-            ),
-            if (isSupervisor) ...[
-              HomeMenuBtn(
-                icon: "face-2",
-                title: "Enrôlement",
-                onPress: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EnrollFacePage(),
-                    ),
-                  );
-                },
-              ),
-              HomeMenuBtn(
-                icon: "qrcode",
-                title: "Completer zone",
-                onPress: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SupervisorQRCODECompleter(),
-                    ),
-                  );
-                },
-              ),
-            ],
-            HomeMenuBtn(
-              icon: "car-scan-1",
-              title: "Ronde 011",
-              onPress: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MobileQrScannerPage011(),
-                  ),
-                );
-              },
-            ),
-          ];
-        });
-      }
+      tagsController.fetchAnnouncesAndPlannings();
+      SyncService.instance.start();
     });
   }
 
-  Future<void> handlePowerEventAndStartHeartbeat(BuildContext context) async {
-    await LogService.loadPowerEvents();
-    LogService.startActivityHeartbeat();
+  String _formatNextPatrol(Planning? planning) {
+    if (planning == null || planning.date == null || planning.startTime == null) {
+      return "Aucune patrouille planifiée";
+    }
+    
+    try {
+      DateTime date;
+      if (planning.date!.contains('/')) {
+        date = DateFormat('dd/MM/yyyy').parse(planning.date!);
+      } else {
+        date = DateTime.parse(planning.date!);
+      }
+
+      final DateTime now = DateTime.now();
+      final DateTime today = DateTime(now.year, now.month, now.day);
+      final DateTime tomorrow = today.add(const Duration(days: 1));
+      final DateTime targetDate = DateTime(date.year, date.month, date.day);
+
+      String timeStr = planning.startTime!.replaceAll(':', 'h');
+      
+      if (targetDate == today) {
+        return "Aujourd'hui à $timeStr";
+      } else if (targetDate == tomorrow) {
+        return "Demain à $timeStr";
+      } else {
+        String formattedDate = DateFormat('EEEE d MMMM', 'fr_FR').format(date);
+        return "${formattedDate[0].toUpperCase()}${formattedDate.substring(1)} à $timeStr";
+      }
+    } catch (e) {
+      return "${planning.date} à ${planning.startTime}";
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = authController.userSession.value;
+    final isGuard = user!.role?.toLowerCase() == 'guard';
+    final isSupervisor = user.role?.toLowerCase() == 'supervisor';
+
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: darkColor,
-          title: Row(
-            children: [
-              Image.asset(
-                "assets/images/mamba-2.png",
-                height: 35.0,
-              ).paddingRight(8.0),
-              const Text(
-                "SALAMA",
-                style: TextStyle(
-                  fontSize: 30.0,
-                  fontWeight: FontWeight.w900,
-                  color: whiteColor,
-                  fontFamily: 'Staatliches',
-                  letterSpacing: 1.2,
+      backgroundColor: const Color(0xFF0B0B0F), // Dark Header Background
+      body: Obx(() {
+        final hasPatrol = tagsController.patrolId.value != 0;
+        final countPlanning = tagsController.pendingPlanningCount.value;
+        final countAnnounces = tagsController.announceCount.value;
+
+        return Column(
+          children: [
+            // Dark Header Section
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 25),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF0B0B0F),
+                    Color(0xFF16161E),
+                  ],
                 ),
               ),
-            ],
-          ),
-          actions: [
-            const UserStatus(name: "Gaston delimond").marginAll(8.0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Image.asset(
+                        "assets/images/mamba-2.png",
+                        height: 32.0,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "SALAMA",
+                        style: TextStyle(
+                          fontSize: 22.0,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          fontFamily: 'Staatliches',
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const Spacer(),
+                      const UserStatus(name: ""),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _btnPatrolPending(),
+                  const SizedBox(height: 10),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 4,
+                    mainAxisSpacing: 15,
+                    crossAxisSpacing: 8,
+                    clipBehavior: Clip.none,
+                    children: [
+                      _buildHeaderAction(
+                        icon: Icons.face_retouching_natural_rounded,
+                        label: "Présence",
+                        color: Colors.blueAccent,
+                        onTap: () => _showBottonPresenceChoice(context),
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.qr_code_scanner_rounded,
+                        label: "RONDE",
+                        color: Colors.orangeAccent,
+                        enabled: isGuard,
+                        badge: hasPatrol ? "!" : null,
+                        onTap: () {
+                          if (hasPatrol) {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage()));
+                          } else {
+                            EasyLoading.showToast("Veuillez sélectionner votre planning !");
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const PatrolPlanning()));
+                          }
+                        },
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.event_note_rounded,
+                        label: "Planning",
+                        color: Colors.tealAccent,
+                        enabled: isGuard,
+                        badge: countPlanning > 0 ? "$countPlanning" : null,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatrolPlanning())),
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.shield_outlined,
+                        label: "Supervision",
+                        color: Colors.amberAccent,
+                        enabled: isSupervisor,
+                        onTap: () {
+                          if (authController.pendingSupervisionMap.isEmpty) {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorPlanning()));
+                          } else {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorAgent()));
+                          }
+                        },
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.description_rounded,
+                        label: "Requêtes",
+                        color: Colors.purpleAccent,
+                        onTap: () => showRequestModal(context),
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.report_problem_rounded,
+                        label: "Alertes",
+                        color: Colors.redAccent,
+                        onTap: () => showSignalementModal(context),
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.notifications_active_rounded,
+                        label: "Annonces",
+                        color: Colors.yellowAccent,
+                        badge: countAnnounces > 0 ? "$countAnnounces" : null,
+                        badgeColor: Colors.redAccent,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AnnouncePage())),
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.add_location_alt_rounded,
+                        label: "Zone +",
+                        color: Colors.deepOrangeAccent,
+                        enabled: isSupervisor,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorQRCODECompleter())),
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.add_location_rounded,
+                        label: "Station +",
+                        color: Colors.deepOrangeAccent,
+                        enabled: isSupervisor,
+                        onTap: () =>Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MobileQrScannerPage011(
+                              isStationGps: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.face_rounded,
+                        label: "Visage +",
+                        color: Colors.cyanAccent,
+                        enabled: isSupervisor,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const EnrollFacePage())),
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.person_rounded,
+                        label: "Profil",
+                        color: Colors.blueGrey,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilPage())),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            // White Dashboard Section
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(35),
+                    topRight: Radius.circular(35),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 20,
+                      offset: Offset(0, -5),
+                    )
+                  ],
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(25, 20, 25, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (!isSupervisor)...[
+                            const Text(
+                              "Tableau de bord",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF16161E),
+                                fontFamily: 'Ubuntu',
+                              ),
+                            ),
+                            const Spacer(),
+                          ]
+                          else...[
+                            const Expanded(child: Padding(
+                              padding: EdgeInsets.only(top: 15, bottom: 5),
+                              child: Text(
+                                "Cliquez sur le bouton « Superviser les agents », puis scannez le QR code de la station afin de procéder à l’inspection des agents.",
+                                textAlign: TextAlign.start,
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 10,
+                                  fontStyle: FontStyle.italic,
+                                  fontFamily: 'Ubuntu',
+                                ),
+                              ),
+                            )),
+                          ],
+                          IconButton(
+                            onPressed: () async {
+                              EasyLoading.show(status: 'Synchronisation...');
+                              await tagsController.fetchAnnouncesAndPlannings();
+                              await SyncService.instance.syncPendingActions();
+                              EasyLoading.showSuccess("Données à jour");
+                            },
+                            icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+
+                      if (isSupervisor) ...[
+                        _btnSuperviseAgents(),
+                        const SizedBox(height: 15.0),
+                        const Text(
+                          "POINTAGE DE PRÉSENCE",
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
+                        ),
+                        const SizedBox(height: 15),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildPresenceActionCard(
+                                icon: Icons.login_rounded,
+                                title: "Signer l'arrivée",
+                                color: Colors.green,
+                                onTap: () {
+                                  tagsController.isLoading.value = false;
+                                  showRecognitionModal(context, key: "check-in");
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 15),
+                            Expanded(
+                              child: _buildPresenceActionCard(
+                                icon: Icons.logout_rounded,
+                                title: "Signer le départ",
+                                color: primaryColor,
+                                onTap: () {
+                                  tagsController.isLoading.value = false;
+                                  showRecognitionModal(context, key: "check-out");
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ] else ...[
+                        const Text(
+                          "DÉTAILS OPÉRATIONNELS",
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInfoCard(
+                          Icons.location_on_rounded, 
+                          "Site d'affectation", 
+                          user.site?.name ?? "Non défini",
+                          Colors.blue
+                        ),
+                        _buildInfoCard(
+                          Icons.access_time_filled_rounded, 
+                          "Prochaine patrouille", 
+                          _formatNextPatrol(tagsController.nextPlanning.value), 
+                          Colors.orange
+                        ),
+                      ],
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildPresenceActionCard({required IconData icon, required String title, required Color color, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withOpacity(0.1)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Ubuntu',
+              ),
+            ),
           ],
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(10.0),
-          child: Obx(() {
-            return Column(
-              children: [
-                _btnPatrolPending().paddingBottom(20.0).paddingTop(10.0),
-                GridView.count(
-                  crossAxisCount: 3,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  children: menuButtons,
-                )
-              ],
-            );
-          }),
-        ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: primaryMaterialColor,
-          tooltip: "Appuyez longtemps pour déclencher un alèrte !",
-          elevation: 10,
-          onPressed: () async {
-            _updateService.checkForUpdate(context);
-          },
-          child: Image.asset(
-            "assets/icons/sirene.png",
-            height: 35.0,
+      ),
+    );
+  }
+
+  Widget _buildHeaderAction({required IconData icon, required String label, required Color color, VoidCallback? onTap, String? badge, Color badgeColor = Colors.blueAccent, bool enabled = true}) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                height: 48,
+                width: 48,
+                decoration: BoxDecoration(
+                  color: enabled ? color.withOpacity(0.4) : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: enabled ? color.withOpacity(0.2) : Colors.grey.withOpacity(0.1)),
+                ),
+                child: Icon(icon, color: enabled ? Colors.white : Colors.white24, size: 22),
+              ),
+              if (enabled && badge != null)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: badgeColor, 
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFF0B0B0F), width: 1.5),
+                    ),
+                    constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                    child: Text(
+                      badge,
+                      style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              if (!enabled)
+                Positioned(
+                  bottom: -2,
+                  right: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(color: Color(0xFF16161E), shape: BoxShape.circle),
+                    child: const Icon(Icons.lock_rounded, color: Colors.white38, size: 10),
+                  ),
+                ),
+            ],
           ),
-        ));
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(color: enabled ? Colors.white : Colors.white24, fontSize: 9, fontFamily: 'Ubuntu'),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(IconData icon, String title, String value, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF0F0F0)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 15),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w600, fontFamily: 'Ubuntu')),
+              Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF16161E), fontFamily: 'Ubuntu')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _btnPatrolPending() {
+    final hasPatrol = tagsController.patrolId.value != 0;
+    final user = authController.userSession.value;
+    final isGuard = user!.role?.toLowerCase() == 'guard';
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                if (isGuard) {
+                  if (hasPatrol) {
+                    _showBottonPatrolChoice(context);
+                  } else {
+                    EasyLoading.showToast("Veuillez sélectionner votre planning !");
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const PatrolPlanning()));
+                  }
+                } else {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorQRCODECompleter()));
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: hasPatrol ? Colors.orangeAccent.withOpacity(0.2) : Colors.greenAccent.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            hasPatrol ? Icons.shield_rounded : Icons.verified_user_rounded,
+                            color: hasPatrol ? Colors.orangeAccent : Colors.greenAccent,
+                            size: 30,
+                          ),
+                        ),
+                        if (hasPatrol)
+                          Positioned(
+                            top: -2,
+                            right: -2,
+                            child: Container(
+                              height: 12,
+                              width: 12,
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Bienvenue, ${user.fullname?.split(' ')[0] ?? 'Agent'}",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Ubuntu',
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            hasPatrol 
+                              ? "Une patrouille est en cours d'exécution." 
+                              : (isGuard ? "Veuillez consulter votre planning de patrouille." : "Statut disponible pour supervision."),
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 11,
+                              fontFamily: 'Ubuntu',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white24, size: 16),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _btnSuperviseAgents() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.blueAccent, Color(0xFF1976D2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueAccent.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          )
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (authController.pendingSupervisionMap.isEmpty) {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorPlanning()));
+            } else {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorAgent()));
+            }
+          },
+          borderRadius: BorderRadius.circular(25),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: const Icon(Icons.shield_outlined, color: Colors.white, size: 32),
+                ),
+                const SizedBox(width: 20),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "SUPERVISER LES AGENTS",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Staatliches',
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "Cliquez pour scanner une station dans la laquelle vs faite la supervision",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontFamily: 'Ubuntu',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _showBottonPatrolChoice(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(12.0),
-          topRight: Radius.circular(12.0),
-        ),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SizedBox(
-            height: 90.0,
-            child: Row(
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: const EdgeInsets.all(24.0),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(30.0), topRight: Radius.circular(30.0)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: CostumButton(
-                    bgColor: primaryMaterialColor.shade100,
-                    title: "Poursuivre",
-                    onPress: () {
-                      Get.back();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MobileQrScannerPage(),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: CostumButton(
-                    title: "Clôturer",
-                    bgColor: primaryMaterialColor,
-                    labelColor: Colors.white,
-                    onPress: () {
-                      Get.back();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MobileQrScannerPage(),
-                        ),
-                      );
-                    },
-                  ),
+                Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+                const Text("PATROUILLE", style: TextStyle(color: Colors.black87, fontFamily: 'Staatliches', fontSize: 24, letterSpacing: 1.5)),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(child: CostumButton(bgColor: Colors.grey.shade100, title: "Poursuivre", labelColor: Colors.black87, onPress: () { Get.back(); Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage())); })),
+                    const SizedBox(width: 12.0),
+                    Expanded(child: CostumButton(title: "Clôturer", bgColor: primaryMaterialColor, labelColor: Colors.white, onPress: () { Get.back(); Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage())); })),
+                  ],
                 ),
               ],
             ),
@@ -324,175 +713,63 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void _showBottonPresenceChoice(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(12.0),
-          topRight: Radius.circular(12.0),
-        ),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SizedBox(
-            height: 90.0,
-            child: Row(
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: const EdgeInsets.all(24.0),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(30.0), topRight: Radius.circular(30.0)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: CostumButton(
-                    bgColor: primaryMaterialColor.shade100,
-                    title: "Signer mon arrivée",
-                    onPress: () {
-                      tagsController.isLoading.value = false;
-                      Get.back();
-                      showRecognitionModal(context, key: "check-in");
-                    },
-                  ),
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
                 ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: CostumButton(
-                    title: "Signer mon départ",
-                    bgColor: primaryMaterialColor,
-                    labelColor: Colors.white,
-                    onPress: () {
-                      tagsController.isLoading.value = false;
-                      Get.back();
-                      showRecognitionModal(context, key: "check-out");
-                    },
-                  ),
+                const Text(
+                  "POINTAGE DE PRÉSENCE",
+                  style: TextStyle(color: Colors.black87, fontFamily: 'Staatliches', fontSize: 24, letterSpacing: 1.5),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: CostumButton(
+                        bgColor: Colors.grey.shade100,
+                        title: "Signer mon arrivée",
+                        labelColor: Colors.black87,
+                        onPress: () {
+                          tagsController.isLoading.value = false;
+                          Get.back();
+                          showRecognitionModal(context, key: "check-in");
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12.0),
+                    Expanded(
+                      child: CostumButton(
+                        title: "Signer mon départ",
+                        bgColor: primaryMaterialColor,
+                        labelColor: Colors.white,
+                        onPress: () {
+                          tagsController.isLoading.value = false;
+                          Get.back();
+                          showRecognitionModal(context, key: "check-out");
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _btnPatrolPending() {
-    return DottedBorder(
-      color: primaryMaterialColor.shade100,
-      radius: const Radius.circular(12.0),
-      strokeWidth: 1,
-      borderType: BorderType.RRect,
-      dashPattern: const [6, 3], // Optionnel, personnalise les pointillés
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-          onTap: () {
-            if (authController.userSession.value.role == 'guard') {
-              if (tagsController.patrolId.value != 0) {
-                _showBottonPatrolChoice(context);
-              } else {
-                EasyLoading.showToast(
-                    "Veuillez sélectionner votre planning de patrouille !");
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PatrolPlanning(),
-                  ),
-                );
-              }
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SupervisorQRCODECompleter(),
-                ),
-              );
-            }
-          },
-          child: ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-            child: Container(
-              // Utilise padding plutôt que margin
-              color: Colors.white,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    "assets/images/patrol_illustration.png",
-                    height: 80.0,
-                  ).paddingRight(8.0),
-                  if (authController.userSession.value.role == 'guard') ...[
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (tagsController.patrolId.value != 0) ...[
-                            const Text(
-                              "Patrouille en cours disponible",
-                              style: TextStyle(
-                                fontFamily: 'Staatliches',
-                                color: primaryMaterialColor,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15.0,
-                              ),
-                            ),
-                            const SizedBox(height: 4.0),
-                            const Text(
-                              "Veuillez cliquer ici pour clôturer ou poursuivre la patrouille en cours.",
-                              style: TextStyle(
-                                fontFamily: "Poppins",
-                                fontSize: 10.0,
-                              ),
-                            ),
-                          ] else ...[
-                            Text(
-                              "Bienvenue agent ${authController.userSession.value.fullname}",
-                              style: const TextStyle(
-                                fontFamily: 'Staatliches',
-                                color: primaryMaterialColor,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15.0,
-                              ),
-                            ),
-                            const SizedBox(height: 4.0),
-                            const Text(
-                              "Veuillez cliquer pour commencer une nouvelle patrouille.",
-                              style: TextStyle(
-                                fontFamily: "Poppins",
-                                fontSize: 10.0,
-                              ),
-                            ),
-                          ]
-                        ],
-                      ),
-                    )
-                  ] else ...[
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Bienvenue Superviseur ${authController.userSession.value.fullname} !",
-                            style: const TextStyle(
-                              fontFamily: 'Staatliches',
-                              color: primaryMaterialColor,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15.0,
-                            ),
-                          ),
-                          const SizedBox(height: 4.0),
-                          const Text(
-                            "Vous pouvez completer les zones de patrouille et aussi enrôler les visages des agents.",
-                            style: TextStyle(
-                              fontFamily: "Poppins",
-                              fontSize: 10.0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  ]
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

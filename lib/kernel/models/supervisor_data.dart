@@ -61,7 +61,6 @@ class ElementModel {
     );
   }
 
-  /// ✅ Méthode de clonage
   factory ElementModel.cloneFrom(ElementModel other) {
     return ElementModel(
       id: other.id,

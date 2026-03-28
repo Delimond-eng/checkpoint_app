@@ -1,180 +1,130 @@
 import 'dart:io';
-
-import 'package:checkpoint_app/constants/styles.dart';
+import 'dart:ui';
 import 'package:checkpoint_app/global/controllers.dart';
 import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:path/path.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart';
 
 import '../kernel/services/http_manager.dart';
 import '../widgets/submit_button.dart';
-import 'utils.dart';
 
-Future<void> showSignalementModal(context) async {
+Future<void> showSignalementModal(BuildContext context) async {
   final textTitle = TextEditingController();
   final textDescription = TextEditingController();
 
-  showCustomModal(
-    context,
-    onClosed: () {},
-    title: "Signalement",
-    child: Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Obx(
-        () => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(35),
+            topRight: Radius.circular(35),
+          ),
+        ),
+        child: Column(
           children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 15),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Text(
+              "SIGNALER UN INCIDENT",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Staatliches',
+                letterSpacing: 1.5,
+                color: Color(0xFF16161E),
+              ),
+            ),
+            const SizedBox(height: 10),
             Text(
-              "Veuillez renseigner tous les champs requis pour effectuer un signalement !",
-              style: Theme.of(context).textTheme.bodySmall,
-            ).paddingBottom(8.0),
-            Container(
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(
-                  color: Colors.blue.shade200,
-                ),
+              "Décrivez l'incident et joignez une preuve visuelle.",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+                fontFamily: 'Ubuntu',
               ),
-              width: MediaQuery.of(context).size.width,
-              child: Row(
-                children: [
-                  Flexible(
-                    child: TextField(
-                      controller: textTitle,
-                      decoration: const InputDecoration(
-                        hintText: "Titre du signalement",
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                      ),
-                    ),
-                  )
-                ],
-              ).paddingHorizontal(5.0),
-            ).paddingBottom(10.0),
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(
-                  color: Colors.blue.shade200,
-                ),
-              ),
-              width: MediaQuery.of(context).size.width,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  controller: textDescription,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(
-                    hintText: "Description...",
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                  ),
-                ),
-              ),
-            ).paddingBottom(10.0),
-            PickerButton(
-              isPicked: tagsController.mediaFile.value != null,
-              onCleared: () {
-                tagsController.mediaFile.value = null;
-              },
-              onPressed: () {
-                showModalBottomSheet(
-                    context: context,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(15.0),
-                      ),
-                    ),
-                    builder: (context) {
-                      return Container(
-                        height: 120.0,
-                        padding: const EdgeInsets.all(15.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width,
-                                child: PickerActionButton(
-                                  label: "Capture Photo",
-                                  icon: CupertinoIcons.photo_camera,
-                                  onPressed: () {
-                                    pickImage().then((value) => Get.back());
-                                  },
-                                ).paddingRight(10.0),
-                              ),
-                            ),
-                            Expanded(
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width,
-                                child: PickerActionButton(
-                                  label: "Capture vidéo",
-                                  icon: CupertinoIcons.video_camera,
-                                  onPressed: () {
-                                    pickVideo().then((value) => Get.back());
-                                  },
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      );
-                    });
-              },
-            ).paddingBottom(10),
-            SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: 55.0,
-              child: SubmitButton(
-                label: "Envoyer la requête",
-                loading: tagsController.isLoading.value,
-                onPressed: () async {
-                  if (tagsController.mediaFile.value == null) {
-                    EasyLoading.showSuccess(
-                        "Vous devez faire une capture vidéo ou image !");
-                    return;
-                  }
-                  if (textTitle.text.isEmpty) {
-                    EasyLoading.showSuccess(
-                        "Vous devez donner un titre à votre signalement !");
-                    return;
-                  }
+            ),
+            const SizedBox(height: 25),
 
-                  if (textDescription.text.isEmpty) {
-                    EasyLoading.showSuccess(
-                        "Vous devez donner une description à votre signalement !");
-                    return;
-                  }
-                  var manager = HttpManager();
-                  tagsController.isLoading.value = true;
-                  manager
-                      .createSignalement(textTitle.text, textDescription.text)
-                      .then((value) {
-                    tagsController.isLoading.value = false;
-                    if (value is String) {
-                      EasyLoading.showToast(value);
-                    } else {
-                      Get.back();
-                      tagsController.mediaFile.value = null;
-                      EasyLoading.showSuccess(
-                        "Votre signalement a été transmis au centre de contrôle avec succès !",
-                      );
-                    }
-                  });
-                },
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildFieldLabel("TITRE DE L'INCIDENT"),
+                    _buildInputField(
+                      controller: textTitle,
+                      hint: "Ex: Intrusion, Panne technique...",
+                      icon: Icons.error_outline_rounded,
+                      color: Colors.redAccent,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildFieldLabel("PREUVE VISUELLE"),
+                    Obx(() => _buildMediaPicker(context)),
+                    const SizedBox(height: 20),
+                    _buildFieldLabel("DESCRIPTION DES FAITS"),
+                    _buildInputField(
+                      controller: textDescription,
+                      hint: "Expliquez ce qu'il s'est passé...",
+                      icon: Icons.subject_rounded,
+                      maxLines: 4,
+                      color: Colors.redAccent,
+                    ),
+                    const SizedBox(height: 35),
+                    Obx(() => SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: SubmitButton(
+                        label: "TRANSMETTRE L'ALERTE",
+                        loading: tagsController.isLoading.value,
+                        onPressed: () async {
+                          if (tagsController.mediaFile.value == null) {
+                            EasyLoading.showToast("Une capture photo ou vidéo est requise !");
+                            return;
+                          }
+                          if (textTitle.text.isEmpty || textDescription.text.isEmpty) {
+                            EasyLoading.showToast("Veuillez remplir tous les champs !");
+                            return;
+                          }
+                          
+                          tagsController.isLoading.value = true;
+                          var manager = HttpManager();
+                          final response = await manager.createSignalement(textTitle.text, textDescription.text);
+                          tagsController.isLoading.value = false;
+                          
+                          if (response is String) {
+                            EasyLoading.showToast(response);
+                          } else {
+                            Get.back();
+                            tagsController.mediaFile.value = null;
+                            EasyLoading.showSuccess("Signalement transmis avec succès !");
+                          }
+                        },
+                      ),
+                    )),
+                    const SizedBox(height: 30),
+                  ],
+                ),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -182,184 +132,180 @@ Future<void> showSignalementModal(context) async {
   );
 }
 
-Future<void> pickImage() async {
-  final ImagePicker picker = ImagePicker();
-  final XFile? pickedFile = await picker.pickImage(
-    source: ImageSource.camera,
-    imageQuality: 60,
+Widget _buildFieldLabel(String label) {
+  return Padding(
+    padding: const EdgeInsets.only(left: 5, bottom: 8),
+    child: Text(
+      label,
+      style: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.bold,
+        color: Colors.grey,
+        letterSpacing: 1.2,
+        fontFamily: 'Ubuntu',
+      ),
+    ),
   );
-
-  if (pickedFile != null) {
-    await Future.delayed(Duration.zero);
-    tagsController.mediaFile.value = File(pickedFile.path);
-  } else {
-    tagsController.mediaFile.value = null;
-  }
 }
 
-// Fonction pour capturer une vidéo (max 30s)
-Future<void> pickVideo() async {
-  final ImagePicker picker = ImagePicker();
-  final XFile? pickedFile = await picker.pickVideo(
-    source: ImageSource.camera,
-    maxDuration: const Duration(seconds: 30),
+Widget _buildInputField({
+  required TextEditingController controller,
+  required String hint,
+  required IconData icon,
+  required Color color,
+  int maxLines = 1,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      color: const Color(0xFFF8F9FA),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.grey.withOpacity(0.1)),
+    ),
+    child: TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: const TextStyle(fontFamily: 'Ubuntu', fontSize: 14),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+        prefixIcon: Icon(icon, size: 20, color: color),
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(vertical: 15),
+      ),
+    ),
   );
-  if (pickedFile != null) {
-    await Future.delayed(Duration.zero);
-    tagsController.mediaFile.value = File(pickedFile.path);
-  } else {
-    tagsController.mediaFile.value = null;
-  }
 }
 
-class PickerButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final VoidCallback? onCleared;
-  final bool isPicked;
-  const PickerButton({
-    super.key,
-    this.onPressed,
-    this.onCleared,
-    this.isPicked = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        DottedBorder(
-          color: primaryMaterialColor.shade500,
-          radius: const Radius.circular(12.0),
-          strokeWidth: 1,
-          borderType: BorderType.RRect,
-          dashPattern: const [6, 3],
-          child: ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-            child: Container(
-              height: 120.0,
-              width: MediaQuery.of(context).size.width,
-              padding: const EdgeInsets.all(2.5),
-              color: whiteColor,
-              child: Material(
-                borderRadius: BorderRadius.circular(12.0),
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12.0),
-                  onTap: onPressed,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (tagsController.mediaFile.value == null) ...[
-                        const Text("Faites une capture photo ou une video")
-                            .paddingBottom(10),
-                      ] else ...[
-                        Text(
-                          basename(tagsController.mediaFile.value!.path),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 10.0,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.green,
-                          ),
-                        ).paddingBottom(10).paddingHorizontal(10.0),
-                      ],
-                      Icon(
-                        CupertinoIcons.play,
-                        color: tagsController.mediaFile.value != null
-                            ? Colors.green
-                            : primaryMaterialColor,
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        if (isPicked)
-          Positioned(
-            bottom: 10.0,
-            right: 10.0,
-            child: Container(
-              height: 40.0,
-              width: 40.0,
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(40),
-              ),
-              child: Material(
-                borderRadius: BorderRadius.circular(40),
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(40),
-                  onTap: onCleared,
-                  child: Center(
-                    child: Icon(
-                      CupertinoIcons.clear,
-                      size: 18.0,
-                      color: Colors.red.shade300,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          )
-      ],
-    );
-  }
-}
-
-class PickerActionButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final String label;
-  final IconData icon;
-  const PickerActionButton({
-    super.key,
-    this.onPressed,
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return DottedBorder(
-      color: primaryMaterialColor.shade500,
-      radius: const Radius.circular(12.0),
-      strokeWidth: 1,
-      borderType: BorderType.RRect,
-      dashPattern: const [6, 3],
-      child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        child: Container(
-          color: Colors.white,
-          width: MediaQuery.of(context).size.width,
-          child: Material(
-            borderRadius: BorderRadius.circular(12.0),
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12.0),
-              onTap: onPressed,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    icon,
-                    color: primaryMaterialColor,
-                    size: 30.0,
-                  ).paddingBottom(10),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                        fontFamily: "Staatliches", color: blackColor),
-                  ),
-                ],
-              ),
-            ),
-          ),
+Widget _buildMediaPicker(BuildContext context) {
+  final file = tagsController.mediaFile.value;
+  return GestureDetector(
+    onTap: () => _showPickerOptions(context),
+    child: Container(
+      width: double.infinity,
+      height: 100,
+      decoration: BoxDecoration(
+        color: file == null ? const Color(0xFFF8F9FA) : Colors.green.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: file == null ? Colors.grey.withOpacity(0.1) : Colors.green.withOpacity(0.2),
+          style: file == null ? BorderStyle.solid : BorderStyle.solid,
         ),
       ),
-    );
+      child: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  file == null ? Icons.camera_alt_rounded : Icons.check_circle_rounded,
+                  color: file == null ? Colors.grey : Colors.green,
+                  size: 30,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  file == null ? "AJOUTER UNE PHOTO / VIDÉO" : basename(file.path),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: file == null ? Colors.grey : Colors.green,
+                    fontFamily: 'Ubuntu',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (file != null)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: () => tagsController.mediaFile.value = null,
+                child: const Icon(Icons.cancel_rounded, color: Colors.redAccent, size: 24),
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+void _showPickerOptions(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (context) => Container(
+      padding: const EdgeInsets.all(25),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("CHOISIR UN MÉDIA", style: TextStyle(fontFamily: 'Staatliches', fontSize: 18, letterSpacing: 1.5)),
+          const SizedBox(height: 25),
+          Row(
+            children: [
+              Expanded(
+                child: _buildPickerAction(
+                  icon: Icons.photo_camera_rounded,
+                  label: "PHOTO",
+                  onTap: () async {
+                    Get.back();
+                    await _pickMedia(ImageSource.camera, isVideo: false);
+                  },
+                ),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: _buildPickerAction(
+                  icon: Icons.videocam_rounded,
+                  label: "VIDÉO",
+                  onTap: () async {
+                    Get.back();
+                    await _pickMedia(ImageSource.camera, isVideo: true);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildPickerAction({required IconData icon, required String label, required VoidCallback onTap}) {
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(20),
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.redAccent, size: 30),
+          const SizedBox(height: 10),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Staatliches')),
+        ],
+      ),
+    ),
+  );
+}
+
+Future<void> _pickMedia(ImageSource source, {required bool isVideo}) async {
+  final ImagePicker picker = ImagePicker();
+  if (isVideo) {
+    final XFile? pickedFile = await picker.pickVideo(source: source, maxDuration: const Duration(seconds: 30));
+    if (pickedFile != null) tagsController.mediaFile.value = File(pickedFile.path);
+  } else {
+    final XFile? pickedFile = await picker.pickImage(source: source, imageQuality: 60);
+    if (pickedFile != null) tagsController.mediaFile.value = File(pickedFile.path);
   }
 }

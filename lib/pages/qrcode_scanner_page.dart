@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/models/area.dart';
-import 'package:checkpoint_app/modals/close_patrol_modal.dart';
-import 'package:checkpoint_app/modals/scanning_completer_modal.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
+import '/global/controllers.dart';
+import '/kernel/models/area.dart';
+import '/modals/close_patrol_modal.dart';
+import '/modals/scanning_completer_modal.dart';
+import '/themes/app_theme.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

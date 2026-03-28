@@ -1,7 +1,7 @@
-import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/kernel/services/talkie_walkie_service.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/widgets/svg.dart';
+import '/constants/styles.dart';
+import '/kernel/services/talkie_walkie_service.dart';
+import '/themes/app_theme.dart';
+import '/widgets/svg.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -45,7 +45,7 @@ class _RadioPageState extends State<RadioPage> {
               radius: 30,
               backgroundColor: Colors.blue,
               child: Text(
-                authController.userSession.value.fullname!.substring(0, 1),
+                authController.userSession.value!.fullname!.substring(0, 1),
                 style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ).marginAll(8.0),

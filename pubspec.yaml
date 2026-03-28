@@ -53,7 +53,7 @@ dependencies:
   connectivity_plus: ^6.1.4
   battery_plus: ^6.2.2
   package_info_plus: ^8.3.0
-  install_plugin: ^2.1.0
+  #install_plugin: ^2.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -70,6 +70,16 @@ flutter:
     - assets/models/facenet.tflite
 
   fonts:
+    - family: Ubuntu
+      fonts:
+        - asset: assets/fonts/Ubuntu/Ubuntu-Bold.ttf
+        - asset: assets/fonts/Ubuntu/Ubuntu-BoldItalic.ttf
+        - asset: assets/fonts/Ubuntu/Ubuntu-Italic.ttf
+        - asset: assets/fonts/Ubuntu/Ubuntu-Light.ttf
+        - asset: assets/fonts/Ubuntu/Ubuntu-LightItalic.ttf
+        - asset: assets/fonts/Ubuntu/Ubuntu-Medium.ttf
+        - asset: assets/fonts/Ubuntu/Ubuntu-MediumItalic.ttf
+        - asset: assets/fonts/Ubuntu/Ubuntu-Regular.ttf
     - family: Poppins
       fonts:
         - asset: assets/fonts/Poppins/Poppins-Black.ttf

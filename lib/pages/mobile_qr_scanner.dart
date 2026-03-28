@@ -1,13 +1,10 @@
 import 'dart:convert';
+import 'dart:ui';
 
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/models/area.dart';
-import 'package:checkpoint_app/modals/close_patrol_modal.dart';
-import 'package:checkpoint_app/modals/scanning_completer_modal.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/widgets/costum_button.dart';
-import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/cupertino.dart';
+import '/global/controllers.dart';
+import '/kernel/models/area.dart';
+import '/modals/close_patrol_modal.dart';
+import '/modals/scanning_completer_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -15,6 +12,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../constants/styles.dart';
 import '../widgets/user_status.dart';
+import '../widgets/scanner_overlay.dart';
 
 class MobileQrScannerPage extends StatefulWidget {
   const MobileQrScannerPage({super.key});
@@ -24,10 +22,7 @@ class MobileQrScannerPage extends StatefulWidget {
 }
 
 class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
-  var scaffoldKey = GlobalKey<ScaffoldState>();
-
   final controller = MobileScannerController(autoStart: true);
-
   bool isLigthing = false;
 
   @override
@@ -40,10 +35,7 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
     if (mounted) {
       try {
         if (!tagsController.isScanningModalOpen.value) {
-          // Convertir la chaîne JSON en Map
-          Map<String, dynamic> jsonMap =
-              jsonDecode(barcodes.barcodes.first.displayValue!);
-          // Formatter le JSON en objet Dart
+          Map<String, dynamic> jsonMap = jsonDecode(barcodes.barcodes.first.displayValue!);
           var area = Area.fromJson(jsonMap);
           tagsController.scannedArea.value = area;
           tagsController.isLoading.value = false;
@@ -61,119 +53,140 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: darkColor,
-        title: const Text(
-          "PATROUILLE",
-          style: TextStyle(
-            fontSize: 30.0,
-            fontWeight: FontWeight.w900,
-            color: whiteColor,
-            fontFamily: 'Staatliches',
-            letterSpacing: 1.2,
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Background Scanner
+          MobileScanner(
+            controller: controller,
+            onDetect: _handleBarcode,
           ),
-        ),
-        actions: [
-          const UserStatus(name: "Gaston delimond").marginAll(8.0),
-        ],
-      ),
-      body: SafeArea(
-        child: Obx(
-          () => Stack(
-            alignment: Alignment.center,
-            children: [
-              if (!tagsController.isScanningModalOpen.value) ...[
-                MobileScanner(
-                  controller: controller,
-                  onDetect: _handleBarcode,
-                )
-              ] else ...[
-                Center(
-                  child: DottedBorder(
-                    color: primaryMaterialColor.shade100,
-                    radius: const Radius.circular(12.0),
-                    strokeWidth: 1,
-                    borderType: BorderType.RRect,
-                    dashPattern: const [6, 3],
-                    child: ClipRRect(
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(12.0)),
-                      child: Container(
-                        height: 150.0,
-                        width: 150.0,
-                        color: Colors.white,
-                        child: Material(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(12.0)),
-                          color: Colors.white,
-                          child: InkWell(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(12.0)),
-                            onTap: () {
-                              //restart scan here
-                              tagsController.isScanningModalOpen.value = false;
-                              controller.stop(); // Arrête d'abord proprement
-                              Future.delayed(const Duration(milliseconds: 300),
-                                  () {
-                                controller.start(); // Puis redémarre le scanner
-                              });
-                            },
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.refresh_rounded,
-                                  color: primaryMaterialColor,
-                                ).paddingBottom(10.0),
-                                const Text(
-                                  "Relancer la caméra",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 10.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                )
-                              ],
+          
+          // Scanner Overlay with Animation or Refresh Icon
+          Obx(() => ScannerOverlay(isScanned: tagsController.isScanningModalOpen.value)),
+
+          // Glass Header Section
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                  color: Colors.black.withOpacity(0.4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          GestureDetector(
+                            onTap: () => Get.back(),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
                             ),
+                          ),
+                          const UserStatus(name: ""),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "PATROUILLE",
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Staatliches', letterSpacing: 2),
+                      ),
+                      const Text(
+                        "SCANNEZ LE POINT",
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Bottom Controls & Close Action
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
+            child: Column(
+              children: [
+                Obx(() => tagsController.patrolId.value != 0 
+                  ? Padding(
+                      padding: const EdgeInsets.only(bottom: 20, left: 30, right: 30),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.redAccent.withOpacity(0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            )
+                          ],
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: () => showClosePatrolModal(context),
+                          icon: const Icon(Icons.stop_circle_rounded),
+                          label: const Text("CLÔTURER LA PATROUILLE", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Ubuntu')),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 55),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            elevation: 0,
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                )
-              ],
-              // Overlay avec fenêtre transparente
-              tagsController.patrolId.value != 0
-                  ? Positioned(
-                      bottom: 15.0,
-                      left: 15.0,
-                      child: CostumButton(
-                        bgColor: primaryMaterialColor,
-                        borderColor: primaryMaterialColor.shade400,
-                        title: "Cloturer la patrouille en cours",
-                        labelColor: whiteColor,
-                        onPress: () {
-                          showClosePatrolModal(context);
-                        },
-                      ),
                     )
-                  : const SizedBox.shrink()
-            ],
+                  : const SizedBox.shrink()),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildControlBtn(
+                      icon: isLigthing ? Icons.flashlight_off_rounded : Icons.flashlight_on_rounded,
+                      onTap: () {
+                        setState(() => isLigthing = !isLigthing);
+                        controller.toggleTorch();
+                      },
+                    ),
+                    const SizedBox(width: 30),
+                    _buildControlBtn(
+                      icon: Icons.refresh_rounded,
+                      onTap: () {
+                        tagsController.isScanningModalOpen.value = false;
+                        controller.start();
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(
-          isLigthing
-              ? Icons.flashlight_off_rounded
-              : Icons.flashlight_on_rounded,
+    );
+  }
+
+  Widget _buildControlBtn({required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 60,
+        width: 60,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withOpacity(0.2)),
         ),
-        onPressed: () {
-          setState(() => isLigthing = !isLigthing);
-          controller.toggleTorch();
-        },
+        child: Icon(icon, color: Colors.white, size: 28),
       ),
     );
   }

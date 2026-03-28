@@ -114,7 +114,7 @@ class TalkieWalkieService {
     try {
       var uri = Uri.parse("${Api.baseUrl}/send.talk");
       var request = http.MultipartRequest('POST', uri);
-      request.fields['user_id'] = agent.id!.toString();
+      request.fields['user_id'] = agent!.id!.toString();
       request.fields['sender'] = "app";
       request.files.add(await http.MultipartFile.fromPath('audio', filePath));
       var response = await request.send();
