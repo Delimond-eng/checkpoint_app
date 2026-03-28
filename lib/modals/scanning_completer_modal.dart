@@ -140,6 +140,7 @@ Future<void> showScanningCompleter(BuildContext context, {String key = "patrol"}
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: Colors.grey.withOpacity(0.1)),
                       ),
+                      padding: const EdgeInsets.all(15.0),
                       child: TextField(
                         controller: commentController,
                         maxLines: 4,

@@ -8,7 +8,7 @@ import '/kernel/models/user.dart';
 import '/kernel/models/planning.dart';
 import '/kernel/services/http_manager.dart';
 import '/kernel/services/local_db_service.dart';
-import '/kernel/services/alarm_service.dart'; // Import ajouté
+import '/kernel/services/alarm_service.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -29,7 +29,6 @@ class TagsController extends GetxController {
   var cameraIndex = 1.obs;
   var planningId = "".obs;
   
-  // Observables pour les badges et le dashboard
   var announceCount = 0.obs;
   var pendingPlanningCount = 0.obs;
   var nextPlanning = Rxn<Planning>();
@@ -47,6 +46,9 @@ class TagsController extends GetxController {
     super.onReady();
     _startPatrolStream();
     
+    // Charger immédiatement les données locales pour un affichage instantané
+    _loadLocalData();
+
     ever(authController.userSession, (user) {
       if (user != null && user.id != null) {
         fetchAnnouncesAndPlannings();
@@ -90,10 +92,18 @@ class TagsController extends GetxController {
   }
 
   void _startDataRefreshTimer() {
-    _dataRefreshTimer = Timer.periodic(const Duration(minutes: 2), (timer) {
+    _dataRefreshTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
       fetchAnnouncesAndPlannings();
     });
-    fetchAnnouncesAndPlannings();
+  }
+
+  Future<void> _loadLocalData() async {
+    final localPlannings = await LocalDbService.instance.getLocalPlannings();
+    if (localPlannings.isNotEmpty) {
+      pendingPlanningCount.value = localPlannings.length;
+      _updateNextPlanning(localPlannings);
+      await AlarmService.instance.scheduleAlarms(localPlannings);
+    }
   }
 
   Future<void> fetchAnnouncesAndPlannings() async {
@@ -123,17 +133,10 @@ class TagsController extends GetxController {
       pendingPlanningCount.value = validPlannings.length;
       
       _updateNextPlanning(validPlannings);
-
-      // Programmer les alarmes pour les plannings valides
       await AlarmService.instance.scheduleAlarms(validPlannings);
       
     } catch (e) {
-      final localPlannings = await LocalDbService.instance.getLocalPlannings();
-      pendingPlanningCount.value = localPlannings.length;
-      _updateNextPlanning(localPlannings);
-      
-      // Programmer les alarmes même en mode local
-      await AlarmService.instance.scheduleAlarms(localPlannings);
+      // Silencieux : on garde ce qui est déjà affiché (le local)
     }
   }
 
@@ -146,18 +149,14 @@ class TagsController extends GetxController {
     try {
       final now = DateTime.now();
       
-      // Trier par date et heure de début
       plannings.sort((a, b) {
         DateTime dateA = a.date!.contains('/') ? DateFormat('dd/MM/yyyy').parse(a.date!) : DateTime.parse(a.date!);
         DateTime dateB = b.date!.contains('/') ? DateFormat('dd/MM/yyyy').parse(b.date!) : DateTime.parse(b.date!);
-        
         int dateComp = dateA.compareTo(dateB);
         if (dateComp != 0) return dateComp;
-        
         return a.startTime!.compareTo(b.startTime!);
       });
 
-      // Trouver le prochain planning futur
       nextPlanning.value = plannings.firstWhere((p) {
         DateTime pDate = p.date!.contains('/') ? DateFormat('dd/MM/yyyy').parse(p.date!) : DateTime.parse(p.date!);
         DateTime start = DateTime(pDate.year, pDate.month, pDate.day, 

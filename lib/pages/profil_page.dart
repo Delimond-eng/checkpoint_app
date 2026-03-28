@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 import '/constants/styles.dart';
 import '/global/controllers.dart';
 import '/global/modal.dart';
@@ -136,8 +137,22 @@ class _ProfilPageState extends State<ProfilPage> {
                           ),
                           child: ClipOval(
                             child: user.photo != null && user.photo!.isNotEmpty
-                                ? Image.network(user.photo!, fit: BoxFit.cover)
-                                : Image.asset("assets/images/profil-2.png", fit: BoxFit.cover),
+                                ? CachedNetworkImage(
+                                    imageUrl: user.photo!,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => Image.asset(
+                                      "assets/images/profil-2.png",
+                                      fit: BoxFit.cover,
+                                    ),
+                                    errorWidget: (context, url, error) => Image.asset(
+                                      "assets/images/profil-2.png",
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Image.asset(
+                                    "assets/images/profil-2.png",
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                         ),
                         const SizedBox(width: 20),

@@ -44,7 +44,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   String _formatNextPatrol(Planning? planning) {
     if (planning == null || planning.date == null || planning.startTime == null) {
-      return "Aucune patrouille planifiée";
+      return "En attente de nouveau planning...";
     }
     
     try {
@@ -85,6 +85,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       backgroundColor: const Color(0xFF0B0B0F), // Dark Header Background
       body: Obx(() {
         final hasPatrol = tagsController.patrolId.value != 0;
+        final hasSupervision = authController.pendingSupervision.value != null;
         final countPlanning = tagsController.pendingPlanningCount.value;
         final countAnnounces = tagsController.announceCount.value;
 
@@ -171,6 +172,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         label: "Supervision",
                         color: Colors.amberAccent,
                         enabled: isSupervisor,
+                        badge: hasSupervision ? "!" : null,
                         onTap: () {
                           Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorAgent()));
                         },
@@ -272,18 +274,35 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               ),
                             ),
                             const Spacer(),
-                            IconButton(
-                              onPressed: () async {
-                                EasyLoading.show(status: 'Synchronisation...');
-                                await tagsController.fetchAnnouncesAndPlannings();
-                                await SyncService.instance.syncPendingActions();
-                                EasyLoading.showSuccess("Données à jour");
-                              },
-                              icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
-                            ),
                           ]
+                          else...[
+                            const Expanded(child: Padding(
+                              padding: EdgeInsets.only(top: 15, bottom: 5),
+                              child: Text(
+                                "Cliquez sur le bouton « Superviser les agents », puis scannez le QR code de la station afin de procéder à l’inspection des agents.",
+                                textAlign: TextAlign.start,
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 10,
+                                  fontStyle: FontStyle.italic,
+                                  fontFamily: 'Ubuntu',
+                                ),
+                              ),
+                            )),
+                          ],
+                          IconButton(
+                            onPressed: () async {
+                              EasyLoading.show(status: 'Synchronisation...');
+                              await tagsController.fetchAnnouncesAndPlannings();
+                              await SyncService.instance.syncPendingActions();
+                              EasyLoading.showSuccess("Données à jour");
+                            },
+                            icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
+                          ),
                         ],
                       ),
+                      const SizedBox(height: 15),
+
                       if (isSupervisor) ...[
                         _btnSuperviseAgents(),
                         const SizedBox(height: 15.0),

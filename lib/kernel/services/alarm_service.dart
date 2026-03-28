@@ -47,6 +47,33 @@ class AlarmService {
     });
   }
 
+  /// Use this method to detect when a new notification or a schedule is created
+  @pragma("vm:entry-point")
+  static Future<void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
+    // Your code here
+  }
+
+  /// Use this method to detect every time that a new notification is displayed
+  @pragma("vm:entry-point")
+  static Future<void> onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {
+    // Your code here
+  }
+
+  /// Use this method to detect if the user dismissed a notification
+  @pragma("vm:entry-point")
+  static Future<void> onDismissActionReceivedMethod(ReceivedAction receivedAction) async {
+    // Your code here
+  }
+
+  /// Use this method to detect when the user taps on a notification or action button
+  @pragma("vm:entry-point")
+  static Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+    if (receivedAction.channelKey == 'patrol_alarms') {
+      final libelle = receivedAction.payload?['libelle'] ?? '';
+      instance.handleForegroundAlarm(libelle);
+    }
+  }
+
   Future<void> speak(String text) async {
     await _flutterTts.speak(text);
   }
