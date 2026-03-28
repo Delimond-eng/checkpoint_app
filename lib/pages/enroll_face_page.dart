@@ -27,6 +27,8 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
   bool _isDetecting = false;
   bool _facePresent = false;
   bool _isCapturing = false;
+  int _cameraIndex = 1; // Default to front camera
+  List<CameraDescription> _cameras = [];
   final TextEditingController _matriculeController = TextEditingController();
   
   final FaceDetector _faceDetector = FaceDetector(
@@ -43,15 +45,12 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
   }
 
   Future<void> _initCamera() async {
-    final cameras = await availableCameras();
-    if (cameras.isEmpty) return;
+    _cameras = await availableCameras();
+    if (_cameras.isEmpty) return;
 
     _controller = CameraController(
-      cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.front,
-        orElse: () => cameras.first,
-      ),
-      ResolutionPreset.medium,
+      _cameras[_cameraIndex],
+      ResolutionPreset.high,
       enableAudio: false,
       imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
     );
@@ -68,6 +67,16 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
     } catch (e) {
       debugPrint("Camera init error: $e");
     }
+  }
+
+  Future<void> _toggleCamera() async {
+    if (_cameras.length < 2) return;
+    
+    _cameraIndex = (_cameraIndex == 1) ? 0 : 1;
+    if (_controller != null) {
+      await _controller!.dispose();
+    }
+    _initCamera();
   }
 
   Future<void> _checkFacePresence(CameraImage image) async {
@@ -137,19 +146,16 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
     EasyLoading.show(status: 'Analyse biométrique...');
     
     try {
-      // 1. Extraire l'embedding (le vecteur) pour la reconnaissance locale et serveur
       final embedding = await faceRecognitionController.getEmbedding(_capturedImage!);
       if (embedding == null || embedding.isEmpty) {
         EasyLoading.showError("Échec de l'analyse faciale.");
         return;
       }
 
-      // 2. Préparer l'envoi au serveur avec l'embedding inclus
       tagsController.face.value = _capturedImage;
       final response = await HttpManager().enrollAgent(matricule, embedding);
       
       if (response == "success") {
-        // 3. Stocker également localement le visage et son vecteur
         await faceRecognitionController.addKnownFaceFromImage(
           matricule,
           _capturedImage!,
@@ -182,142 +188,188 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          onPressed: () => Get.back(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+        ),
         title: const Text(
           "ENRÔLEMENT VISAGE",
           style: TextStyle(fontFamily: 'Staatliches', letterSpacing: 1.5, color: Colors.white),
         ),
-        actions: [
-          const Padding(
+        actions: const [
+          Padding(
             padding: EdgeInsets.only(right: 12.0),
             child: UserStatus(name: ""),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Text(
-              _capturedImage != null 
-                ? "Vérifiez les informations" 
-                : (_facePresent ? "Visage détecté : Prêt" : "Positionnez le visage dans le cercle"),
-              style: TextStyle(
-                color: _facePresent ? Colors.greenAccent : Colors.white70,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Ubuntu',
-              ),
-            ),
-            const SizedBox(height: 30),
-            
-            // Camera / Preview Circle
-            Center(
-              child: Container(
-                width: 280,
-                height: 280,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: _capturedImage != null 
-                      ? Colors.greenAccent 
-                      : (_facePresent ? Colors.greenAccent : Colors.blueAccent.withOpacity(0.5)), 
-                    width: 4
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (_facePresent ? Colors.greenAccent : Colors.blueAccent).withOpacity(0.2),
-                      blurRadius: 20,
-                    )
-                  ],
-                ),
-                child: ClipOval(
-                  child: _capturedImage != null
-                    ? Image.file(File(_capturedImage!.path), fit: BoxFit.cover)
-                    : (_controller != null && _controller!.value.isInitialized)
-                        ? CameraPreview(_controller!)
-                        : const Center(child: CircularProgressIndicator()),
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 40),
-
-            if (_capturedImage == null)
-              ElevatedButton.icon(
-                onPressed: (_isCapturing || !_facePresent) ? null : _capturePhoto,
-                icon: _isCapturing 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.camera_alt_rounded),
-                label: const Text("CAPTURER LE VISAGE", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Staatliches')),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryMaterialColor,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: Colors.white10,
-                  minimumSize: const Size(240, 60),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                ),
-              )
-            else
-              Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
-                    ),
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _matriculeController,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu'),
-                          decoration: InputDecoration(
-                            labelText: "Matricule de l'agent",
-                            labelStyle: const TextStyle(color: Colors.white70),
-                            hintText: "Saisir le matricule",
-                            hintStyle: const TextStyle(color: Colors.white24),
-                            prefixIcon: const Icon(Icons.badge_rounded, color: primaryMaterialColor),
-                            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
-                            focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: primaryMaterialColor)),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _capturedImage != null 
+                          ? "Vérifiez les informations" 
+                          : (_facePresent ? "Visage détecté : Prêt" : "Positionnez le visage dans le cercle"),
+                        style: TextStyle(
+                          color: _facePresent ? Colors.greenAccent : Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Ubuntu',
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      
+                      // Camera / Preview Circle
+                      Center(
+                        child: Container(
+                          width: 280,
+                          height: 280,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _capturedImage != null 
+                                ? Colors.greenAccent 
+                                : (_facePresent ? Colors.greenAccent : Colors.blueAccent.withOpacity(0.5)), 
+                              width: 4
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (_facePresent ? Colors.greenAccent : Colors.blueAccent).withOpacity(0.2),
+                                blurRadius: 20,
+                              )
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: _capturedImage != null
+                              ? Image.file(File(_capturedImage!.path), fit: BoxFit.cover)
+                              : (_controller != null && _controller!.value.isInitialized)
+                                  ? FittedBox(
+                                      fit: BoxFit.cover,
+                                      child: SizedBox(
+                                        width: _controller!.value.previewSize?.height,
+                                        height: _controller!.value.previewSize?.width,
+                                        child: CameraPreview(_controller!),
+                                      ),
+                                    )
+                                  : const Center(child: CircularProgressIndicator()),
                           ),
                         ),
-                        const SizedBox(height: 25),
+                      ),
+                      
+                      const SizedBox(height: 40),
+
+                      if (_capturedImage == null)
                         Row(
                           children: [
                             Expanded(
-                              child: TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _capturedImage = null;
-                                    _initCamera(); // Relance le stream
-                                  });
-                                },
-                                child: const Text("REPRENDRE", style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold)),
+                              flex: 4,
+                              child: ElevatedButton.icon(
+                                onPressed: (_isCapturing || !_facePresent) ? null : _capturePhoto,
+                                icon: _isCapturing 
+                                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : const Icon(Icons.camera_alt_rounded),
+                                label: const Text("CAPTURER", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Staatliches')),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryMaterialColor,
+                                  foregroundColor: Colors.white,
+                                  disabledBackgroundColor: Colors.white30,
+                                  disabledForegroundColor: Colors.grey.shade400,
+                                  minimumSize: const Size(0, 60),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 15),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: _submitEnroll,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.greenAccent.shade700,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(0, 50),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                                ),
-                                child: const Text("VALIDER", style: TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 12),
+                            Container(
+                              height: 60,
+                              width: 60,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                              ),
+                              child: IconButton(
+                                onPressed: _toggleCamera,
+                                icon: const Icon(Icons.flip_camera_ios_rounded, color: Colors.white, size: 28),
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Column(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                              ),
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                children: [
+                                  TextField(
+                                    controller: _matriculeController,
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu'),
+                                    decoration: InputDecoration(
+                                      labelText: "Matricule de l'agent",
+                                      labelStyle: const TextStyle(color: Colors.white70),
+                                      hintText: "Saisir le matricule",
+                                      hintStyle: const TextStyle(color: Colors.white24),
+                                      prefixIcon: const Icon(Icons.badge_rounded, color: primaryMaterialColor),
+                                      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
+                                      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: primaryMaterialColor)),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 25),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _capturedImage = null;
+                                              _initCamera(); 
+                                            });
+                                          },
+                                          child: const Text("REPRENDRE", style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold)),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 15),
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          onPressed: _submitEnroll,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.greenAccent.shade700,
+                                            foregroundColor: Colors.white,
+                                            minimumSize: const Size(0, 50),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                          ),
+                                          child: const Text("VALIDER", style: TextStyle(fontWeight: FontWeight.bold)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-          ],
-        ),
+            ),
+          );
+        },
       ),
     );
   }

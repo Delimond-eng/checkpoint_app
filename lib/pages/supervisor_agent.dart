@@ -75,9 +75,26 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                     "INSPECTION SUR SITE",
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Staatliches', letterSpacing: 2),
                   ),
-                  Text(
-                    site.name?.toUpperCase() ?? "STATION",
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          site.name?.toUpperCase() ?? "STATION",
+                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
+                        ),
+                      ),
+                      // Refresh button to clear and rescanning
+                      if (!isSupervising)
+                        IconButton(
+                          onPressed: () {
+                            authController.stationAgents.clear();
+                            tagsController.isScanningModalOpen.value = false;
+                            Get.back();
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage011()));
+                          },
+                          icon: const Icon(Icons.refresh_rounded, color: Colors.white54, size: 28),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 5),
                   Text(
@@ -167,6 +184,8 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
             const SizedBox(height: 30),
             ElevatedButton.icon(
               onPressed: () {
+                authController.stationAgents.clear();
+                tagsController.isScanningModalOpen.value = false;
                 Get.back();
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage011()));
               },

@@ -172,11 +172,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         color: Colors.amberAccent,
                         enabled: isSupervisor,
                         onTap: () {
-                          if (authController.pendingSupervisionMap.isEmpty) {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorPlanning()));
-                          } else {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorAgent()));
-                          }
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorAgent()));
                         },
                       ),
                       _buildHeaderAction(
@@ -276,35 +272,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               ),
                             ),
                             const Spacer(),
+                            IconButton(
+                              onPressed: () async {
+                                EasyLoading.show(status: 'Synchronisation...');
+                                await tagsController.fetchAnnouncesAndPlannings();
+                                await SyncService.instance.syncPendingActions();
+                                EasyLoading.showSuccess("Données à jour");
+                              },
+                              icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
+                            ),
                           ]
-                          else...[
-                            const Expanded(child: Padding(
-                              padding: EdgeInsets.only(top: 15, bottom: 5),
-                              child: Text(
-                                "Cliquez sur le bouton « Superviser les agents », puis scannez le QR code de la station afin de procéder à l’inspection des agents.",
-                                textAlign: TextAlign.start,
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 10,
-                                  fontStyle: FontStyle.italic,
-                                  fontFamily: 'Ubuntu',
-                                ),
-                              ),
-                            )),
-                          ],
-                          IconButton(
-                            onPressed: () async {
-                              EasyLoading.show(status: 'Synchronisation...');
-                              await tagsController.fetchAnnouncesAndPlannings();
-                              await SyncService.instance.syncPendingActions();
-                              EasyLoading.showSuccess("Données à jour");
-                            },
-                            icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
-                          ),
                         ],
                       ),
-                      const SizedBox(height: 15),
-
                       if (isSupervisor) ...[
                         _btnSuperviseAgents(),
                         const SizedBox(height: 15.0),
@@ -620,11 +599,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            if (authController.pendingSupervisionMap.isEmpty) {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorPlanning()));
-            } else {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorAgent()));
-            }
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorAgent()));
           },
           borderRadius: BorderRadius.circular(25),
           child: Padding(
