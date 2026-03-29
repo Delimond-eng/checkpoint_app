@@ -5,8 +5,11 @@ class FacePicture {
   final List<double> embedding;
   final String? imagePath;
 
-  FacePicture(
-      {required this.matricule, required this.embedding, this.imagePath});
+  FacePicture({
+    required this.matricule,
+    required this.embedding,
+    this.imagePath,
+  });
 
   Map<String, dynamic> toMap() => {
         'matricule': matricule,

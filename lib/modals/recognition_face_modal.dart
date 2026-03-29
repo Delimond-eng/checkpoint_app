@@ -182,8 +182,8 @@ Future<dynamic> showRecognitionModal(context,
                       ? "camera-capture.svg"
                       : "camera-refresh.svg",
                   color: tagsController.face.value == null
-                      ? Colors.deepPurple
-                      : Colors.green.shade400,
+                      ? Colors.blue
+                      : Colors.green,
                   size: 80.0,
                   onPress: () async {
                     if (!_controller.value.isInitialized) return;
@@ -224,9 +224,7 @@ Future<dynamic> showRecognitionModal(context,
                       ? "flash-on-2.svg"
                       : "flash-on-1.svg",
                   size: 80.0,
-                  color: tagsController.cameraIndex.value == 1
-                      ? Colors.blue.shade200
-                      : Colors.blue.shade800,
+                  color: Colors.purple,
                   onPress: () async {
                     if (tagsController.cameraIndex.value == 0) {
                       tagsController.isFlashOn.value =

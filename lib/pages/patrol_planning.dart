@@ -25,34 +25,8 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
   void initState() {
     super.initState();
     initializeDateFormatting('fr_FR', null);
-  }
-
-  Future<List<Planning>> _fetchAndSyncPlannings() async {
-    try {
-      // Try to fetch from server
-      final plannings = await HttpManager.getAllPlannings();
-      if (plannings.isNotEmpty) {
-        // Save only valid (today or future) plannings locally
-        final now = DateTime.now();
-        final today = DateTime(now.year, now.month, now.day);
-        final validPlannings = plannings.where((p) {
-          try {
-            DateTime pDate = p.date!.contains('/') 
-                ? DateFormat('dd/MM/yyyy').parse(p.date!)
-                : DateTime.parse(p.date!);
-            return !pDate.isBefore(today);
-          } catch (_) {
-            return true;
-          }
-        }).toList();
-        
-        await LocalDbService.instance.savePlannings(validPlannings);
-        return validPlannings;
-      }
-    } catch (e) {
-      // Offline: use local data
-    }
-    return await LocalDbService.instance.getLocalPlannings();
+    // On lance la mise à jour serveur de manière silencieuse
+    tagsController.fetchAnnouncesAndPlannings();
   }
 
   @override
@@ -116,28 +90,26 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
               ),
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
-                child: FutureBuilder<List<Planning>>(
-                  future: _fetchAndSyncPlannings(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: primaryMaterialColor));
-                    }
-                    if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                      final groupedPlannings = _groupPlanningsByDate(snapshot.data!);
-                      final dates = groupedPlannings.keys.toList();
-                      return ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(25, 30, 25, 20),
-                        itemCount: dates.length,
-                        itemBuilder: (context, index) {
-                          final dateStr = dates[index];
-                          final dayPlannings = groupedPlannings[dateStr]!;
-                          return _buildDateGroup(dateStr, dayPlannings);
-                        },
-                      );
-                    }
+                child: Obx(() {
+                  final list = tagsController.plannings;
+                  
+                  if (list.isEmpty) {
                     return _buildEmptyState();
-                  },
-                ),
+                  }
+
+                  final groupedPlannings = _groupPlanningsByDate(list);
+                  final dates = groupedPlannings.keys.toList();
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(25, 30, 25, 20),
+                    itemCount: dates.length,
+                    itemBuilder: (context, index) {
+                      final dateStr = dates[index];
+                      final dayPlannings = groupedPlannings[dateStr]!;
+                      return _buildDateGroup(dateStr, dayPlannings);
+                    },
+                  );
+                }),
               ),
             ),
           ),

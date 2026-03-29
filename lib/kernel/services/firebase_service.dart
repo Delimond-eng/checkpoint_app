@@ -133,7 +133,6 @@ class FirebaseService {
           }
           final face = FacePicture(
             matricule: item['matricule'],
-            name: item['name'] ?? item['fullname'] ?? item['matricule'],
             embedding: embedding,
           );
           await dbHelper.deleteFace(face.matricule);

@@ -124,7 +124,7 @@ Future<dynamic> showPhotoCaptureModal(context,
                 builder: (context, setter) => CostumIconButton(
                   svg: _isFlashOn ? "flash-on-2.svg" : "flash-on-1.svg",
                   size: 80.0,
-                  color: Colors.blue.shade800,
+                  color: Colors.blue,
                   onPress: () async {
                     setter(() {
                       _isFlashOn = !_isFlashOn;

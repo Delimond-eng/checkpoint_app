@@ -2,6 +2,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:checkpoint_app/kernel/services/alarm_service.dart';
 import 'package:checkpoint_app/themes/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import '../global/controllers.dart';
 import '../screens/auth/login.dart';
@@ -22,13 +23,12 @@ class _ApplicationState extends State<Application> {
   }
 
   void _setupNotificationListeners() {
+    // On pointe vers les méthodes statiques de AlarmService qui ont le décorateur @pragma("vm:entry-point")
     AwesomeNotifications().setListeners(
-      onActionReceivedMethod: (ReceivedAction receivedAction) async {
-        if (receivedAction.channelKey == 'patrol_alarms') {
-          final libelle = receivedAction.payload?['libelle'] ?? '';
-          AlarmService.instance.handleForegroundAlarm(libelle);
-        }
-      },
+      onActionReceivedMethod: AlarmService.onActionReceivedMethod,
+      onNotificationCreatedMethod: AlarmService.onNotificationCreatedMethod,
+      onNotificationDisplayedMethod: AlarmService.onNotificationDisplayedMethod,
+      onDismissActionReceivedMethod: AlarmService.onDismissActionReceivedMethod,
     );
   }
 
@@ -42,6 +42,7 @@ class _ApplicationState extends State<Application> {
         primarySwatch: Palette.kPrimarySwatch,
         fontFamily: 'Ubuntu',
       ),
+      builder:  EasyLoading.init(),
       home: Obx(() {
         return authController.userSession.value?.id != null
             ? const WelcomeScreen()

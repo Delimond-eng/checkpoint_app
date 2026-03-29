@@ -32,6 +32,9 @@ class TagsController extends GetxController {
   var announceCount = 0.obs;
   var pendingPlanningCount = 0.obs;
   var nextPlanning = Rxn<Planning>();
+  
+  // Liste réactive pour les plannings
+  var plannings = <Planning>[].obs;
 
   StreamSubscription<List<Map<String, dynamic>>>? _patrolStreamSubscription;
   Timer? _dataRefreshTimer;
@@ -46,7 +49,7 @@ class TagsController extends GetxController {
     super.onReady();
     _startPatrolStream();
     
-    // Charger immédiatement les données locales pour un affichage instantané
+    // Charger immédiatement les données locales
     _loadLocalData();
 
     ever(authController.userSession, (user) {
@@ -100,6 +103,7 @@ class TagsController extends GetxController {
   Future<void> _loadLocalData() async {
     final localPlannings = await LocalDbService.instance.getLocalPlannings();
     if (localPlannings.isNotEmpty) {
+      plannings.assignAll(localPlannings);
       pendingPlanningCount.value = localPlannings.length;
       _updateNextPlanning(localPlannings);
       await AlarmService.instance.scheduleAlarms(localPlannings);
@@ -113,12 +117,12 @@ class TagsController extends GetxController {
       final announces = await HttpManager.getAllAnnounces();
       announceCount.value = announces.length;
       
-      final plannings = await HttpManager.getAllPlannings();
+      final remotePlannings = await HttpManager.getAllPlannings();
       
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       
-      final validPlannings = plannings.where((p) {
+      final validPlannings = remotePlannings.where((p) {
         try {
           DateTime pDate = p.date!.contains('/') 
               ? DateFormat('dd/MM/yyyy').parse(p.date!)
@@ -130,26 +134,30 @@ class TagsController extends GetxController {
       }).toList();
       
       await LocalDbService.instance.savePlannings(validPlannings);
+      
+      // Mise à jour de la liste réactive (UI se rafraîchit seule)
+      plannings.assignAll(validPlannings);
       pendingPlanningCount.value = validPlannings.length;
       
       _updateNextPlanning(validPlannings);
       await AlarmService.instance.scheduleAlarms(validPlannings);
       
     } catch (e) {
-      // Silencieux : on garde ce qui est déjà affiché (le local)
+      // Silencieux : on garde le local déjà chargé
     }
   }
 
-  void _updateNextPlanning(List<Planning> plannings) {
-    if (plannings.isEmpty) {
+  void _updateNextPlanning(List<Planning> planningsList) {
+    if (planningsList.isEmpty) {
       nextPlanning.value = null;
       return;
     }
 
     try {
       final now = DateTime.now();
+      final list = List<Planning>.from(planningsList);
       
-      plannings.sort((a, b) {
+      list.sort((a, b) {
         DateTime dateA = a.date!.contains('/') ? DateFormat('dd/MM/yyyy').parse(a.date!) : DateTime.parse(a.date!);
         DateTime dateB = b.date!.contains('/') ? DateFormat('dd/MM/yyyy').parse(b.date!) : DateTime.parse(b.date!);
         int dateComp = dateA.compareTo(dateB);
@@ -157,15 +165,15 @@ class TagsController extends GetxController {
         return a.startTime!.compareTo(b.startTime!);
       });
 
-      nextPlanning.value = plannings.firstWhere((p) {
+      nextPlanning.value = list.firstWhere((p) {
         DateTime pDate = p.date!.contains('/') ? DateFormat('dd/MM/yyyy').parse(p.date!) : DateTime.parse(p.date!);
         DateTime start = DateTime(pDate.year, pDate.month, pDate.day, 
             int.parse(p.startTime!.split(':')[0]), 
             int.parse(p.startTime!.split(':')[1]));
         return start.isAfter(now);
-      }, orElse: () => plannings.first);
+      }, orElse: () => list.first);
     } catch (e) {
-      nextPlanning.value = plannings.isNotEmpty ? plannings.first : null;
+      nextPlanning.value = planningsList.isNotEmpty ? planningsList.first : null;
     }
   }
 

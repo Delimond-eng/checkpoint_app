@@ -27,16 +27,24 @@ class DatabaseHelper {
   }
 
   Future<void> insertFace(FacePicture face) async {
+    if (_db == null) await init();
     await _db!.insert('faces', face.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  Future<void> deleteFace(String matricule) async {
+    if (_db == null) await init();
+    await _db!.delete('faces', where: 'matricule = ?', whereArgs: [matricule]);
+  }
+
   Future<List<FacePicture>> getAllFaces() async {
+    if (_db == null) await init();
     final List<Map<String, dynamic>> maps = await _db!.query('faces');
     return maps.map(FacePicture.fromMap).toList();
   }
 
   Future<void> deleteAll() async {
+    if (_db == null) await init();
     await _db!.delete('faces');
   }
 }

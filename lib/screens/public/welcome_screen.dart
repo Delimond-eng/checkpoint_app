@@ -247,13 +247,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     topLeft: Radius.circular(35),
                     topRight: Radius.circular(35),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 20,
-                      offset: Offset(0, -5),
-                    )
-                  ],
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(25, 20, 25, 20),
@@ -274,70 +267,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               ),
                             ),
                             const Spacer(),
+
+                            IconButton(
+                              onPressed: () async {
+                                EasyLoading.show(status: 'Synchronisation...');
+                                await tagsController.fetchAnnouncesAndPlannings();
+                                await SyncService.instance.syncPendingActions();
+                                EasyLoading.showSuccess("Données à jour");
+                              },
+                              icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
+                            )
                           ]
-                          else...[
-                            const Expanded(child: Padding(
-                              padding: EdgeInsets.only(top: 15, bottom: 5),
-                              child: Text(
-                                "Cliquez sur le bouton « Superviser les agents », puis scannez le QR code de la station afin de procéder à l’inspection des agents.",
-                                textAlign: TextAlign.start,
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 10,
-                                  fontStyle: FontStyle.italic,
-                                  fontFamily: 'Ubuntu',
-                                ),
-                              ),
-                            )),
-                          ],
-                          IconButton(
-                            onPressed: () async {
-                              EasyLoading.show(status: 'Synchronisation...');
-                              await tagsController.fetchAnnouncesAndPlannings();
-                              await SyncService.instance.syncPendingActions();
-                              EasyLoading.showSuccess("Données à jour");
-                            },
-                            icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
-                          ),
+
                         ],
                       ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 10),
 
                       if (isSupervisor) ...[
                         _btnSuperviseAgents(),
-                        const SizedBox(height: 15.0),
-                        const Text(
-                          "POINTAGE DE PRÉSENCE",
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
-                        ),
-                        const SizedBox(height: 15),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildPresenceActionCard(
-                                icon: Icons.login_rounded,
-                                title: "Signer l'arrivée",
-                                color: Colors.green,
-                                onTap: () {
-                                  tagsController.isLoading.value = false;
-                                  showRecognitionModal(context, key: "check-in");
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 15),
-                            Expanded(
-                              child: _buildPresenceActionCard(
-                                icon: Icons.logout_rounded,
-                                title: "Signer le départ",
-                                color: primaryColor,
-                                onTap: () {
-                                  tagsController.isLoading.value = false;
-                                  showRecognitionModal(context, key: "check-out");
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
                       ] else ...[
                         const Text(
                           "DÉTAILS OPÉRATIONNELS",
@@ -357,7 +304,38 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           Colors.orange
                         ),
                       ],
-                      const SizedBox(height: 20),
+                      const Text(
+                        "POINTAGE DE PRÉSENCE",
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildPresenceActionRowCard(
+                              icon: Icons.login_rounded,
+                              title: "Signer l'arrivée",
+                              color: Colors.green,
+                              onTap: () {
+                                tagsController.isLoading.value = false;
+                                showRecognitionModal(context, key: "check-in");
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: _buildPresenceActionRowCard(
+                              icon: Icons.logout_rounded,
+                              title: "Signer le départ",
+                              color: primaryColor,
+                              onTap: () {
+                                tagsController.isLoading.value = false;
+                                showRecognitionModal(context, key: "check-out");
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -369,29 +347,31 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  Widget _buildPresenceActionCard({required IconData icon, required String title, required Color color, required VoidCallback onTap}) {
+  Widget _buildPresenceActionRowCard({required IconData icon, required String title, required Color color, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(15),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.1)),
+          color: color.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: color.withOpacity(0.3)),
         ),
-        child: Column(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 10),
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
             Text(
               title,
-              textAlign: TextAlign.center,
               style: TextStyle(
                 color: color,
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Ubuntu',
+                letterSpacing: 1.5,
+                fontFamily: 'Staatliches',
               ),
             ),
           ],
@@ -464,8 +444,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   Widget _buildInfoCard(IconData icon, String title, String value, Color color) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(15),
+      margin: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -600,19 +580,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.blueAccent, Color(0xFF1976D2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.blueAccent.withOpacity(0.05),
         borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blueAccent.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          )
-        ],
+        border: Border.all(color: Colors.blueAccent.withOpacity(0.2), width: 1.5),
       ),
       child: Material(
         color: Colors.transparent,
@@ -628,10 +598,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.blueAccent.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  child: const Icon(Icons.shield_outlined, color: Colors.white, size: 32),
+                  child: const Icon(Icons.shield_outlined, color: Colors.blueAccent, size: 32),
                 ),
                 const SizedBox(width: 20),
                 const Expanded(
@@ -641,7 +611,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       Text(
                         "SUPERVISER LES AGENTS",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Colors.blueAccent,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Staatliches',
@@ -652,7 +622,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       Text(
                         "Cliquez pour scanner une station dans la laquelle vs faite la supervision",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Colors.black54,
                           fontSize: 11,
                           fontFamily: 'Ubuntu',
                           fontWeight: FontWeight.w500,
@@ -661,7 +631,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ],
                   ),
                 ),
-                const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 24),
+                const Icon(Icons.arrow_forward_rounded, color: Colors.blueAccent, size: 24),
               ],
             ),
           ),
@@ -721,8 +691,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 40,
-                  height: 4,
+                  width: 40, height: 4,
                   margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
                 ),
                 const Text(
