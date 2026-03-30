@@ -30,6 +30,7 @@ Future<void> showSignalementModal(BuildContext context) async {
             topRight: Radius.circular(35),
           ),
         ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Column(
           children: [
             Container(
@@ -146,7 +147,7 @@ Future<void> showSignalementModal(BuildContext context) async {
                           maxLines: 4,
                           color: Colors.redAccent,
                         ),
-                        const SizedBox(height: 120),
+                        const SizedBox(height: 50),
                         Obx(() => SizedBox(
                           width: double.infinity,
                           height: 55,

@@ -207,6 +207,25 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
   }
 
   Widget _buildTimelineItem(Planning planning, bool isLast, bool isPast) {
+    final nextPlanningId = tagsController.nextPlanning.value?.id;
+    final isNext = planning.id == nextPlanningId;
+
+    // Détection si planning passé aujourd'hui et non fait
+    bool isPastTodayNotDone = false;
+    final now = DateTime.now();
+    final todayStr = DateFormat('yyyy-MM-dd').format(now);
+    final todaySlashStr = DateFormat('dd/MM/yyyy').format(now);
+    
+    if ((planning.date == todayStr || planning.date == todaySlashStr) && planning.endTime != null) {
+      try {
+        final endParts = planning.endTime!.split(':');
+        final endDateTime = DateTime(now.year, now.month, now.day, int.parse(endParts[0]), int.parse(endParts[1]));
+        if (now.isAfter(endDateTime)) {
+          isPastTodayNotDone = true;
+        }
+      } catch (_) {}
+    }
+
     return IntrinsicHeight(
       child: Row(
         children: [
@@ -216,7 +235,7 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
                 width: 12,
                 height: 12,
                 decoration: BoxDecoration(
-                  color: isPast ? Colors.grey.shade300 : Colors.white,
+                  color: isPast ? Colors.grey.shade300 : (isNext ? primaryMaterialColor : Colors.white),
                   shape: BoxShape.circle,
                   border: Border.all(color: isPast ? Colors.grey : primaryMaterialColor, width: 2),
                 ),
@@ -230,54 +249,88 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
               opacity: isPast ? 0.6 : 1.0,
               child: GestureDetector(
                 onTap: isPast ? null : () => _confirmStartPatrol(planning),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FA),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Stack(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F9FA),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isNext ? primaryMaterialColor : Colors.grey.withOpacity(0.1),
+                          width: isNext ? 2 : 1,
+                        ),
+                        boxShadow: isNext ? [
+                          BoxShadow(
+                            color: primaryMaterialColor.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ] : null,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Icon(Icons.access_time_rounded, size: 14, color: isPast ? Colors.grey : primaryMaterialColor),
-                              const SizedBox(width: 6),
+                              Row(
+                                children: [
+                                  Icon(Icons.access_time_rounded, size: 14, color: isPast ? Colors.grey : primaryMaterialColor),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "${planning.startTime} - ${planning.endTime}",
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu', color: isPast ? Colors.grey : const Color(0xFF16161E)),
+                                  ),
+                                ],
+                              ),
+                              if (isPast)
+                                const Icon(Icons.lock_outline_rounded, size: 16, color: Colors.grey)
+                              else
+                                const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            planning.libelle ?? "Ronde sans libellé",
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isPast ? Colors.grey : const Color(0xFF16161E), fontFamily: 'Ubuntu'),
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Icon(Icons.location_on_outlined, size: 12, color: Colors.grey.shade500),
+                              const SizedBox(width: 4),
                               Text(
-                                "${planning.startTime} - ${planning.endTime}",
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu', color: isPast ? Colors.grey : const Color(0xFF16161E)),
+                                planning.site?.name ?? "Site non défini",
+                                style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontFamily: 'Ubuntu'),
                               ),
                             ],
                           ),
-                          if (isPast)
-                            const Icon(Icons.lock_outline_rounded, size: 16, color: Colors.grey)
-                          else
-                            const Icon(Icons.chevron_right_rounded, color: Colors.grey),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        planning.libelle ?? "Ronde sans libellé",
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isPast ? Colors.grey : const Color(0xFF16161E), fontFamily: 'Ubuntu'),
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on_outlined, size: 12, color: Colors.grey.shade500),
-                          const SizedBox(width: 4),
-                          Text(
-                            planning.site?.name ?? "Site non défini",
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontFamily: 'Ubuntu'),
+                    ),
+                    if (isPastTodayNotDone)
+                      Positioned(
+                        right: 0,
+                        bottom: 20,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: primaryMaterialColor.withOpacity(0.15),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(15),
+                              bottomRight: Radius.circular(20),
+                            ),
+                            border: Border.all(color: primaryMaterialColor.withOpacity(0.3)),
                           ),
-                        ],
+                          child: const Text(
+                            "NON EFFECTUÉE",
+                            style: TextStyle(color: primaryMaterialColor, fontSize: 8, fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ),

@@ -1,6 +1,7 @@
 import '/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../constants/styles.dart';
 import '../global/controllers.dart';
@@ -68,110 +69,172 @@ class _PlanningPageState extends State<PlanningPage> {
     return FutureBuilder<List<Planning>>(
       future: HttpManager.getAllPlannings(),
       builder: (context, snapshot) {
-        if (snapshot.data != null) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+        
+        if (snapshot.hasData) {
           if (snapshot.data!.isEmpty) {
             return emptyState();
           } else {
+            final plannings = snapshot.data!;
+            final nextPlanningId = tagsController.nextPlanning.value?.id;
+            final now = DateTime.now();
+            final todayStr = DateFormat('yyyy-MM-dd').format(now);
+
             return ListView.separated(
-              itemCount: snapshot.data!.length,
+              itemCount: plannings.length,
               padding: const EdgeInsets.all(10.0),
               itemBuilder: (context, index) {
-                var item = snapshot.data![index];
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  margin: EdgeInsets.zero,
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                var item = plannings[index];
+                bool isNext = item.id == nextPlanningId;
+                
+                // Déterminer si le planning est passé pour aujourd'hui et non fait
+                bool isPastToday = false;
+                if (item.date == todayStr && item.endTime != null) {
+                  try {
+                    final endParts = item.endTime!.split(':');
+                    final endDateTime = DateTime(now.year, now.month, now.day, int.parse(endParts[0]), int.parse(endParts[1]));
+                    if (now.isAfter(endDateTime)) {
+                      isPastToday = true;
+                    }
+                  } catch (_) {}
+                }
+
+                return Stack(
+                  children: [
+                    Card(
+                      elevation: isNext ? 4 : 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        side: isNext 
+                          ? const BorderSide(color: primaryMaterialColor, width: 2) 
+                          : BorderSide(color: Colors.grey.shade200),
+                      ),
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              item.libelle!,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall!
-                                  .copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 18.0,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    item.libelle!.toUpperCase(),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall!
+                                        .copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16.0,
+                                          fontFamily: 'Staatliches',
+                                          letterSpacing: 1,
+                                          color: isNext ? primaryMaterialColor : const Color(0xFF16161E),
+                                        ),
                                   ),
-                            ).paddingBottom(2.0),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Text("Heures de patrouille")
-                                    .paddingRight(10),
-                                const Icon(
-                                  Icons.arrow_right_alt_rounded,
-                                  size: 17,
                                 ),
+                                if (isNext)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: primaryMaterialColor,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Text(
+                                      "À VENIR",
+                                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
                               ],
-                            ),
+                            ).paddingBottom(8.0),
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    const Icon(
-                                      Icons.access_time_filled_sharp,
-                                      color: primaryColor,
-                                      size: 16.0,
-                                    ).paddingRight(6.0),
+                                    const Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey),
+                                    const SizedBox(width: 5),
                                     Text(
-                                      item.startTime!,
-                                      style:
-                                          Theme.of(context).textTheme.bodyLarge,
-                                    )
+                                      item.date ?? "",
+                                      style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                                    ),
                                   ],
-                                ).paddingRight(20.0),
+                                ),
                                 Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    const Icon(
-                                      Icons.access_time,
-                                      color: primaryColor,
-                                      size: 16.0,
-                                    ).paddingRight(6.0),
-                                    Text(
-                                      item.endTime!,
-                                      style:
-                                          Theme.of(context).textTheme.bodyLarge,
-                                    )
+                                    _buildTimeChip(context, item.startTime!, Icons.access_time_filled_rounded),
+                                    const SizedBox(width: 10),
+                                    _buildTimeChip(context, item.endTime!, Icons.access_time_rounded),
                                   ],
                                 )
                               ],
                             )
                           ],
-                        )
-                      ],
+                        ),
+                      ),
                     ),
-                  ),
+                    if (isPastToday)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: const BoxDecoration(
+                            color: Colors.redAccent,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.error_outline_rounded, color: Colors.white, size: 12),
+                              SizedBox(width: 4),
+                              Text(
+                                "NON EFFECTUÉE",
+                                style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
                 );
               },
               separatorBuilder: (_, __) => const SizedBox(
-                height: 8.0,
+                height: 12.0,
               ),
             );
           }
-        } else {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [CircularProgressIndicator()],
-            ),
-          );
         }
+        
+        return emptyState();
       },
+    );
+  }
+
+  Widget _buildTimeChip(BuildContext context, String time, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: primaryColor, size: 14),
+          const SizedBox(width: 5),
+          Text(
+            time,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF16161E)),
+          ),
+        ],
+      ),
     );
   }
 }

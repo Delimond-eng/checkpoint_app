@@ -225,15 +225,24 @@ Future<dynamic> showRecognitionModal(BuildContext context,
                           labelColor: Colors.white,
                           onPress: () async {
                             try {
-                              if (key == "check-in") await checkPresence("check-in");
-                              if (key == "check-out") await checkPresence("check-out");
-                              if (key == "patrol") await startPatrol(comment: comment);
-                              if (key == "close") await closePatrol(comment: comment);
-                              if (key == "supervize-in") onValidate?.call();
-                              if (key == "supervize-out") onValidate?.call();
+                              bool success = false;
+                              if (key == "check-in") success = await checkPresence("check-in");
+                              if (key == "check-out") success = await checkPresence("check-out");
+                              if (key == "patrol") success = await startPatrol(comment: comment);
+                              if (key == "close") success = await closePatrol(comment: comment);
+                              if (key == "supervize-in") {
+                                onValidate?.call();
+                                success = true;
+                              }
+                              if (key == "supervize-out") {
+                                onValidate?.call();
+                                success = true;
+                              }
                               
-                              await _controller.dispose();
-                              Get.back();
+                              if (success) {
+                                await _controller.dispose();
+                                Get.back();
+                              }
                             } catch (e) {
                               EasyLoading.showError("Erreur : $e");
                             }
@@ -272,20 +281,22 @@ Widget _buildCircleAction({required IconData icon, required Color color, require
   );
 }
 
-Future<void> checkPresence(String key) async {
+Future<bool> checkPresence(String key) async {
   var manager = HttpManager();
   tagsController.isLoading.value = true;
   final value = await manager.checkPresence(key: key);
   tagsController.isLoading.value = false;
   if (value != null) {
     EasyLoading.showSuccess(value.toString());
+    return true;
   }
+  return false;
 }
 
-Future<void> closePatrol({String comment = ""}) async {
+Future<bool> closePatrol({String comment = ""}) async {
   if (tagsController.faceResult.value != authController.userSession.value!.matricule) {
     EasyLoading.showInfo("Le matricule agent ne correspond pas.");
-    return;
+    return false;
   }
   var manager = HttpManager();
   tagsController.isLoading.value = true;
@@ -293,13 +304,15 @@ Future<void> closePatrol({String comment = ""}) async {
   tagsController.isLoading.value = false;
   if (value != null) {
     EasyLoading.showSuccess(value.toString());
+    return true;
   }
+  return false;
 }
 
-Future<void> startPatrol({String comment = ""}) async {
+Future<bool> startPatrol({String comment = ""}) async {
   if (authController.userSession.value!.matricule!.trim() != tagsController.faceResult.value.trim()) {
     EasyLoading.showInfo("Le matricule agent ne correspond pas.");
-    return;
+    return false;
   }
   var manager = HttpManager();
   tagsController.isLoading.value = true;
@@ -307,5 +320,7 @@ Future<void> startPatrol({String comment = ""}) async {
   tagsController.isLoading.value = false;
   if (value != null) {
     EasyLoading.showSuccess(value.toString());
+    return true;
   }
+  return false;
 }

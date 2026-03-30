@@ -26,6 +26,7 @@ Future<void> showClosePatrolModal(BuildContext context) async {
             topRight: Radius.circular(35),
           ),
         ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Column(
           children: [
             // Header Handle

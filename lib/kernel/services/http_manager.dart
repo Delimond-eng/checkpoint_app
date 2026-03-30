@@ -82,9 +82,10 @@ class HttpManager {
 
     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
+      String localSessionId = DateTime.now().millisecondsSinceEpoch.toString();
       await LocalDbService.instance.addPendingAction({
         'type': 'scan',
-        'local_session_id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'local_session_id': localSessionId,
         'patrol_id': data['patrol_id'],
         'site_id': data['site_id'],
         'agency_id': data['agency_id'],
@@ -98,9 +99,16 @@ class HttpManager {
         'created_at': now,
       });
 
-      if (patrolId == 0 && planningId.isNotEmpty) {
-        await tagsController.removePlanningLocally(int.parse(planningId));
+      if (patrolId == 0) {
+        tagsController.isOfflinePatrolActive.value = true;
+        localStorage.write("is_offline_patrol", true);
+        localStorage.write("local_session_id", localSessionId);
+        
+        if (planningId.isNotEmpty) {
+          await tagsController.removePlanningLocally(int.parse(planningId));
+        }
       }
+      
       return "Hors-ligne : Scan enregistré localement.";
     }
 
@@ -131,6 +139,7 @@ class HttpManager {
   // Close pending patrol
   Future<dynamic> stopPendingPatrol(String? comment) async {
     var patrolId = localStorage.read("patrol_id");
+    var localSessionId = localStorage.read("local_session_id");
     var now = DateTime.now().toIso8601String();
     File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
 
@@ -138,12 +147,17 @@ class HttpManager {
     if (connectivityResult == ConnectivityResult.none) {
       await LocalDbService.instance.addPendingAction({
         'type': 'close',
-        'patrol_id': patrolId.toString(),
+        'patrol_id': patrolId?.toString() ?? "",
+        'local_session_id': localSessionId ?? "",
         'comment': comment,
         'photo_path': photoFile.path,
         'created_at': now,
       });
+      
       localStorage.remove("patrol_id");
+      localStorage.remove("is_offline_patrol");
+      localStorage.remove("local_session_id");
+      tagsController.isOfflinePatrolActive.value = false;
       tagsController.refreshPending();
       return "Hors-ligne : Clôture enregistrée localement.";
     }
@@ -162,6 +176,9 @@ class HttpManager {
 
       if (response != null && !response.containsKey("errors")) {
         localStorage.remove("patrol_id");
+        localStorage.remove("local_session_id");
+        localStorage.remove("is_offline_patrol");
+        tagsController.isOfflinePatrolActive.value = false;
         tagsController.refreshPending();
         return response["message"] ?? "Patrouille clôturée avec succès.";
       }

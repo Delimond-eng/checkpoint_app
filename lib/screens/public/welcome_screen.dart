@@ -85,7 +85,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       backgroundColor: const Color(0xFF0B0B0F), // Dark Header Background
       body: Obx(() {
         // Détection des changements réactifs
-        final hasPatrol = tagsController.patrolId.value != 0;
+        final hasPatrol = tagsController.hasActivePatrol;
         final hasSupervision = authController.pendingSupervision.value != null;
 
         return Column(
@@ -126,15 +126,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       const UserStatus(name: ""),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
                   _btnPatrolPending(),
                   const SizedBox(height: 10),
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 4,
-                    mainAxisSpacing: 15,
-                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
                     clipBehavior: Clip.none,
                     children: [
                       _buildHeaderAction(
@@ -487,7 +487,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   Widget _btnPatrolPending() {
-    final hasPatrol = tagsController.patrolId.value != 0;
+    final hasPatrol = tagsController.hasActivePatrol;
     final user = authController.userSession.value;
     final isGuard = user!.role?.toLowerCase() == 'guard';
 
@@ -563,13 +563,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Ubuntu',
+                              fontFamily: 'Staatliches',
+                              letterSpacing: 1.6
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             hasPatrol 
-                              ? "Une patrouille est en cours d'exécution." 
+                              ? (tagsController.isOfflinePatrolActive.value ? "Patrouille active (Mode Hors-ligne)." : "Une patrouille est en cours d'exécution.")
                               : (isGuard ? "Veuillez consulter votre planning de patrouille." : "Statut disponible pour supervision."),
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.6),

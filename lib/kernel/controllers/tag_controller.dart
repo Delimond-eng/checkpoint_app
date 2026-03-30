@@ -12,6 +12,7 @@ import '/kernel/services/alarm_service.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class TagsController extends GetxController {
   static TagsController instance = Get.find();
@@ -20,6 +21,7 @@ class TagsController extends GetxController {
   var scannedSite = Site().obs;
   var isQrcodeScanned = false.obs;
   var patrolId = 0.obs;
+  var isOfflinePatrolActive = false.obs; // Flag pour la patrouille offline
   var isLoading = false.obs;
   var isScanningModalOpen = false.obs;
   var mediaFile = Rx<File?>(null);
@@ -38,9 +40,14 @@ class TagsController extends GetxController {
   StreamSubscription<List<Map<String, dynamic>>>? _patrolStreamSubscription;
   Timer? _dataRefreshTimer;
 
+  // Getter intelligent pour savoir si une patrouille est en cours (online ou offline)
+  bool get hasActivePatrol => patrolId.value != 0 || isOfflinePatrolActive.value;
+
   @override
   void onInit() {
     super.onInit();
+    // Restaurer l'état offline si besoin
+    isOfflinePatrolActive.value = localStorage.read("is_offline_patrol") ?? false;
   }
 
   @override
@@ -69,6 +76,9 @@ class TagsController extends GetxController {
     const Duration interval = Duration(seconds: 30);
     _patrolStreamSubscription = Stream.periodic(interval).asyncMap((_) async {
       try {
+        var connectivityResult = await Connectivity().checkConnectivity();
+        if (connectivityResult == ConnectivityResult.none) return <Map<String, dynamic>>[];
+
         if (authController.userSession.value != null && authController.userSession.value?.id != null) {
           return await HttpManager().checkPending();
         }
@@ -78,14 +88,26 @@ class TagsController extends GetxController {
       }
     }).listen((pendingPatrols) {
       if (pendingPatrols.isEmpty) {
-        localStorage.remove("patrol_id");
-        patrolId.value = 0;
+        Connectivity().checkConnectivity().then((result) {
+          if (result != ConnectivityResult.none) {
+             // On ne réinitialise que si on n'a pas de patrouille offline en cours
+             if (!isOfflinePatrolActive.value) {
+                localStorage.remove("patrol_id");
+                patrolId.value = 0;
+             }
+          }
+        });
       } else {
         final first = pendingPatrols.first;
         final newId = first["id"] ?? 0;
         if (patrolId.value != newId) {
           patrolId.value = newId;
           localStorage.write("patrol_id", newId);
+          // Si on récupère un ID réel, on peut potentiellement couper le flag offline
+          if (isOfflinePatrolActive.value) {
+            isOfflinePatrolActive.value = false;
+            localStorage.write("is_offline_patrol", false);
+          }
         }
       }
     });
@@ -110,6 +132,12 @@ class TagsController extends GetxController {
   Future<void> fetchAnnouncesAndPlannings() async {
     if (authController.userSession.value == null || authController.userSession.value?.id == null) return;
     
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      await _loadLocalData();
+      return;
+    }
+
     try {
       final announces = await HttpManager.getAllAnnounces();
       announceCount.value = announces.length;
@@ -136,11 +164,10 @@ class TagsController extends GetxController {
       await AlarmService.instance.scheduleAlarms(validPlannings);
       
     } catch (e) {
-      if (plannings.isEmpty) _loadLocalData();
+      await _loadLocalData();
     }
   }
 
-  /// Supprime un planning localement et met à jour l'UI (Badge + Dashboard)
   Future<void> removePlanningLocally(int id) async {
     await LocalDbService.instance.deletePlanning(id);
     plannings.removeWhere((p) => p.id == id);
@@ -181,5 +208,6 @@ class TagsController extends GetxController {
   void refreshPending() {
     var patrolIdLocal = localStorage.read("patrol_id");
     patrolId.value = patrolIdLocal ?? 0;
+    isOfflinePatrolActive.value = localStorage.read("is_offline_patrol") ?? false;
   }
 }

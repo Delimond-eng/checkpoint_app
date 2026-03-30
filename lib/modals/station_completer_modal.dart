@@ -25,6 +25,7 @@ Future<void> showStationCompleterModal(BuildContext context, {VoidCallback? onFi
             topRight: Radius.circular(35),
           ),
         ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Column(
           children: [
             // Header Handle
