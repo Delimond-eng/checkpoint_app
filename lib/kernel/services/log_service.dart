@@ -1,8 +1,8 @@
 // ignore_for_file: unused_local_variable, unused_element, depend_on_referenced_packages
 import 'dart:async';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/global/store.dart';
-import 'package:checkpoint_app/kernel/services/http_manager.dart';
+import '/global/controllers.dart';
+import '/global/store.dart';
+import '/kernel/services/http_manager.dart';
 import 'package:intl/intl.dart';
 import 'battery_service.dart';
 

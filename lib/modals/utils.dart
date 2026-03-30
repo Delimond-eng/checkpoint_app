@@ -1,6 +1,6 @@
 import 'package:animate_do/animate_do.dart';
-import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
+import '/constants/styles.dart';
+import '/themes/app_theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

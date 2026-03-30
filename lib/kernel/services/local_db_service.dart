@@ -93,6 +93,11 @@ CREATE TABLE pending_actions (
     )).toList();
   }
 
+  Future<void> deletePlanning(int id) async {
+    final db = await instance.database;
+    await db.delete('plannings', where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<void> addPendingAction(Map<String, dynamic> actionData) async {
     final db = await instance.database;
     await db.insert('pending_actions', actionData);

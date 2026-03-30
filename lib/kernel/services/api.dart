@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 
 class Api {
   //static String baseUrl = 'http://salama.uco.rod.mybluehost.me/api';
-  static String baseUrl = 'https://mamba.salama-drc.com/api';
+  //static String baseUrl = 'https://mamba.salama-drc.com/api';
+  static String baseUrl = 'https://md.salama-drc.com/api';
   // static String baseUrl = 'http://192.168.200.9:8000/api';
 
   static Future<dynamic> request({

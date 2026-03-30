@@ -1,6 +1,6 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:checkpoint_app/kernel/services/alarm_service.dart';
-import 'package:checkpoint_app/themes/colors.dart';
+import '/kernel/services/alarm_service.dart';
+import '/themes/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';

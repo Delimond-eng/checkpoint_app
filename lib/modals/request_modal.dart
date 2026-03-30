@@ -1,6 +1,6 @@
 import 'dart:ui';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
+import '/global/controllers.dart';
+import '/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';

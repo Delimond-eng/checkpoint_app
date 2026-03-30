@@ -200,7 +200,6 @@ class _LoginScreenState extends State<LoginScreen> {
         isLoading = false;
       });
       if (res is User) {
-        faceRecognitionController.enrollUserFaceFromUrl();
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(

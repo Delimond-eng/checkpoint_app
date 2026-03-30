@@ -1,25 +1,22 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:camera/camera.dart';
-import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:dotted_border/dotted_border.dart';
+import '/constants/styles.dart';
+import '/themes/app_theme.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../widgets/costum_icon_button.dart';
 import '../widgets/svg.dart';
-import 'utils.dart';
 
-Future<dynamic> showPhotoCaptureModal(context,
+Future<dynamic> showPhotoCaptureModal(BuildContext context,
     {Function(File file)? onValidate}) async {
   List<CameraDescription> cameras = [];
-  /* final TextEditingController _matriculeText = TextEditingController(); */
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
 
-  await Future.delayed(Duration.zero);
   try {
     cameras = await availableCameras();
     _controller = CameraController(
@@ -33,110 +30,170 @@ Future<dynamic> showPhotoCaptureModal(context,
       print("Erreur d'initialisation de la caméra : $e");
     }
   }
+  
   bool _isFlashOn = false;
 
-  showCustomModal(
-    context,
-    onClosed: () {
-      _controller.dispose();
-    },
-    title: "Capture photo",
-    child: Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          FutureBuilder(
-            future: _initializeControllerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return ClipOval(
-                  child: SizedBox(
-                    width: 300,
-                    height: 300,
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: _controller.value.previewSize?.height ?? 300,
-                        height: _controller.value.previewSize?.width ?? 300,
-                        child: CameraPreview(_controller),
-                      ),
-                    ),
-                  ),
-                );
-              } else {
-                return Stack(
-                  alignment: Alignment.center,
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(35),
+            topRight: Radius.circular(35),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Header Handle
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 15),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            const Text(
+              "CAPTURE PHOTO",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Staatliches',
+                letterSpacing: 1.5,
+                color: Color(0xFF16161E),
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              "Prenez une photo pour justifier l'action.",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+                fontFamily: 'Ubuntu',
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizedBox(
-                      height: 250.0,
-                      width: 250.0,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 4.0,
-                        color: primaryMaterialColor.shade300,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 250.0,
-                      width: 250.0,
-                      child: DottedBorder(
-                        color: primaryMaterialColor.shade500,
-                        radius: const Radius.circular(250.0),
-                        strokeWidth: 1.2,
-                        borderType: BorderType.RRect,
-                        dashPattern: const [6, 3],
-                        child: const Center(
-                          child: Svg(
-                            size: 40.0,
-                            path: "camera-refresh.svg",
-                            color: primaryMaterialColor,
+                    // Camera Preview Circle
+                    Center(
+                      child: Container(
+                        width: 280,
+                        height: 280,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: primaryMaterialColor.withOpacity(0.2), width: 4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            )
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: FutureBuilder(
+                            future: _initializeControllerFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.done) {
+                                return FittedBox(
+                                  fit: BoxFit.cover,
+                                  child: SizedBox(
+                                    width: _controller.value.previewSize?.height ?? 280,
+                                    height: _controller.value.previewSize?.width ?? 280,
+                                    child: CameraPreview(_controller),
+                                  ),
+                                );
+                              } else {
+                                return const Center(child: CircularProgressIndicator(color: primaryMaterialColor));
+                              }
+                            },
                           ),
                         ),
                       ),
                     ),
+                    
+                    const SizedBox(height: 40),
+
+                    // Controls
+                    StatefulBuilder(
+                      builder: (context, setter) => Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Capture Button
+                          GestureDetector(
+                            onTap: () async {
+                              try {
+                                final file = await _controller.takePicture();
+                                await _controller.dispose();
+                                Get.back();
+                                onValidate?.call(File(file.path));
+                              } catch (e) {
+                                debugPrint("Capture error: $e");
+                              }
+                            },
+                            child: Container(
+                              height: 80,
+                              width: 80,
+                              decoration: BoxDecoration(
+                                color: primaryMaterialColor.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: primaryMaterialColor.withOpacity(0.2), width: 2),
+                              ),
+                              child: const Center(
+                                child: Icon(Icons.camera_rounded, color: primaryMaterialColor, size: 40),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 30),
+                          // Flash Button
+                          GestureDetector(
+                            onTap: () async {
+                              setter(() {
+                                _isFlashOn = !_isFlashOn;
+                              });
+                              await _controller.setFlashMode(
+                                _isFlashOn ? FlashMode.torch : FlashMode.off
+                              );
+                            },
+                            child: Container(
+                              height: 60,
+                              width: 60,
+                              decoration: BoxDecoration(
+                                color: Colors.blueAccent.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.blueAccent.withOpacity(0.2), width: 2),
+                              ),
+                              child: Icon(
+                                _isFlashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded, 
+                                color: Colors.blueAccent, 
+                                size: 28
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
                   ],
-                );
-              }
-            },
-          ).paddingBottom(15.0),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CostumIconButton(
-                svg: "camera-capture.svg",
-                color: primaryMaterialColor,
-                size: 80.0,
-                onPress: () async {
-                  try {
-                    final file = await _controller.takePicture();
-                    Get.back();
-                    onValidate!.call(File(file.path));
-                  } catch (e) {
-                    if (kDebugMode) {
-                      print("Erreur capture : $e");
-                    }
-                  }
-                },
-              ).paddingRight(8.0),
-              StatefulBuilder(
-                builder: (context, setter) => CostumIconButton(
-                  svg: _isFlashOn ? "flash-on-2.svg" : "flash-on-1.svg",
-                  size: 80.0,
-                  color: Colors.blue,
-                  onPress: () async {
-                    setter(() {
-                      _isFlashOn = !_isFlashOn;
-                    });
-                    await _controller.setFlashMode(
-                        _isFlashOn ? FlashMode.torch : FlashMode.off);
-                  },
                 ),
-              )
-            ],
-          )
-        ],
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );

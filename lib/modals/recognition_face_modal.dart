@@ -1,11 +1,12 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:camera/camera.dart';
-import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/services/http_manager.dart';
-import 'package:checkpoint_app/themes/app_theme.dart';
-import 'package:checkpoint_app/widgets/costum_button.dart';
+import '/constants/styles.dart';
+import '/global/controllers.dart';
+import '/kernel/services/http_manager.dart';
+import '/themes/app_theme.dart';
+import '/widgets/costum_button.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 
@@ -15,20 +16,17 @@ import 'package:get/get.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import '../widgets/costum_icon_button.dart';
 import '../widgets/svg.dart';
-import 'utils.dart';
 
-Future<dynamic> showRecognitionModal(context,
+Future<dynamic> showRecognitionModal(BuildContext context,
     {String key = "",
     String comment = "",
     siteId = "",
     scheduleId = "",
     VoidCallback? onValidate}) async {
   List<CameraDescription> cameras = [];
-  /* final TextEditingController _matriculeText = TextEditingController(); */
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
 
-  await Future.delayed(Duration.zero);
   try {
     cameras = await availableCameras();
     _controller = CameraController(
@@ -42,275 +40,233 @@ Future<dynamic> showRecognitionModal(context,
       print("Erreur d'initialisation de la caméra : $e");
     }
   }
+  
   tagsController.face.value = null;
   tagsController.faceResult.value = "";
 
-  showCustomModal(
-    context,
-    onClosed: () {
-      tagsController.face.value = null;
-      tagsController.faceResult.value = "";
-      _controller.dispose();
-    },
-    title: "Reconnaissance faciale",
-    child: Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Obx(
-        () => Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(35),
+            topRight: Radius.circular(35),
+          ),
+        ),
+        child: Column(
           children: [
-            if (tagsController.face.value != null) ...[
-              Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  DottedBorder(
-                    color: tagsController.faceResult.value != 'Inconnu'
-                        ? Colors.green.shade400
-                        : Colors.red,
-                    radius: const Radius.circular(130.0),
-                    strokeWidth: 1.2,
-                    borderType: BorderType.RRect,
-                    dashPattern: const [6, 3],
-                    child: CircleAvatar(
-                      radius: 120.0,
-                      backgroundColor: darkColor,
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(240.0),
+            // Header Handle
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 15),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            const Text(
+              "AUTHENTIFICATION",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Staatliches',
+                letterSpacing: 1.5,
+                color: Color(0xFF16161E),
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              "Validez votre identité par reconnaissance faciale.",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+                fontFamily: 'Ubuntu',
+              ),
+            ),
+            const SizedBox(height: 25),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Obx(() => Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Face Preview or Captured Image
+                    Center(
+                      child: Container(
+                        width: 260,
+                        height: 260,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: tagsController.face.value != null 
+                              ? (tagsController.faceResult.value != 'Inconnu' ? Colors.greenAccent : Colors.redAccent)
+                              : primaryMaterialColor.withOpacity(0.2), 
+                            width: 4
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            )
+                          ],
                         ),
-                        child: Image.file(
-                          width: 240.0,
-                          height: 240.0,
-                          File(tagsController.face.value!.path),
-                          alignment: Alignment.center,
-                          fit: BoxFit.cover,
+                        child: ClipOval(
+                          child: tagsController.face.value != null
+                            ? Image.file(File(tagsController.face.value!.path), fit: BoxFit.cover)
+                            : FutureBuilder(
+                                future: _initializeControllerFuture,
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.done) {
+                                    return FittedBox(
+                                      fit: BoxFit.cover,
+                                      child: SizedBox(
+                                        width: _controller.value.previewSize?.height ?? 260,
+                                        height: _controller.value.previewSize?.width ?? 260,
+                                        child: CameraPreview(_controller),
+                                      ),
+                                    );
+                                  } else {
+                                    return const Center(child: CircularProgressIndicator(color: primaryMaterialColor));
+                                  }
+                                },
+                              ),
                         ),
                       ),
                     ),
-                  ),
-                  if (tagsController.faceResult.value.isNotEmpty) ...[
-                    Positioned(
-                      bottom: -15.0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20.0, vertical: 8.0),
+                    
+                    if (tagsController.faceResult.value.isNotEmpty) ...[
+                      const SizedBox(height: 15),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                         decoration: BoxDecoration(
-                          color: tagsController.faceResult.value != 'Inconnu'
-                              ? Colors.green.withOpacity(.8)
-                              : Colors.red.withOpacity(.8),
-                          borderRadius: BorderRadius.circular(30.0),
+                          color: tagsController.faceResult.value != 'Inconnu' 
+                            ? Colors.green.withOpacity(0.1) 
+                            : Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         child: Text(
-                          tagsController.faceResult.value,
-                          style: const TextStyle(
+                          tagsController.faceResult.value.toUpperCase(),
+                          style: TextStyle(
                             fontFamily: "Staatliches",
-                            fontSize: 15.0,
-                            color: whiteColor,
+                            fontSize: 16,
+                            color: tagsController.faceResult.value != 'Inconnu' ? Colors.green : Colors.red,
                             fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
                           ),
                         ),
                       ),
-                    )
-                  ]
-                ],
-              ).paddingBottom(25.0),
-            ] else ...[
-              FutureBuilder(
-                future: _initializeControllerFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return ClipOval(
-                      child: SizedBox(
-                        width: 250,
-                        height: 250,
-                        child: FittedBox(
-                          fit: BoxFit.cover,
-                          child: SizedBox(
-                            width: _controller.value.previewSize?.height ?? 250,
-                            height: _controller.value.previewSize?.width ?? 250,
-                            child: CameraPreview(_controller),
-                          ),
-                        ),
-                      ),
-                    );
-                  } else {
-                    return Stack(
-                      alignment: Alignment.center,
+                    ],
+
+                    const SizedBox(height: 30),
+
+                    // Control Buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
-                          height: 220.0,
-                          width: 220.0,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 4.0,
-                            color: primaryMaterialColor.shade300,
-                          ),
+                        _buildCircleAction(
+                          icon: tagsController.face.value == null ? Icons.camera_alt_rounded : Icons.refresh_rounded,
+                          color: tagsController.face.value == null ? primaryMaterialColor : Colors.orangeAccent,
+                          onTap: () async {
+                            if (!_controller.value.isInitialized) return;
+                            if (tagsController.face.value != null) {
+                              tagsController.face.value = null;
+                              tagsController.faceResult.value = "";
+                              return;
+                            }
+                            try {
+                              final file = await _controller.takePicture();
+                              tagsController.face.value = XFile(file.path);
+                              
+                              faceRecognitionController.isRecognitionLoading.value = true;
+                              final result = await faceRecognitionController.recognizeFaceFromImage(file);
+                              tagsController.faceResult.value = result ?? "Inconnu";
+                              faceRecognitionController.isRecognitionLoading.value = false;
+                            } catch (e) {
+                              debugPrint("Capture error: $e");
+                            }
+                          },
+                          isLoading: faceRecognitionController.isRecognitionLoading.value,
                         ),
-                        SizedBox(
-                          height: 220.0,
-                          width: 220.0,
-                          child: DottedBorder(
-                            color: primaryMaterialColor.shade500,
-                            radius: const Radius.circular(110.0),
-                            strokeWidth: 1.2,
-                            borderType: BorderType.RRect,
-                            dashPattern: const [6, 3],
-                            child: const Center(
-                              child: Svg(
-                                size: 40.0,
-                                path: "camera-refresh.svg",
-                                color: primaryMaterialColor,
-                              ),
-                            ),
-                          ),
+                        const SizedBox(width: 25),
+                        _buildCircleAction(
+                          icon: tagsController.isFlashOn.value ? Icons.flash_on_rounded : Icons.flash_off_rounded,
+                          color: Colors.indigoAccent,
+                          onTap: () async {
+                            tagsController.isFlashOn.value = !tagsController.isFlashOn.value;
+                            await _controller.setFlashMode(
+                              tagsController.isFlashOn.value ? FlashMode.torch : FlashMode.off
+                            );
+                          },
                         ),
                       ],
-                    );
-                  }
-                },
-              ).paddingBottom(15.0),
-            ],
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CostumIconButton(
-                  isLoading:
-                      faceRecognitionController.isRecognitionLoading.value,
-                  svg: tagsController.face.value == null
-                      ? "camera-capture.svg"
-                      : "camera-refresh.svg",
-                  color: tagsController.face.value == null
-                      ? Colors.blue
-                      : Colors.green,
-                  size: 80.0,
-                  onPress: () async {
-                    if (!_controller.value.isInitialized) return;
-                    if (tagsController.face.value != null) {
-                      tagsController.face.value = null;
-                      return;
-                    }
-                    tagsController.face.value = null;
-                    tagsController.faceResult.value = "";
-                    try {
-                      final file = await _controller.takePicture();
-                      tagsController.face.value = XFile(file.path);
-                      await Future.delayed(Duration.zero);
-                      faceRecognitionController.isRecognitionLoading.value =
-                          true;
-                      final faceResult = await faceRecognitionController
-                          .recognizeFaceFromImage(file);
-                      if (faceResult != null) {
-                        /* _matriculeText.text = faceResult; */
-                        tagsController.faceResult.value = faceResult;
-                        faceRecognitionController.isRecognitionLoading.value =
-                            false;
-                        tagsController.isLoading.value = false;
-                      } else {
-                        tagsController.isLoading.value = false;
-                        faceRecognitionController.isRecognitionLoading.value =
-                            false;
-                      }
-                    } catch (e) {
-                      if (kDebugMode) {
-                        print("Erreur capture : $e");
-                      }
-                    }
-                  },
-                ).paddingRight(8.0),
-                CostumIconButton(
-                  svg: tagsController.isFlashOn.value
-                      ? "flash-on-2.svg"
-                      : "flash-on-1.svg",
-                  size: 80.0,
-                  color: Colors.purple,
-                  onPress: () async {
-                    if (tagsController.cameraIndex.value == 0) {
-                      tagsController.isFlashOn.value =
-                          !tagsController.isFlashOn.value;
-                      await _controller.setFlashMode(
-                          tagsController.isFlashOn.value
-                              ? FlashMode.torch
-                              : FlashMode.off);
-                    } else {
-                      tagsController.isFlashOn.value =
-                          !tagsController.isFlashOn.value;
-                      if (tagsController.isFlashOn.value) {
-                        await ScreenBrightness().setScreenBrightness(1.0);
-                      } else {
-                        await ScreenBrightness()
-                            .resetApplicationScreenBrightness();
-                      }
-                    }
-                  },
-                ),
-              ],
-            ).paddingBottom(10.0),
-            if (tagsController.face.value != null) ...[
-              Container(
-                padding: const EdgeInsets.all(5.0),
-                color: Colors.white,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if ((tagsController.faceResult.value.isNotEmpty &&
-                              tagsController.faceResult.value !=
-                                  "Inconnu")) ...[
-                            CostumButton(
-                              borderColor: Colors.blue.shade300,
-                              title: "Valider",
-                              isLoading: tagsController.isLoading.value,
-                              bgColor: Colors.blue,
-                              labelColor: Colors.white,
-                              onPress: () async {
-                                if (key == "check-in") {
-                                  checkPresence("check-in");
-                                  _controller.dispose();
-                                }
-                                if (key == "check-out") {
-                                  checkPresence("check-out");
-                                  _controller.dispose();
-                                }
+                    ),
 
-                                if (key == "patrol") {
-                                  await startPatrol(comment: comment);
-                                  _controller.dispose();
-                                  Get.back();
-                                }
+                    const SizedBox(height: 40),
 
-                                if (key == "close") {
-                                  await closePatrol(comment: comment);
-                                  _controller.dispose();
-                                  Get.back();
-                                }
-
-                                if (key == "supervize-in") {
-                                  Get.back();
-                                  onValidate!.call();
-                                }
-
-                                if (key == "supervize-out") {
-                                  Get.back();
-                                  onValidate!.call();
-                                }
-                              },
-                            ).paddingTop(10.0)
-                          ]
-                        ],
+                    // Validation Button
+                    if (tagsController.face.value != null && tagsController.faceResult.value != "Inconnu" && !faceRecognitionController.isRecognitionLoading.value)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: CostumButton(
+                          title: "VALIDER L'ACTION",
+                          isLoading: tagsController.isLoading.value,
+                          bgColor: primaryMaterialColor,
+                          labelColor: Colors.white,
+                          onPress: () async {
+                            try {
+                              if (key == "check-in") await checkPresence("check-in");
+                              if (key == "check-out") await checkPresence("check-out");
+                              if (key == "patrol") await startPatrol(comment: comment);
+                              if (key == "close") await closePatrol(comment: comment);
+                              if (key == "supervize-in") onValidate?.call();
+                              if (key == "supervize-out") onValidate?.call();
+                              
+                              await _controller.dispose();
+                              Get.back();
+                            } catch (e) {
+                              EasyLoading.showError("Erreur : $e");
+                            }
+                          },
+                        ),
                       ),
-                    )
+                    const SizedBox(height: 30),
                   ],
-                ),
+                )),
               ),
-            ]
+            ),
           ],
         ),
+      ),
+    ),
+  );
+}
+
+Widget _buildCircleAction({required IconData icon, required Color color, required VoidCallback onTap, bool isLoading = false}) {
+  return GestureDetector(
+    onTap: isLoading ? null : onTap,
+    child: Container(
+      height: 70,
+      width: 70,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        shape: BoxShape.circle,
+        border: Border.all(color: color.withOpacity(0.2), width: 2),
+      ),
+      child: Center(
+        child: isLoading 
+          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: primaryMaterialColor))
+          : Icon(icon, color: color, size: 30),
       ),
     ),
   );
@@ -319,95 +275,37 @@ Future<dynamic> showRecognitionModal(context,
 Future<void> checkPresence(String key) async {
   var manager = HttpManager();
   tagsController.isLoading.value = true;
-  manager.checkPresence(key: key).then((value) {
-    tagsController.isLoading.value = false;
-    tagsController.faceResult.value = "";
-    tagsController.face.value = null;
-    if (value != "success") {
-      EasyLoading.showSuccess(value);
-      Get.back();
-    } else {
-      tagsController.faceResult.value = "";
-      tagsController.face.value = null;
-      Get.back();
-      EasyLoading.showSuccess(
-        "Présence signalée avec succès !",
-      );
-    }
-  });
+  final value = await manager.checkPresence(key: key);
+  tagsController.isLoading.value = false;
+  if (value != null) {
+    EasyLoading.showSuccess(value.toString());
+  }
 }
 
 Future<void> closePatrol({String comment = ""}) async {
-  if (tagsController.faceResult.value !=
-      authController.userSession.value!.matricule) {
-    EasyLoading.showInfo(
-        "Le matricule agent ne correspond pas.connectez-vous avec un compte vous appartenant.");
+  if (tagsController.faceResult.value != authController.userSession.value!.matricule) {
+    EasyLoading.showInfo("Le matricule agent ne correspond pas.");
     return;
   }
   var manager = HttpManager();
   tagsController.isLoading.value = true;
-  manager.stopPendingPatrol(comment).then((value) {
-    tagsController.isLoading.value = false;
-    tagsController.faceResult.value = "";
-    tagsController.face.value = null;
-    if (value is String) {
-      EasyLoading.showToast(value);
-      Get.back();
-    } else {
-      EasyLoading.showSuccess(
-        "Patrouille cloturée avec succès !",
-      );
-      Get.back();
-    }
-  });
+  final value = await manager.stopPendingPatrol(comment);
+  tagsController.isLoading.value = false;
+  if (value != null) {
+    EasyLoading.showSuccess(value.toString());
+  }
 }
 
 Future<void> startPatrol({String comment = ""}) async {
-  if (authController.userSession.value!.matricule!.trim() !=
-      tagsController.faceResult.value.trim()) {
-    EasyLoading.showInfo(
-        "Le matricule agent ne correspond pas.connectez-vous avec un compte vous appartenant.");
+  if (authController.userSession.value!.matricule!.trim() != tagsController.faceResult.value.trim()) {
+    EasyLoading.showInfo("Le matricule agent ne correspond pas.");
     return;
   }
   var manager = HttpManager();
   tagsController.isLoading.value = true;
-  manager.beginPatrol(comment).then((value) {
-    tagsController.isLoading.value = false;
-    tagsController.faceResult.value = "";
-    tagsController.face.value = null;
-    if (value is String) {
-      EasyLoading.showToast(value);
-      Get.back();
-    } else {
-      EasyLoading.showSuccess(
-        "Zone patrouille scanné avec succès !",
-      );
-      Get.back();
-    }
-  });
-}
-
-Future<void> confirmRonde({String comment = ""}) async {
-  var manager = HttpManager();
-  tagsController.isLoading.value = true;
-  manager.confirm011Ronde(comment).then((value) {
-    tagsController.isLoading.value = false;
-    tagsController.faceResult.value = "";
-    tagsController.face.value = null;
-    if (value is String) {
-      if (value == "success") {
-        EasyLoading.showSuccess(
-          "Ronde 011 effectué avec succès !",
-        );
-        Get.back();
-        Get.back();
-      } else {
-        EasyLoading.showInfo("Echec de traitement de la requête.");
-        Get.back();
-      }
-    } else {
-      EasyLoading.showInfo("Echec de traitement de la requête.");
-      Get.back();
-    }
-  });
+  final value = await manager.beginPatrol(comment);
+  tagsController.isLoading.value = false;
+  if (value != null) {
+    EasyLoading.showSuccess(value.toString());
+  }
 }

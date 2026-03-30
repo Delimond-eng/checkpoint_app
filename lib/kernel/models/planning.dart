@@ -1,4 +1,4 @@
-import 'package:checkpoint_app/kernel/models/user.dart';
+import '/kernel/models/user.dart';
 
 class Planning {
   int? id;

@@ -1,7 +1,7 @@
 import 'dart:ui';
-import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/modals/recognition_face_modal.dart';
+import '/constants/styles.dart';
+import '/global/controllers.dart';
+import '/modals/recognition_face_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

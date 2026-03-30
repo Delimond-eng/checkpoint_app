@@ -1,4 +1,4 @@
-import 'package:checkpoint_app/kernel/models/face.dart';
+import '/kernel/models/face.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 

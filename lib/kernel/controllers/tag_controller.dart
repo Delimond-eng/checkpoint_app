@@ -33,7 +33,6 @@ class TagsController extends GetxController {
   var pendingPlanningCount = 0.obs;
   var nextPlanning = Rxn<Planning>();
   
-  // Liste réactive pour les plannings
   var plannings = <Planning>[].obs;
 
   StreamSubscription<List<Map<String, dynamic>>>? _patrolStreamSubscription;
@@ -48,8 +47,6 @@ class TagsController extends GetxController {
   void onReady() {
     super.onReady();
     _startPatrolStream();
-    
-    // Charger immédiatement les données locales
     _loadLocalData();
 
     ever(authController.userSession, (user) {
@@ -118,7 +115,6 @@ class TagsController extends GetxController {
       announceCount.value = announces.length;
       
       final remotePlannings = await HttpManager.getAllPlannings();
-      
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       
@@ -134,17 +130,22 @@ class TagsController extends GetxController {
       }).toList();
       
       await LocalDbService.instance.savePlannings(validPlannings);
-      
-      // Mise à jour de la liste réactive (UI se rafraîchit seule)
       plannings.assignAll(validPlannings);
       pendingPlanningCount.value = validPlannings.length;
-      
       _updateNextPlanning(validPlannings);
       await AlarmService.instance.scheduleAlarms(validPlannings);
       
     } catch (e) {
-      // Silencieux : on garde le local déjà chargé
+      if (plannings.isEmpty) _loadLocalData();
     }
+  }
+
+  /// Supprime un planning localement et met à jour l'UI (Badge + Dashboard)
+  Future<void> removePlanningLocally(int id) async {
+    await LocalDbService.instance.deletePlanning(id);
+    plannings.removeWhere((p) => p.id == id);
+    pendingPlanningCount.value = plannings.length;
+    _updateNextPlanning(plannings);
   }
 
   void _updateNextPlanning(List<Planning> planningsList) {

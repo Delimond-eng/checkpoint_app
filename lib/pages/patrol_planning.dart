@@ -75,7 +75,7 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  "Consultez et débutez vos missions planifiées.",
+                  "Consultez et débutez vos rondes planifiées.",
                   style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, fontFamily: 'Ubuntu'),
                 ),
               ],
@@ -262,7 +262,7 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        planning.libelle ?? "Mission sans libellé",
+                        planning.libelle ?? "Ronde sans libellé",
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isPast ? Colors.grey : const Color(0xFF16161E), fontFamily: 'Ubuntu'),
                       ),
                       const SizedBox(height: 5),

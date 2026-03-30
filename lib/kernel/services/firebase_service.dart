@@ -1,10 +1,12 @@
 import 'dart:convert';
-import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/kernel/controllers/face_recognition_controller.dart';
-import 'package:checkpoint_app/kernel/models/face.dart';
-import 'package:checkpoint_app/kernel/services/api.dart';
-import 'package:checkpoint_app/kernel/services/database_helper.dart';
-import 'package:checkpoint_app/kernel/services/mdm_service.dart'; // Import MDM
+import '/constants/styles.dart';
+import '/global/controllers.dart';
+import '/kernel/controllers/face_recognition_controller.dart';
+import '/kernel/controllers/tag_controller.dart';
+import '/kernel/models/face.dart';
+import '/kernel/services/api.dart';
+import '/kernel/services/database_helper.dart';
+import '/kernel/services/mdm_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -42,15 +44,28 @@ class FirebaseService {
         }
       });
 
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        final title = message.notification?.title ?? "Nouvelle notification";
-        final body = message.notification?.body ?? "";
-
-        if (kDebugMode) {
-          print("title : $title, body : $body");
-        }
+      // Écouteur principal (Foreground)
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+        if (kDebugMode) print("FCM Message (Foreground): ${message.data}");
         
-        handleNotificationData(message);
+        final String? type = message.data['type'];
+        String title = message.notification?.title ?? message.data['title'] ?? "SALAMA";
+        final String body = message.notification?.body ?? message.data['body'] ?? "";
+
+        // SI C'EST UN PLANNING : On affiche le toast et on refresh le badge AVANT la notification
+        if (type != null && type.contains('planning')) {
+          title = "Notification de planning";
+          EasyLoading.showToast("Nouveau planning reçu !");
+          
+          if (Get.isRegistered<TagsController>()) {
+            // Refresh silencieux et immédiat du badge et de la liste
+            await tagsController.fetchAnnouncesAndPlannings();
+          }
+        } else {
+          // Pour tout autre type, on refresh quand même les données par précaution
+          await handleNotificationData(message);
+        }
+
         showLocalNotification(title, body);
         readMessage(body);
       });
@@ -58,29 +73,27 @@ class FirebaseService {
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
       var token = await getToken();
-      if (kDebugMode) {
-        print("FCM TOKEN: $token");
-      }
+      if (kDebugMode) print("FCM TOKEN: $token");
     } catch (e) {
-      if (kDebugMode) {
-        print("Firebase init error $e");
-      }
+      if (kDebugMode) print("Firebase init error $e");
     }
   }
 
   @pragma('vm:entry-point')
   static Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     await Firebase.initializeApp();
+    // Rafraîchir les données même en arrière-plan pour que le badge soit prêt à l'ouverture
     await handleNotificationData(message, silent: true);
-    final title = message.data['title'] ?? message.notification?.title ?? 'Titre';
-    final body = message.data['body'] ?? message.notification?.body ?? 'Corps';
-    await showLocalNotification(title, body);
   }
 
   static Future<void> handleNotificationData(RemoteMessage message, {bool silent = false}) async {
+    if (Get.isRegistered<TagsController>()) {
+      await tagsController.fetchAnnouncesAndPlannings();
+    }
+
     final String? type = message.data['type'];
     
-    // GESTION MDM (Lock/Unlock)
+    // GESTION MDM
     if (type == 'lock') {
       await MdmService.lockDevice();
       return;
@@ -89,32 +102,33 @@ class FirebaseService {
       return;
     }
 
+    // GESTION BIOMÉTRIQUE
     final dynamic rawMatricules = message.data['matricules'];
-    List<String> matricules = [];
-    try {
-      if (rawMatricules is List) {
-        matricules = List<String>.from(rawMatricules);
-      } else if (rawMatricules is String) {
-        matricules = List<String>.from(jsonDecode(rawMatricules));
+    if (rawMatricules != null) {
+      List<String> matricules = [];
+      try {
+        if (rawMatricules is List) {
+          matricules = List<String>.from(rawMatricules);
+        } else if (rawMatricules is String) {
+          matricules = List<String>.from(jsonDecode(rawMatricules));
+        }
+      } catch (e) {
+        return;
       }
-    } catch (e) {
-      debugPrint("❌ Erreur parsing matricules FCM: $e");
-      return;
-    }
 
-    if (matricules.isEmpty) return;
-
-    if (type == 'biometric_sync') {
-      await syncMatricules(matricules, silent: silent);
-    } 
-    else if (type == 'biometric_delete') {
-      await deleteMatricules(matricules, silent: silent);
+      if (matricules.isNotEmpty) {
+        if (type == 'biometric_sync') {
+          await syncMatricules(matricules, silent: silent);
+        } 
+        else if (type == 'biometric_delete') {
+          await deleteMatricules(matricules, silent: silent);
+        }
+      }
     }
   }
 
   static Future<void> syncMatricules(List<String> matricules, {bool silent = true}) async {
     try {
-      if (!silent) EasyLoading.show(status: 'Mise à jour biométrique...');
       final response = await Api.request(
         method: 'post',
         url: 'biometrics/by-matricules',
@@ -124,27 +138,20 @@ class FirebaseService {
         List data = response['data'];
         final dbHelper = DatabaseHelper();
         for (var item in data) {
-          List<double> embedding;
-          var rawEmb = item['embedding'];
-          if (rawEmb is String) {
-            embedding = List<double>.from(jsonDecode(rawEmb).map((e) => e.toDouble()));
-          } else {
-            embedding = List<double>.from(rawEmb.map((e) => e.toDouble()));
-          }
-          final face = FacePicture(
-            matricule: item['matricule'],
-            embedding: embedding,
+          List<double> embedding = List<double>.from(
+            (item['embedding'] is String ? jsonDecode(item['embedding']) : item['embedding'])
+            .map((e) => e.toDouble())
           );
+          final face = FacePicture(matricule: item['matricule'], embedding: embedding);
           await dbHelper.deleteFace(face.matricule);
           await dbHelper.insertFace(face);
         }
         if (Get.isRegistered<FaceRecognitionController>()) {
           await FaceRecognitionController.instance.initializeModel();
         }
-        if (!silent) EasyLoading.showSuccess('${data.length} visages synchronisés');
       }
     } catch (e) {
-      if (!silent) debugPrint("Sync error: $e");
+      debugPrint("Biometric Sync Error: $e");
     }
   }
 
@@ -157,9 +164,8 @@ class FirebaseService {
       if (Get.isRegistered<FaceRecognitionController>()) {
         await FaceRecognitionController.instance.initializeModel();
       }
-      if (!silent) EasyLoading.showSuccess("Données supprimées");
     } catch (e) {
-      if (!silent) debugPrint("Delete error: $e");
+      debugPrint("Biometric Delete Error: $e");
     }
   }
 

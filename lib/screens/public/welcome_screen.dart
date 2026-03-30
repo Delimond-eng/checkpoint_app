@@ -84,10 +84,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0F), // Dark Header Background
       body: Obx(() {
+        // Détection des changements réactifs
         final hasPatrol = tagsController.patrolId.value != 0;
         final hasSupervision = authController.pendingSupervision.value != null;
-        final countPlanning = tagsController.pendingPlanningCount.value;
-        final countAnnounces = tagsController.announceCount.value;
 
         return Column(
           children: [
@@ -164,7 +163,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         label: "Planning",
                         color: Colors.tealAccent,
                         enabled: isGuard,
-                        badge: countPlanning > 0 ? "$countPlanning" : null,
+                        // Utilisation directe du .value pour forcer la réactivité du badge
+                        badge: tagsController.pendingPlanningCount.value > 0 ? "${tagsController.pendingPlanningCount.value}" : null,
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatrolPlanning())),
                       ),
                       _buildHeaderAction(
@@ -193,7 +193,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         icon: Icons.notifications_active_rounded,
                         label: "Annonces",
                         color: Colors.yellowAccent,
-                        badge: countAnnounces > 0 ? "$countAnnounces" : null,
+                        badge: tagsController.announceCount.value > 0 ? "${tagsController.announceCount.value}" : null,
                         badgeColor: Colors.redAccent,
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AnnouncePage())),
                       ),
@@ -267,24 +267,38 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               ),
                             ),
                             const Spacer(),
-
-                            IconButton(
-                              onPressed: () async {
-                                EasyLoading.show(status: 'Synchronisation...');
-                                await tagsController.fetchAnnouncesAndPlannings();
-                                await SyncService.instance.syncPendingActions();
-                                EasyLoading.showSuccess("Données à jour");
-                              },
-                              icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
-                            )
                           ]
-
+                          else...[
+                            const Expanded(child: Padding(
+                              padding: EdgeInsets.only(top: 15, bottom: 5),
+                              child: Text(
+                                "Cliquez sur le bouton « Superviser les agents », puis scannez le QR code de la station afin de procéder à l’inspection des agents.",
+                                textAlign: TextAlign.start,
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 10,
+                                  fontStyle: FontStyle.italic,
+                                  fontFamily: 'Ubuntu',
+                                ),
+                              ),
+                            )),
+                          ],
+                          IconButton(
+                            onPressed: () async {
+                              EasyLoading.show(status: 'Synchronisation...');
+                              await tagsController.fetchAnnouncesAndPlannings();
+                              await SyncService.instance.syncPendingActions();
+                              EasyLoading.showSuccess("Données à jour");
+                            },
+                            icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 15),
 
                       if (isSupervisor) ...[
                         _btnSuperviseAgents(),
+                        const SizedBox(height: 20),
                       ] else ...[
                         const Text(
                           "DÉTAILS OPÉRATIONNELS",
@@ -304,6 +318,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           Colors.orange
                         ),
                       ],
+
                       const Text(
                         "POINTAGE DE PRÉSENCE",
                         style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),

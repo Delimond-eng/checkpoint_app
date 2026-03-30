@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:checkpoint_app/constants/styles.dart';
-import 'package:checkpoint_app/global/controllers.dart';
-import 'package:checkpoint_app/kernel/models/supervision_element.dart';
-import 'package:checkpoint_app/modals/photo_capture_modal.dart';
+import '/constants/styles.dart';
+import '/global/controllers.dart';
+import '/kernel/models/supervision_element.dart';
+import '/modals/photo_capture_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -21,130 +21,132 @@ Future<void> showSupervisorFormModal(BuildContext context) async {
     backgroundColor: Colors.transparent,
     builder: (context) => BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.85,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              width: 40, height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 15),
-              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
-            ),
-            const Text(
-              "COTATION AGENT",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'Staatliches', letterSpacing: 1.5, color: Color(0xFF16161E)),
-            ),
-            const SizedBox(height: 5),
-            Text("Évaluez les critères de performance de l'agent.", style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontFamily: 'Ubuntu')),
-            const SizedBox(height: 25),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 15),
+                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+              ),
+              const Text(
+                "COTATION AGENT",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'Staatliches', letterSpacing: 1.5, color: Color(0xFF16161E)),
+              ),
+              const SizedBox(height: 5),
+              Text("Évaluez les critères de performance de l'agent.", style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontFamily: 'Ubuntu')),
+              const SizedBox(height: 25),
 
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 25),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Photo Section
-                    StatefulBuilder(
-                      builder: (context, setter) {
-                        File? photo = authController.supervisedDatas.firstWhereOrNull((e) => e['agent_id'] == agentId)?['photo'];
-                        return GestureDetector(
-                          onTap: () {
-                            showPhotoCaptureModal(context, onValidate: (file) {
-                              setter(() => photo = file);
-                              authController.updateAgentPhoto(agentId, file);
-                            });
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 25),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Photo Section
+                      StatefulBuilder(
+                        builder: (context, setter) {
+                          File? photo = authController.supervisedDatas.firstWhereOrNull((e) => e['agent_id'] == agentId)?['photo'];
+                          return GestureDetector(
+                            onTap: () {
+                              showPhotoCaptureModal(context, onValidate: (file) {
+                                setter(() => photo = file);
+                                authController.updateAgentPhoto(agentId, file);
+                              });
+                            },
+                            child: Stack(
+                              children: [
+                                Container(
+                                  height: 120, width: 120,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: const Color(0xFFF8F9FA),
+                                    border: Border.all(color: primaryMaterialColor.withOpacity(0.2), width: 3),
+                                    image: photo != null ? DecorationImage(image: FileImage(photo), fit: BoxFit.cover) : null,
+                                  ),
+                                  child: photo == null ? const Icon(Icons.add_a_photo_rounded, color: primaryMaterialColor, size: 35) : null,
+                                ),
+                                Positioned(
+                                  bottom: 0, right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: const BoxDecoration(color: primaryMaterialColor, shape: BoxShape.circle),
+                                    child: const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 30),
+
+                      // Criteria List
+                      ...authController.supervisorElements.map((e) {
+                        var existingNote = existingData?['notes']?.firstWhere((n) => n['control_element_id'] == e.id, orElse: () => null);
+                        return ElementCard(
+                          data: e,
+                          initialNote: existingNote?['note'],
+                          onNoteSelected: (noteLabel) {
+                            if (existingData != null) {
+                              existingData['notes']?.removeWhere((n) => n['control_element_id'] == e.id);
+                              existingData['notes']?.add({
+                                'control_element_id': e.id, 
+                                'note': noteLabel, 
+                                'comment': null // Commentaire à null par défaut par critère
+                              });
+                            }
                           },
-                          child: Stack(
-                            children: [
-                              Container(
-                                height: 120, width: 120,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: const Color(0xFFF8F9FA),
-                                  border: Border.all(color: primaryMaterialColor.withOpacity(0.2), width: 3),
-                                  image: photo != null ? DecorationImage(image: FileImage(photo), fit: BoxFit.cover) : null,
-                                ),
-                                child: photo == null ? const Icon(Icons.add_a_photo_rounded, color: primaryMaterialColor, size: 35) : null,
-                              ),
-                              Positioned(
-                                bottom: 0, right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(color: primaryMaterialColor, shape: BoxShape.circle),
-                                  child: const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
-                                ),
-                              ),
-                            ],
-                          ),
                         );
-                      },
-                    ),
-                    const SizedBox(height: 30),
+                      }).toList(),
 
-                    // Criteria List
-                    ...authController.supervisorElements.map((e) {
-                      var existingNote = existingData?['notes']?.firstWhere((n) => n['control_element_id'] == e.id, orElse: () => null);
-                      return ElementCard(
-                        data: e,
-                        initialNote: existingNote?['note'],
-                        onNoteSelected: (noteLabel) {
-                          existingData?['notes']?.removeWhere((n) => n['control_element_id'] == e.id);
-                          existingData?['notes']?.add({'control_element_id': e.id, 'note': noteLabel, 'comment': ''});
-                        },
-                      );
-                    }).toList(),
-
-                    const SizedBox(height: 20),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text("OBSERVATIONS", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu')),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      maxLines: 3,
-                      style: const TextStyle(fontFamily: 'Ubuntu', fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: "Remarques sur la tenue ou le comportement...",
-                        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-                        filled: true,
-                        fillColor: const Color(0xFFF8F9FA),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                      const SizedBox(height: 35),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: SubmitButton(
+                          label: "ENREGISTRER LA NOTE",
+                          color: primaryMaterialColor,
+                          onPressed: () {
+                            if (existingData == null) {
+                              Get.back();
+                              return;
+                            }
+                            var notes = existingData['notes'] as List;
+                            
+                            // Un agent est marqué "supervisé" si TOUS les éléments ont été cotés
+                            bool allCriteriaRated = authController.supervisorElements.isNotEmpty && 
+                            authController.supervisorElements.every((e) =>
+                              notes.any((n) => n['control_element_id'] == e.id && n['note'] != null)
+                            );
+                            
+                            if (allCriteriaRated) {
+                              if (!authController.supervisedAgent.contains(agentId)) {
+                                authController.supervisedAgent.add(agentId);
+                              }
+                              EasyLoading.showSuccess("Agent évalué");
+                            } else {
+                              authController.supervisedAgent.remove(agentId);
+                            }
+                            authController.supervisedDatas.refresh();
+                            Get.back();
+                          },
+                        ),
                       ),
-                      onChanged: (val) {
-                        var index = authController.supervisedDatas.indexWhere((e) => e['agent_id'] == agentId);
-                        if (index != -1) authController.supervisedDatas[index]['comment'] = val;
-                      },
-                    ),
-                    const SizedBox(height: 35),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: SubmitButton(
-                        label: "ENREGISTRER LA NOTE",
-                        color: primaryMaterialColor,
-                        onPressed: () {
-                          var index = authController.supervisedDatas.indexWhere((e) => e['agent_id'] == agentId);
-                          var notes = authController.supervisedDatas[index]['notes'] as List;
-                          bool allChecked = authController.supervisorElements.every((e) => notes.any((n) => n['control_element_id'] == e.id));
-                          if (allChecked && !authController.supervisedAgent.contains(agentId)) {
-                            authController.supervisedAgent.add(agentId);
-                            EasyLoading.showSuccess("Note enregistrée");
-                          }
-                          Get.back();
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                  ],
+                      const SizedBox(height: 30),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ),
