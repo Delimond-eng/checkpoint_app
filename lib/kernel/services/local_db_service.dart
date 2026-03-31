@@ -22,7 +22,7 @@ class LocalDbService {
 
     return await openDatabase(
       path,
-      version: 3, 
+      version: 4, // Passage à la version 4 pour inclure la colonne 'time'
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -44,6 +44,10 @@ CREATE TABLE announces (
       await db.execute('ALTER TABLE pending_actions ADD COLUMN started_at TEXT');
       await db.execute('ALTER TABLE pending_actions ADD COLUMN ended_at TEXT');
       await db.execute('ALTER TABLE pending_actions ADD COLUMN date_reference TEXT');
+    }
+    if (oldVersion < 4) {
+      // Ajout de la colonne 'time' manquante
+      await db.execute('ALTER TABLE pending_actions ADD COLUMN time TEXT');
     }
   }
 
@@ -92,7 +96,8 @@ CREATE TABLE pending_actions (
   key $textType,
   started_at $textType,
   ended_at $textType,
-  date_reference $textType
+  date_reference $textType,
+  time $textType
 )
 ''');
   }
