@@ -27,6 +27,16 @@ class HttpManager {
   String _now() => DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
   String _timeOnly() => DateFormat('HH:mm').format(DateTime.now());
 
+  String _formatToBackend(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return _now();
+    try {
+      DateTime dt = DateTime.parse(dateStr);
+      return DateFormat('yyyy-MM-dd HH:mm:ss').format(dt);
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
   Future<bool> _isOffline() async {
     try {
       var connectivityResult = await Connectivity().checkConnectivity();
@@ -75,14 +85,13 @@ class HttpManager {
   // Start scanning for patrol (with Offline Support)
   Future<dynamic> beginPatrol(String comment) async {
     var latlng = await _getCurrentLocation() ?? "0.0,0.0";
-    var patrolId = tagsController.patrolId.value;
+    var patrolIdVal = tagsController.patrolId.value;
     var planningId = tagsController.planningId.value;
     var user = authController.userSession.value!;
     var nowStr = _now();
     var timeOnly = _timeOnly();
 
     var data = {
-      "patrol_id": patrolId != 0 ? patrolId.toString() : "",
       "site_id": user.siteId,
       "agency_id": user.agencyId,
       "agent_id": user.id,
@@ -92,9 +101,13 @@ class HttpManager {
       "matricule": tagsController.faceResult.value,
       "comment": comment,
       "latlng": latlng,
-      "started_at": nowStr, // Format Y-m-d H:i:s
-      "time": timeOnly,     // Format H:i (Heure du scan)
+      "started_at": nowStr,
+      "time": timeOnly,
     };
+
+    if (patrolIdVal != 0) {
+      data["patrol_id"] = patrolIdVal.toString();
+    }
 
     File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
 
@@ -103,7 +116,7 @@ class HttpManager {
       await LocalDbService.instance.addPendingAction({
         'type': 'scan',
         'local_session_id': localSessionId,
-        'patrol_id': data['patrol_id'],
+        'patrol_id': patrolIdVal != 0 ? patrolIdVal.toString() : "",
         'site_id': data['site_id'],
         'agency_id': data['agency_id'],
         'agent_id': data['agent_id'],
@@ -118,7 +131,7 @@ class HttpManager {
         'time': timeOnly,
       });
 
-      if (patrolId == 0) {
+      if (patrolIdVal == 0) {
         tagsController.isOfflinePatrolActive.value = true;
         localStorage.write("is_offline_patrol", true);
         localStorage.write("local_session_id", localSessionId);
@@ -143,21 +156,25 @@ class HttpManager {
         if (localStorage.read("patrol_id") == null) {
           localStorage.write("patrol_id", response["result"]["id"] ?? response["result"]["patrol_id"]);
         }
-        if (patrolId == 0 && planningId.isNotEmpty) {
+        if (patrolIdVal == 0 && planningId.isNotEmpty) {
           await tagsController.removePlanningLocally(int.parse(planningId));
         }
         tagsController.refreshPending();
         return response["message"] ?? "Ronde enregistrée avec succès.";
       }
-      return _parseError(response);
+      
+      String error = _parseError(response);
+      EasyLoading.showError(error);
+      return null;
     } catch (e) {
-      return "Erreur réseau : $e";
+      EasyLoading.showError("Erreur réseau : $e");
+      return null;
     }
   }
 
   // Close pending patrol
   Future<dynamic> stopPendingPatrol(String? comment) async {
-    var patrolId = localStorage.read("patrol_id");
+    var patrolIdVal = localStorage.read("patrol_id");
     var localSessionId = localStorage.read("local_session_id");
     var planningId = tagsController.planningId.value;
     var nowStr = _now();
@@ -166,13 +183,13 @@ class HttpManager {
     if (await _isOffline()) {
       await LocalDbService.instance.addPendingAction({
         'type': 'close',
-        'patrol_id': patrolId?.toString() ?? "",
+        'patrol_id': (patrolIdVal != null && patrolIdVal != 0) ? patrolIdVal.toString() : "",
         'local_session_id': localSessionId ?? "",
         'schedule_id': planningId,
         'comment': comment,
         'photo_path': photoFile.path,
         'created_at': nowStr,
-        'ended_at': nowStr, // Clôture demande ended_at
+        'ended_at': nowStr,
       });
       
       localStorage.remove("patrol_id");
@@ -184,15 +201,20 @@ class HttpManager {
     }
 
     try {
+      Map<String, dynamic> data = {
+        "schedule_id": planningId,
+        "comment_text": comment ?? "",
+        "ended_at": nowStr,
+      };
+      
+      if (patrolIdVal != null && patrolIdVal != 0 && patrolIdVal != "0" && patrolIdVal != "") {
+        data["patrol_id"] = patrolIdVal.toString();
+      }
+
       var response = await Api.request(
         url: "patrol.close",
         method: "post",
-        body: {
-          "patrol_id": patrolId, 
-          "schedule_id": planningId,
-          "comment_text": comment!,
-          "ended_at": nowStr,
-        },
+        body: data,
         files: {"photo": photoFile},
       );
 
@@ -204,9 +226,13 @@ class HttpManager {
         tagsController.refreshPending();
         return response["message"] ?? "Patrouille clôturée avec succès.";
       }
-      return _parseError(response);
+      
+      String error = _parseError(response);
+      EasyLoading.showError(error);
+      return null;
     } catch (e) {
-      return "Erreur réseau : $e";
+      EasyLoading.showError("Erreur réseau : $e");
+      return null;
     }
   }
 
@@ -222,23 +248,28 @@ class HttpManager {
       }
 
       if (action['type'] == 'scan') {
+        Map<String, dynamic> body = {
+          "site_id": action['site_id'],
+          "agency_id": action['agency_id'],
+          "agent_id": action['agent_id'],
+          "scan_agent_id": action['agent_id'],
+          "area_id": action['area_id'],
+          "schedule_id": action['schedule_id'],
+          "matricule": action['matricule'],
+          "comment": action['comment'],
+          "latlng": action['latlng'],
+          "started_at": _formatToBackend(action['started_at'] ?? action['created_at']),
+          "time": action['time'],
+        };
+        
+        if (action['patrol_id'] != null && action['patrol_id'] != "" && action['patrol_id'] != "0") {
+          body["patrol_id"] = action['patrol_id'];
+        }
+
         var response = await Api.request(
           url: "patrol.scan",
           method: "post",
-          body: {
-            "patrol_id": action['patrol_id'],
-            "site_id": action['site_id'],
-            "agency_id": action['agency_id'],
-            "agent_id": action['agent_id'],
-            "scan_agent_id": action['agent_id'],
-            "area_id": action['area_id'],
-            "schedule_id": action['schedule_id'],
-            "matricule": action['matricule'],
-            "comment": action['comment'],
-            "latlng": action['latlng'],
-            "started_at": action['started_at'] ?? action['created_at'],
-            "time": action['time'], // L'heure du scan pour begin et scan
-          },
+          body: body,
           files: photoFile != null ? {"photo": photoFile} : null, 
         );
         if (response != null && !response.containsKey("errors")) {
@@ -246,15 +277,20 @@ class HttpManager {
         }
         return "error";
       } else if (action['type'] == 'close') {
+        Map<String, dynamic> body = {
+          "schedule_id": action['schedule_id'],
+          "comment_text": action['comment'],
+          "ended_at": _formatToBackend(action['ended_at'] ?? action['created_at']),
+        };
+
+        if (action['patrol_id'] != null && action['patrol_id'] != "" && action['patrol_id'] != "0") {
+          body["patrol_id"] = action['patrol_id'];
+        }
+
         var response = await Api.request(
           url: "patrol.close",
           method: "post",
-          body: {
-            "patrol_id": action['patrol_id'], 
-            "schedule_id": action['schedule_id'],
-            "comment_text": action['comment'],
-            "ended_at": action['ended_at'] ?? action['created_at'],
-          },
+          body: body,
           files: photoFile != null ? {"photo": photoFile} : null, 
         );
         return (response != null && !response.containsKey("errors")) ? "success" : "error";
@@ -300,7 +336,8 @@ class HttpManager {
           a['date_reference'] == dateRef
         );
         if (alreadyCheckedIn) {
-          return "Déjà pointé aujourd'hui (en attente de synchro).";
+          EasyLoading.showInfo("Déjà pointé aujourd'hui (en attente de synchro).");
+          return null;
         }
       }
 
@@ -332,14 +369,18 @@ class HttpManager {
       var response = await Api.request(url: "presence.create", method: "post", body: data, files: {'photo': photoFile});
       if (response != null) {
         if (response.containsKey("errors")) {
-          return _parseError(response);
+          String error = _parseError(response);
+          EasyLoading.showError(error);
+          return null;
         } else {
           return response["message"] ?? "Pointage effectué avec succès.";
         }
       }
-      return "Erreur lors du pointage.";
+      EasyLoading.showError("Erreur lors du pointage.");
+      return null;
     } catch (e) {
-      return "Echec : $e";
+      EasyLoading.showError("Echec : $e");
+      return null;
     }
   }
 
@@ -356,9 +397,12 @@ class HttpManager {
       if (response != null && !response.containsKey("errors")) {
         return response["result"];
       }
-      return _parseError(response);
+      String error = _parseError(response);
+      EasyLoading.showError(error);
+      return null;
     } catch (e) {
-      return "Echec de traitement de la requête !";
+      EasyLoading.showError("Echec de traitement de la requête !");
+      return null;
     }
   }
 
@@ -382,9 +426,12 @@ class HttpManager {
       if (response != null && !response.containsKey("errors")) {
         return response["result"];
       }
-      return _parseError(response);
+      String error = _parseError(response);
+      EasyLoading.showError(error);
+      return null;
     } catch (e) {
-      return "Échec de traitement";
+      EasyLoading.showError("Échec de traitement");
+      return null;
     }
   }
 
@@ -401,9 +448,12 @@ class HttpManager {
       if (response != null && !response.containsKey("errors")) {
         return "success";
       }
-      return _parseError(response);
+      String error = _parseError(response);
+      EasyLoading.showError(error);
+      return null;
     } catch (e) {
-      return "Echec de traitement de la requête !";
+      EasyLoading.showError("Echec de traitement de la requête !");
+      return null;
     }
   }
 
@@ -446,9 +496,12 @@ class HttpManager {
       if (response != null && !response.containsKey("errors")) {
         return "Station GPS completé avec succès.";
       }
-      return _parseError(response);
+      String error = _parseError(response);
+      EasyLoading.showError(error);
+      return null;
     } catch (e) {
-      return "Echec de traitement de la requête !";
+      EasyLoading.showError("Echec de traitement de la requête !");
+      return null;
     }
   }
 
@@ -459,16 +512,16 @@ class HttpManager {
       if (response != null && !response.containsKey("errors")) {
         return response["result"];
       }
-      return "error";
+      return null;
     } catch (e) {
-      return "error";
+      return null;
     }
   }
 
   // Helper pour parser les erreurs Laravel
   String _parseError(dynamic response) {
     if (response == null) return "Erreur serveur inconnue.";
-    if (response.containsKey("errors")) {
+    if (response is Map && response.containsKey("errors")) {
       var err = response["errors"];
       if (err is List && err.isNotEmpty) return err[0].toString();
       if (err is Map && err.isNotEmpty) return err.values.first.toString();
@@ -514,8 +567,9 @@ class HttpManager {
       File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
       var data = {"site_id": tagsController.scannedSite.value.id, "matricule": tagsController.faceResult.value, "comment": comment, "latlng": latlng};
       var response = await Api.request(url: "ronde.scan", method: "post", body: data, files: {"photo": photoFile});
-      return (response != null && !response.containsKey("errors")) ? "success" : "errors";
-    } catch (e) { return "errors"; }
+      if (response != null && !response.containsKey("errors")) return "success";
+      return null;
+    } catch (e) { return null; }
   }
 
   Future<dynamic> completeArea(String libelle) async {
@@ -523,8 +577,11 @@ class HttpManager {
     try {
       var data = {"area_id": tagsController.scannedArea.value.id, "libelle": libelle, "latlng": latlng};
       var response = await Api.request(url: "area.complete", method: "post", body: data);
-      return (response != null && !response.containsKey("errors")) ? "Zone completée avec succès." : _parseError(response);
-    } catch (e) { return "Echec"; }
+      if (response != null && !response.containsKey("errors")) return "Zone completée avec succès.";
+      String error = _parseError(response);
+      EasyLoading.showError(error);
+      return null;
+    } catch (e) { return null; }
   }
 
   Future<dynamic> startSupervison() async {
@@ -539,8 +596,10 @@ class HttpManager {
         authController.refreshSupervision();
         return response["result"];
       }
-      return _parseError(response);
-    } catch (e) { return "Échec"; }
+      String error = _parseError(response);
+      EasyLoading.showError(error);
+      return null;
+    } catch (e) { return null; }
   }
 
   Future<dynamic> _getCurrentLocation() async {
@@ -584,7 +643,7 @@ class HttpManager {
     var data = {"site_id": id, "fcm_token": token};
     try {
       var response = await Api.request(url: "site.token", method: "post", body: data);
-      return (response != null && !response.containsKey("errors")) ? response["result"] : "error";
-    } catch (e) { return "error"; }
+      return (response != null && !response.containsKey("errors")) ? response["result"] : null;
+    } catch (e) { return null; }
   }
 }
