@@ -36,13 +36,18 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
       try {
         if (!tagsController.isScanningModalOpen.value) {
           Map<String, dynamic> jsonMap = jsonDecode(barcodes.barcodes.first.displayValue!);
+          print(jsonMap);
           var area = Area.fromJson(jsonMap);
           tagsController.scannedArea.value = area;
           tagsController.isLoading.value = false;
           tagsController.isQrcodeScanned.value = true;
           tagsController.isScanningModalOpen.value = true;
           controller.stop();
-          showScanningCompleter(context);
+          showScanningCompleter(context, onFinished: () {
+            // Relancer le scanner automatiquement après validation
+            tagsController.isScanningModalOpen.value = false;
+            controller.start();
+          });
         }
       } catch (e) {
         EasyLoading.showToast("Echec du scan de qrcode. Veuillez reéssayer !");
@@ -119,7 +124,7 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
             right: 0,
             child: Column(
               children: [
-                Obx(() => tagsController.patrolId.value != 0 
+                Obx(() => tagsController.hasActivePatrol // Utilisation du getter intelligent
                   ? Padding(
                       padding: const EdgeInsets.only(bottom: 20, left: 30, right: 30),
                       child: Container(

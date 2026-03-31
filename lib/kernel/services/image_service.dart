@@ -19,6 +19,9 @@ class ImageService {
       img.Image? decoded = img.decodeImage(bytes);
       if (decoded == null) return file;
 
+      // Corrige l'orientation basée sur les métadonnées EXIF (évite que la photo soit tournée)
+      decoded = img.bakeOrientation(decoded);
+
       // Redimensionnement intelligent (garde le ratio)
       img.Image resized;
       if (decoded.width > decoded.height) {

@@ -20,45 +20,52 @@ class SyncService {
 
   Future<void> syncPendingActions() async {
     if (_isSyncing) return;
+    
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult.isEmpty || connectivityResult.every((r) => r == ConnectivityResult.none)) return;
+
     _isSyncing = true;
 
     try {
-      final pendingActions = await LocalDbService.instance.getPendingActions();
-      if (pendingActions.isEmpty) {
-        _isSyncing = false;
-        return;
-      }
-
       final manager = HttpManager();
 
-      for (var action in pendingActions) {
-        // dynamic est utilisé ici car syncLocalAction peut renvoyer une Map ou une String
+      while (true) {
+        final pendingActions = await LocalDbService.instance.getPendingActions();
+        if (pendingActions.isEmpty) break;
+
+        var action = Map<String, dynamic>.from(pendingActions.first);
         final dynamic response = await manager.syncLocalAction(action);
         
-        // On vérifie si la réponse est une Map pour accéder aux clés
         if (response is Map<String, dynamic>) {
-          if (response.containsKey('id')) {
-            final realId = response['id'].toString();
-            final localSid = action['local_session_id'];
-            
-            if (localSid != null && localSid != "") {
-              await LocalDbService.instance.updatePendingActionsId(localSid, realId);
-            }
-            
-            await LocalDbService.instance.deletePendingAction(action['id']);
+          // LOGIQUE INTELLIGENTE D'ID : 
+          // Si c'est un PatrolScan, l'ID de la patrouille est dans 'patrol_id'.
+          // Si c'est une Patrol (creation), c'est dans 'id'.
+          String? realPatrolId;
+          if (response.containsKey('patrol_id')) {
+            realPatrolId = response['patrol_id'].toString();
+          } else if (response.containsKey('id')) {
+            realPatrolId = response['id'].toString();
           }
+
+          final localSid = action['local_session_id'];
+          
+          if (realPatrolId != null && localSid != null && localSid != "") {
+            // Met à jour les autres actions de la même session locale avec l'ID réel du serveur
+            await LocalDbService.instance.updatePendingActionsId(localSid, realPatrolId);
+          }
+          
+          await LocalDbService.instance.deletePendingAction(action['id']);
         } 
-        // Si c'est un succès simple (chaîne "success")
         else if (response == "success") {
           await LocalDbService.instance.deletePendingAction(action['id']);
         } 
         else {
-          // Échec de synchro (chaîne "error" ou autre), on arrête pour préserver l'ordre
+          // Échec : on arrête pour maintenir l'ordre chronologique
           break;
         }
       }
     } catch (e) {
-      // Log error
+      // Erreur silencieuse
     } finally {
       _isSyncing = false;
     }

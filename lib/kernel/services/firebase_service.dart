@@ -7,6 +7,7 @@ import '/kernel/models/face.dart';
 import '/kernel/services/api.dart';
 import '/kernel/services/database_helper.dart';
 import '/kernel/services/mdm_service.dart';
+import '/kernel/services/sync_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -52,17 +53,15 @@ class FirebaseService {
         String title = message.notification?.title ?? message.data['title'] ?? "SALAMA";
         final String body = message.notification?.body ?? message.data['body'] ?? "";
 
-        // SI C'EST UN PLANNING : On affiche le toast et on refresh le badge AVANT la notification
         if (type != null && type.contains('planning')) {
           title = "Notification de planning";
           EasyLoading.showToast("Nouveau planning reçu !");
           
           if (Get.isRegistered<TagsController>()) {
-            // Refresh silencieux et immédiat du badge et de la liste
             await tagsController.fetchAnnouncesAndPlannings();
+            SyncService.instance.syncPendingActions(); // Déclenche la synchro des envois
           }
         } else {
-          // Pour tout autre type, on refresh quand même les données par précaution
           await handleNotificationData(message);
         }
 
@@ -82,18 +81,17 @@ class FirebaseService {
   @pragma('vm:entry-point')
   static Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     await Firebase.initializeApp();
-    // Rafraîchir les données même en arrière-plan pour que le badge soit prêt à l'ouverture
     await handleNotificationData(message, silent: true);
   }
 
   static Future<void> handleNotificationData(RemoteMessage message, {bool silent = false}) async {
     if (Get.isRegistered<TagsController>()) {
       await tagsController.fetchAnnouncesAndPlannings();
+      SyncService.instance.syncPendingActions();
     }
 
     final String? type = message.data['type'];
     
-    // GESTION MDM
     if (type == 'lock') {
       await MdmService.lockDevice();
       return;
@@ -102,7 +100,6 @@ class FirebaseService {
       return;
     }
 
-    // GESTION BIOMÉTRIQUE
     final dynamic rawMatricules = message.data['matricules'];
     if (rawMatricules != null) {
       List<String> matricules = [];

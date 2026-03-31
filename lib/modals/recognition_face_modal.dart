@@ -241,7 +241,11 @@ Future<dynamic> showRecognitionModal(BuildContext context,
                               
                               if (success) {
                                 await _controller.dispose();
-                                Get.back();
+                                Get.back(); // Ferme recognition_face_modal
+                                if (key == "patrol") {
+                                  Get.back(); // Ferme scanning_completer_modal
+                                  onValidate?.call(); // Relance le scanner
+                                }
                               }
                             } catch (e) {
                               EasyLoading.showError("Erreur : $e");

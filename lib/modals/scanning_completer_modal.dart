@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 
 import '../widgets/submit_button.dart';
 
-Future<void> showScanningCompleter(BuildContext context, {String key = "patrol"}) async {
+Future<void> showScanningCompleter(BuildContext context, {String key = "patrol", VoidCallback? onFinished}) async {
   final commentController = TextEditingController();
   tagsController.isScanningModalOpen.value = true;
 
@@ -26,6 +26,7 @@ Future<void> showScanningCompleter(BuildContext context, {String key = "patrol"}
             topRight: Radius.circular(35),
           ),
         ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Column(
           children: [
             Container(
@@ -166,6 +167,9 @@ Future<void> showScanningCompleter(BuildContext context, {String key = "patrol"}
                             context,
                             key: key,
                             comment: commentController.text,
+                            onValidate: () {
+                              onFinished?.call();
+                            }
                           );
                         },
                       ),

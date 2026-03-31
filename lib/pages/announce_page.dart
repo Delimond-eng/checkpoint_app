@@ -1,8 +1,7 @@
 import 'dart:ui';
-import '/kernel/services/http_manager.dart';
+import '/global/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 import '../constants/styles.dart';
 import '../kernel/models/announce.dart';
@@ -17,12 +16,19 @@ class AnnouncePage extends StatefulWidget {
 
 class _AnnouncePageState extends State<AnnouncePage> {
   @override
+  void initState() {
+    super.initState();
+    // On s'assure que les données sont rafraîchies (mode intelligent géré par le controller)
+    tagsController.fetchAnnouncesAndPlannings();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0F), // Dark Header Background
       body: Column(
         children: [
-          // Fixed Header Section (Flow matching Welcome/Profil)
+          // Fixed Header Section
           Container(
             padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
             decoration: const BoxDecoration(
@@ -95,24 +101,21 @@ class _AnnouncePageState extends State<AnnouncePage> {
                   topLeft: Radius.circular(35),
                   topRight: Radius.circular(35),
                 ),
-                child: FutureBuilder<List<Announce>>(
-                  future: HttpManager.getAllAnnounces(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: primaryMaterialColor));
-                    }
-                    if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                      return ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) {
-                          return _buildAnnounceTile(snapshot.data![index]);
-                        },
-                      );
-                    }
+                child: Obx(() {
+                  final list = tagsController.announces;
+                  
+                  if (list.isEmpty) {
                     return _buildEmptyState();
-                  },
-                ),
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
+                    itemCount: list.length,
+                    itemBuilder: (context, index) {
+                      return _buildAnnounceTile(list[index]);
+                    },
+                  );
+                }),
               ),
             ),
           ),

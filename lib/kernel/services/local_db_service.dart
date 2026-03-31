@@ -1,4 +1,5 @@
 import '/kernel/models/user.dart';
+import '/kernel/models/announce.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/planning.dart';
@@ -21,9 +22,29 @@ class LocalDbService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 3, 
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
     );
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+CREATE TABLE announces (
+  id INTEGER PRIMARY KEY,
+  title TEXT,
+  content TEXT,
+  created_at TEXT
+)
+''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE pending_actions ADD COLUMN key TEXT');
+      await db.execute('ALTER TABLE pending_actions ADD COLUMN started_at TEXT');
+      await db.execute('ALTER TABLE pending_actions ADD COLUMN ended_at TEXT');
+      await db.execute('ALTER TABLE pending_actions ADD COLUMN date_reference TEXT');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -44,6 +65,15 @@ CREATE TABLE plannings (
 ''');
 
     await db.execute('''
+CREATE TABLE announces (
+  id INTEGER PRIMARY KEY,
+  title $textType,
+  content $textType,
+  created_at $textType
+)
+''');
+
+    await db.execute('''
 CREATE TABLE pending_actions (
   id $idType,
   type $textType, 
@@ -58,11 +88,16 @@ CREATE TABLE pending_actions (
   comment $textType,
   latlng $textType,
   photo_path $textType,
-  created_at $textType
+  created_at $textType,
+  key $textType,
+  started_at $textType,
+  ended_at $textType,
+  date_reference $textType
 )
 ''');
   }
 
+  // --- PLANNINGS ---
   Future<void> savePlannings(List<Planning> plannings) async {
     final db = await instance.database;
     await db.delete('plannings');
@@ -98,6 +133,32 @@ CREATE TABLE pending_actions (
     await db.delete('plannings', where: 'id = ?', whereArgs: [id]);
   }
 
+  // --- ANNOUNCES ---
+  Future<void> saveAnnounces(List<Announce> announces) async {
+    final db = await instance.database;
+    await db.delete('announces');
+    for (var a in announces) {
+      await db.insert('announces', {
+        'id': a.id,
+        'title': a.title,
+        'content': a.content,
+        'created_at': a.createdAt,
+      });
+    }
+  }
+
+  Future<List<Announce>> getLocalAnnounces() async {
+    final db = await instance.database;
+    final result = await db.query('announces');
+    return result.map((json) => Announce(
+      id: json['id'] as int?,
+      title: json['title'] as String?,
+      content: json['content'] as String?,
+      createdAt: json['created_at'] as String?,
+    )).toList();
+  }
+
+  // --- PENDING ACTIONS ---
   Future<void> addPendingAction(Map<String, dynamic> actionData) async {
     final db = await instance.database;
     await db.insert('pending_actions', actionData);

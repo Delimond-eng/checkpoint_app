@@ -32,9 +32,17 @@ class _LoginScreenState extends State<LoginScreen> {
     initAppVesion();
   }
 
+  @override
+  void dispose() {
+    txtUserName.dispose();
+    txtUserPass.dispose();
+    super.dispose();
+  }
+
   initAppVesion() async {
     final packageInfo = await PackageInfo.fromPlatform();
     int currentVersion = int.parse(packageInfo.buildNumber);
+    if (!mounted) return;
     setState(() {
       version = currentVersion.toString();
     });
@@ -190,12 +198,14 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     var manager = HttpManager();
+    if (!mounted) return;
     setState(() {
       isLoading = true;
     });
     manager
         .login(uMatricule: txtUserName.text, uPass: txtUserPass.text)
         .then((res) {
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });
