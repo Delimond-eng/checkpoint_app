@@ -25,7 +25,8 @@ SupervisorDataResponse parseSupervisorData(dynamic json) {
 
 class HttpManager {
   String _now() => DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-  String _timeOnly() => DateFormat('HH:mm').format(DateTime.now());
+  String _timeOnly() => DateFormat('HH:mm:ss').format(DateTime.now()); // Backend attend H:i:s
+  String _timeShort() => DateFormat('HH:mm').format(DateTime.now());
 
   String _formatToBackend(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) return _now();
@@ -89,7 +90,7 @@ class HttpManager {
     var planningId = tagsController.planningId.value;
     var user = authController.userSession.value!;
     var nowStr = _now();
-    var timeOnly = _timeOnly();
+    var timeShort = _timeShort();
 
     var data = {
       "site_id": user.siteId,
@@ -102,7 +103,7 @@ class HttpManager {
       "comment": comment,
       "latlng": latlng,
       "started_at": nowStr,
-      "time": timeOnly,
+      "time": timeShort,
     };
 
     if (patrolIdVal != 0) {
@@ -128,7 +129,7 @@ class HttpManager {
         'photo_path': photoFile.path,
         'created_at': nowStr,
         'started_at': nowStr,
-        'time': timeOnly,
+        'time': timeShort,
       });
 
       if (patrolIdVal == 0) {
@@ -323,31 +324,31 @@ class HttpManager {
     var latlng = await _getCurrentLocation() ?? "0.0,0.0";
     var now = DateTime.now();
     var dateRef = DateFormat('yyyy-MM-dd').format(now);
-    var timeRef = DateFormat('H:i:s').format(now);
+    var timeFull = _timeOnly();
     
     File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
 
-    if (await _isOffline()) {
-      if (key == 'check-in') {
-        final pending = await LocalDbService.instance.getPendingActions();
-        bool alreadyCheckedIn = pending.any((a) => 
-          a['type'] == 'presence' && 
-          a['key'] == 'check-in' && 
-          a['date_reference'] == dateRef
-        );
-        if (alreadyCheckedIn) {
-          EasyLoading.showInfo("Déjà pointé aujourd'hui (en attente de synchro).");
-          return null;
-        }
-      }
+    // --- SÉCURITÉ : Vérification systématique du cache local avant toute action ---
+    final pending = await LocalDbService.instance.getPendingActions();
+    bool alreadyPending = pending.any((a) => 
+      a['type'] == 'presence' && 
+      a['key'] == key && 
+      a['date_reference'] == dateRef
+    );
 
+    if (alreadyPending) {
+      EasyLoading.showInfo("Une demande de ${key == 'check-in' ? 'pointage d\'entrée' : 'pointage de sortie'} est déjà en attente de synchronisation.");
+      return null;
+    }
+
+    if (await _isOffline()) {
       await LocalDbService.instance.addPendingAction({
         'type': 'presence',
         'matricule': tagsController.faceResult.value,
         'key': key,
         'latlng': latlng,
-        'started_at': key == 'check-in' ? timeRef : null,
-        'ended_at': key == 'check-out' ? timeRef : null,
+        'started_at': key == 'check-in' ? timeFull : null,
+        'ended_at': key == 'check-out' ? timeFull : null,
         'date_reference': dateRef,
         'photo_path': photoFile.path,
         'created_at': now.toIso8601String(),
@@ -363,8 +364,8 @@ class HttpManager {
         "coordonnees": latlng,
         "date_reference": dateRef,
       };
-      if (key == 'check-in') data['started_at'] = timeRef;
-      if (key == 'check-out') data['ended_at'] = timeRef;
+      if (key == 'check-in') data['started_at'] = timeFull;
+      if (key == 'check-out') data['ended_at'] = timeFull;
 
       var response = await Api.request(url: "presence.create", method: "post", body: data, files: {'photo': photoFile});
       if (response != null) {
