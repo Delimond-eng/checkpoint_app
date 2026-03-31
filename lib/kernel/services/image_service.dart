@@ -20,10 +20,10 @@ class ImageService {
       decoded = img.bakeOrientation(decoded);
 
       // 2. Correction manuelle pour Android : 
-      // Si l'image est toujours en paysage (largeur > hauteur), on force une rotation portrait.
-      // C'est un correctif classique pour les capteurs mobiles qui ne tagguent pas bien l'EXIF.
+      // Si l'image est toujours en paysage (largeur > hauteur) après bakeOrientation,
+      // on force une rotation portrait vers le haut (-90 degrés).
       if (decoded.width > decoded.height) {
-        decoded = img.copyRotate(decoded, 90);
+        decoded = img.copyRotate(decoded, -90);
       }
 
       // 3. Redimensionnement proportionnel (fixe la largeur)
