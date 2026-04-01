@@ -99,14 +99,15 @@ class TagsController extends GetxController with WidgetsBindingObserver {
         if (connectivityResult.isEmpty || connectivityResult.every((r) => r == ConnectivityResult.none)) return <Map<String, dynamic>>[];
 
         if (authController.userSession.value != null && authController.userSession.value?.id != null) {
-          return await HttpManager().checkPending();
+          final data = await HttpManager().checkPending();
+          return data ?? <Map<String, dynamic>>[];
         }
         return <Map<String, dynamic>>[];
       } catch (e) {
         return <Map<String, dynamic>>[];
       }
     }).listen((pendingPatrols) {
-      if (pendingPatrols.isEmpty) {
+      if (pendingPatrols != null && pendingPatrols.isEmpty) {
         Connectivity().checkConnectivity().then((result) {
           if (result.any((r) => r != ConnectivityResult.none)) {
              if (!isOfflinePatrolActive.value) {
@@ -115,7 +116,7 @@ class TagsController extends GetxController with WidgetsBindingObserver {
              }
           }
         });
-      } else {
+      } else if (pendingPatrols != null && pendingPatrols.isNotEmpty) {
         final first = pendingPatrols.first;
         final newId = first["id"] ?? 0;
         if (patrolId.value != newId) {
@@ -195,39 +196,38 @@ class TagsController extends GetxController with WidgetsBindingObserver {
     }
 
     try {
-      // 1. Récupérer les IDs des plannings déjà en cours localement (non encore synchronisés)
       final pendingActions = await LocalDbService.instance.getPendingActions();
       final locallyConsumedIds = pendingActions
           .map((a) => a['schedule_id']?.toString())
-          .where((id) => id != null && id.isNotEmpty)
+          .where((id) => id != null && id!.isNotEmpty)
           .toSet();
 
-      // 2. Récupérer les annonces
       final remoteAnnounces = await HttpManager.getAllAnnounces();
-      await LocalDbService.instance.saveAnnounces(remoteAnnounces);
+      if (remoteAnnounces != null) {
+        await LocalDbService.instance.saveAnnounces(remoteAnnounces);
+      }
       
-      // 3. Récupérer les plannings du serveur
       final remotePlannings = await HttpManager.getAllPlannings();
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      
-      // 4. Filtrer : Exclure ceux déjà consommés en local ET ceux passés avant aujourd'hui
-      final filteredPlannings = remotePlannings.where((p) {
-        // Ignorer si déjà entamé en offline
-        if (locallyConsumedIds.contains(p.id.toString())) return false;
+      if (remotePlannings != null) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
         
-        try {
-          DateTime pDate = p.date!.contains('/') 
-              ? DateFormat('dd/MM/yyyy').parse(p.date!)
-              : DateTime.parse(p.date!);
-          return !pDate.isBefore(today);
-        } catch (_) {
-          return true;
-        }
-      }).toList();
+        final filteredPlannings = remotePlannings.where((p) {
+          if (p.id != null && locallyConsumedIds.contains(p.id.toString())) return false;
+          
+          try {
+            DateTime pDate = p.date!.contains('/') 
+                ? DateFormat('dd/MM/yyyy').parse(p.date!)
+                : DateTime.parse(p.date!);
+            return !pDate.isBefore(today);
+          } catch (_) {
+            return true;
+          }
+        }).toList();
+        
+        await LocalDbService.instance.savePlannings(filteredPlannings);
+      }
       
-      // 5. Sauvegarder et recharger
-      await LocalDbService.instance.savePlannings(filteredPlannings);
       await _loadLocalData();
       
     } catch (e) {

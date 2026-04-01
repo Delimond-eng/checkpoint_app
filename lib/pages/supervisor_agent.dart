@@ -121,6 +121,7 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                   color: Colors.white,
                   borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
                 ),
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
                   child: agents.isEmpty 

@@ -139,10 +139,10 @@ CREATE TABLE pending_actions (
   }
 
   // --- ANNOUNCES ---
-  Future<void> saveAnnounces(List<Announce> announces) async {
+  Future<void> saveAnnounces(List<Announce>? announces) async {
     final db = await instance.database;
     await db.delete('announces');
-    for (var a in announces) {
+    for (var a in announces!) {
       await db.insert('announces', {
         'id': a.id,
         'title': a.title,

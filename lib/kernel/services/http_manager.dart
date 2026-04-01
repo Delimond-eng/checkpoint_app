@@ -25,8 +25,23 @@ SupervisorDataResponse parseSupervisorData(dynamic json) {
 
 class HttpManager {
   String _now() => DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-  String _timeOnly() => DateFormat('HH:mm:ss').format(DateTime.now()); // Backend attend H:i:s
+  String _timeOnly() => DateFormat('HH:mm:ss').format(DateTime.now());
+  String _timeHHmm() => DateFormat('HH:mm').format(DateTime.now());
   String _timeShort() => DateFormat('HH:mm').format(DateTime.now());
+
+  // Extrait l'heure d'une chaine. Si format HH:mm:ss, on peut le garder ou le réduire.
+  String _extractTimeOnly(String? dateTimeStr) {
+    if (dateTimeStr == null || dateTimeStr.isEmpty) return _timeHHmm();
+    String time = dateTimeStr;
+    if (dateTimeStr.contains(' ')) {
+      time = dateTimeStr.split(' ').last;
+    }
+    // Si on a HH:mm:ss et qu'on veut HH:mm
+    if (time.split(':').length == 3) {
+      return time.substring(0, 5);
+    }
+    return time;
+  }
 
   String _formatToBackend(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) return _now();
@@ -102,7 +117,7 @@ class HttpManager {
       "matricule": tagsController.faceResult.value,
       "comment": comment,
       "latlng": latlng,
-      "started_at": nowStr,
+      "started_at": nowStr, 
       "time": timeShort,
     };
 
@@ -302,8 +317,9 @@ class HttpManager {
           "coordonnees": action['latlng'] ?? "0.0,0.0",
           "date_reference": action['date_reference'],
         };
-        if (action['key'] == 'check-in') body['started_at'] = action['started_at'];
-        if (action['key'] == 'check-out') body['ended_at'] = action['ended_at'];
+        // Pour le offline, on envoie les horodatages capturés en local au format HH:mm
+        if (action['key'] == 'check-in') body['started_at'] = _extractTimeOnly(action['started_at']);
+        if (action['key'] == 'check-out') body['ended_at'] = _extractTimeOnly(action['ended_at']);
 
         var response = await Api.request(
           url: "presence.create",
@@ -324,11 +340,10 @@ class HttpManager {
     var latlng = await _getCurrentLocation() ?? "0.0,0.0";
     var now = DateTime.now();
     var dateRef = DateFormat('yyyy-MM-dd').format(now);
-    var timeFull = _timeOnly();
+    var timeHHmm = _timeHHmm(); // HH:mm pour le offline
     
     File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
 
-    // --- SÉCURITÉ : Vérification systématique du cache local avant toute action ---
     final pending = await LocalDbService.instance.getPendingActions();
     bool alreadyPending = pending.any((a) => 
       a['type'] == 'presence' && 
@@ -347,8 +362,8 @@ class HttpManager {
         'matricule': tagsController.faceResult.value,
         'key': key,
         'latlng': latlng,
-        'started_at': key == 'check-in' ? timeFull : null,
-        'ended_at': key == 'check-out' ? timeFull : null,
+        'started_at': key == 'check-in' ? timeHHmm : null,
+        'ended_at': key == 'check-out' ? timeHHmm : null,
         'date_reference': dateRef,
         'photo_path': photoFile.path,
         'created_at': now.toIso8601String(),
@@ -358,14 +373,13 @@ class HttpManager {
     }
 
     try {
+      // MODE ONLINE : On n'envoie pas started_at, ended_at ni date_reference
+      // Le serveur gère lui-même ces valeurs.
       Map<String, dynamic> data = {
         "matricule": tagsController.faceResult.value,
         "key": key,
         "coordonnees": latlng,
-        "date_reference": dateRef,
       };
-      if (key == 'check-in') data['started_at'] = timeFull;
-      if (key == 'check-out') data['ended_at'] = timeFull;
 
       var response = await Api.request(url: "presence.create", method: "post", body: data, files: {'photo': photoFile});
       if (response != null) {
@@ -532,33 +546,39 @@ class HttpManager {
   }
 
   // Static loaders
-  static Future<List<Announce>> getAllAnnounces() async {
-    if (authController.userSession.value == null) return [];
+  static Future<List<Announce>?> getAllAnnounces() async {
+    if (authController.userSession.value == null) return null;
     var user = authController.userSession.value!;
     List<Announce> announces = [];
     try {
       var response = await Api.request(method: "get", url: "announces.load?site_id=${user.siteId}&agency_id=${user.agencyId}");
-      if (response != null && response["announces"] != null) {
+      if (response == null) return null;
+      if (response["announces"] != null) {
         var jsonArr = response["announces"];
         jsonArr.forEach((e) => announces.add(Announce.fromJson(e)));
       }
-    } catch (e) {}
-    return announces;
+      return announces;
+    } catch (e) {
+      return null;
+    }
   }
 
-  static Future<List<Planning>> getAllPlannings() async {
-    if (authController.userSession.value == null) return [];
+  static Future<List<Planning>?> getAllPlannings() async {
+    if (authController.userSession.value == null) return null;
     var user = authController.userSession.value!;
     List<Planning> planningsList = [];
     try {
       var response = await Api.request(method: "get", url: "schedules.all?site_id=${user.siteId}&agency_id=${user.agencyId}");
-      if (response != null && response["schedules"] != null) {
+      if (response == null) return null;
+      if (response["schedules"] != null) {
         var jsonArr = response["schedules"];
         localStorage.write("schedules", jsonArr);
         jsonArr.forEach((e) => planningsList.add(Planning.fromJson(e)));
       }
-    } catch (e) {}
-    return planningsList;
+      return planningsList;
+    } catch (e) {
+      return null;
+    }
   }
 
   // Other methods
@@ -623,21 +643,24 @@ class HttpManager {
     }
   }
 
-  Future<List<Map<String, dynamic>>> checkPending() async {
+  Future<List<Map<String, dynamic>>?> checkPending() async {
     List<Map<String, dynamic>> data = [];
     var user = authController.userSession.value;
-    if (user == null || user.siteId == null) return [];
+    if (user == null || user.siteId == null) return null;
     
     try {
       var response = await Api.request(method: "get", url: "site.patrol.pending?id=${user.siteId}");
-      if (response != null && response["patrol"] != null) {
+      if (response == null) return null;
+      if (response["patrol"] != null) {
         var patrol = response["patrol"];
         for (var e in patrol) {
           data.add(e as Map<String, dynamic>);
         }
       }
-    } catch (e) {}
-    return data;
+      return data;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<dynamic> updateSiteTOKEN(String? token, id) async {
