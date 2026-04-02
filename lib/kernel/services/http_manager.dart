@@ -25,20 +25,18 @@ SupervisorDataResponse parseSupervisorData(dynamic json) {
 
 class HttpManager {
   String _now() => DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-  String _timeOnly() => DateFormat('HH:mm:ss').format(DateTime.now());
   String _timeHHmm() => DateFormat('HH:mm').format(DateTime.now());
-  String _timeShort() => DateFormat('HH:mm').format(DateTime.now());
 
-  // Extrait l'heure d'une chaine. Si format HH:mm:ss, on peut le garder ou le réduire.
+  // Extrait strictement l'heure au format HH:mm
   String _extractTimeOnly(String? dateTimeStr) {
     if (dateTimeStr == null || dateTimeStr.isEmpty) return _timeHHmm();
     String time = dateTimeStr;
     if (dateTimeStr.contains(' ')) {
       time = dateTimeStr.split(' ').last;
     }
-    // Si on a HH:mm:ss et qu'on veut HH:mm
-    if (time.split(':').length == 3) {
-      return time.substring(0, 5);
+    var parts = time.split(':');
+    if (parts.length >= 2) {
+      return "${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}";
     }
     return time;
   }
@@ -105,7 +103,7 @@ class HttpManager {
     var planningId = tagsController.planningId.value;
     var user = authController.userSession.value!;
     var nowStr = _now();
-    var timeShort = _timeShort();
+    var timeShort = _timeHHmm();
 
     var data = {
       "site_id": user.siteId,
@@ -317,7 +315,7 @@ class HttpManager {
           "coordonnees": action['latlng'] ?? "0.0,0.0",
           "date_reference": action['date_reference'],
         };
-        // Pour le offline, on envoie les horodatages capturés en local au format HH:mm
+        // CORRECTION : Envoyer HH:mm uniquement (ex: 12:30)
         if (action['key'] == 'check-in') body['started_at'] = _extractTimeOnly(action['started_at']);
         if (action['key'] == 'check-out') body['ended_at'] = _extractTimeOnly(action['ended_at']);
 
@@ -340,7 +338,7 @@ class HttpManager {
     var latlng = await _getCurrentLocation() ?? "0.0,0.0";
     var now = DateTime.now();
     var dateRef = DateFormat('yyyy-MM-dd').format(now);
-    var timeHHmm = _timeHHmm(); // HH:mm pour le offline
+    var timeHHmm = _timeHHmm();
     
     File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
 
@@ -373,8 +371,7 @@ class HttpManager {
     }
 
     try {
-      // MODE ONLINE : On n'envoie pas started_at, ended_at ni date_reference
-      // Le serveur gère lui-même ces valeurs.
+      // MODE ONLINE : Pas de started_at/ended_at (géré par le serveur)
       Map<String, dynamic> data = {
         "matricule": tagsController.faceResult.value,
         "key": key,

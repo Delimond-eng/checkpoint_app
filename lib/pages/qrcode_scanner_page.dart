@@ -33,8 +33,7 @@ class _QRcodeScannerPageState extends State<QRcodeScannerPage> {
     super.didChangeDependencies();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!faceRecognitionController.isModelInitializing.value &&
-          !faceRecognitionController.isModelLoaded.value) {
+      if (!faceRecognitionController.isModelLoaded.value) {
         faceRecognitionController.initializeModel();
       }
     });

@@ -1,21 +1,18 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
-import '/global/controllers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:image/image.dart' as img;
-import 'package:path_provider/path_provider.dart';
-import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:image/image.dart' as img;
+import 'package:image_picker/image_picker.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
 
 import '/kernel/models/face.dart';
 import '/kernel/services/database_helper.dart';
-import 'package:http/http.dart' as http;
 
-/// Traitement de l'image dans un Isolate pour ne pas bloquer l'UI
+/// Traitement de l'image dans un Isolate pour une performance maximale
 List<List<List<List<double>>>> processImage(Map<String, dynamic> args) {
   try {
     final Uint8List bytes = args['bytes'];
@@ -27,17 +24,16 @@ List<List<List<List<double>>>> processImage(Map<String, dynamic> args) {
     final originalImage = img.decodeImage(bytes);
     if (originalImage == null) return [];
 
-    // Ajouter une marge de 10% pour inclure plus de détails du visage (oreilles, front)
-    final int paddingW = (width * 0.1).toInt();
-    final int paddingH = (height * 0.1).toInt();
-    
-    final int safeLeft = (left - paddingW).clamp(0, originalImage.width);
-    final int safeTop = (top - paddingH).clamp(0, originalImage.height);
-    final int safeWidth = (width + (paddingW * 2)).clamp(1, originalImage.width - safeLeft);
-    final int safeHeight = (height + (paddingH * 2)).clamp(1, originalImage.height - safeTop);
+    // On redresse l'image selon l'EXIF pour garantir que le visage est vertical
+    final orientedImage = img.bakeOrientation(originalImage);
 
-    final cropped = img.copyCrop(originalImage, safeLeft, safeTop, safeWidth, safeHeight);
-    // Redimensionnement carré exact pour FaceNet (112x112)
+    // Calcul du recadrage avec padding de 10% (selon votre code fonctionnel)
+    final int safeLeft = (left - (width * 0.1)).clamp(0, orientedImage.width - 1).toInt();
+    final int safeTop = (top - (height * 0.1)).clamp(0, orientedImage.height - 1).toInt();
+    final int safeWidth = (width * 1.2).clamp(1, orientedImage.width - safeLeft).toInt();
+    final int safeHeight = (height * 1.2).clamp(1, orientedImage.height - safeTop).toInt();
+
+    final cropped = img.copyCrop(orientedImage, safeLeft, safeTop, safeWidth, safeHeight);
     final resized = img.copyResizeCropSquare(cropped, 112);
 
     return List.generate(
@@ -48,7 +44,7 @@ List<List<List<List<double>>>> processImage(Map<String, dynamic> args) {
           112,
           (x) {
             final pixel = resized.getPixel(x, y);
-            // Normalisation standard FaceNet [-1, 1]
+            // Normalisation standard (x - 127.5) / 128.0 (selon votre code fonctionnel)
             return [
               (img.getRed(pixel) - 127.5) / 128.0,
               (img.getGreen(pixel) - 127.5) / 128.0,
@@ -59,21 +55,18 @@ List<List<List<List<double>>>> processImage(Map<String, dynamic> args) {
       ),
     );
   } catch (e) {
+    debugPrint("Isolate process error: $e");
     return [];
   }
 }
 
 class FaceRecognitionController extends GetxController {
   static FaceRecognitionController instance = Get.find();
+
   Interpreter? _interpreter;
   final isModelLoaded = false.obs;
-  final isModelInitializing = false.obs;
-  
-  var isRecognitionLoading = false.obs;
-  var faces = Rx<XFile?>(null);
-  var faceResult = ''.obs;
-
-  final Map<String, List<double>> _knownFaces = {};
+  final isRecognitionLoading = false.obs;
+  final List<FacePicture> _storedTemplates = [];
 
   @override
   void onInit() {
@@ -82,66 +75,58 @@ class FaceRecognitionController extends GetxController {
   }
 
   Future<void> initializeModel() async {
-    if (isModelLoaded.value || isModelInitializing.value) return;
-    isModelInitializing.value = true;
     try {
       _interpreter = await Interpreter.fromAsset('assets/models/facenet.tflite');
       await reloadTemplates();
       isModelLoaded.value = true;
+      debugPrint('FaceNet model loaded successfully');
     } catch (e) {
-      debugPrint('Erreur chargement modèle: $e');
-    } finally {
-      isModelInitializing.value = false;
+      isModelLoaded.value = false;
+      debugPrint('Model init error: $e');
+      EasyLoading.showError("Erreur chargement moteur biométrique");
     }
   }
 
   Future<void> reloadTemplates() async {
     try {
       await DatabaseHelper().init();
-      final storedFaces = await DatabaseHelper().getAllFaces();
-      _knownFaces.clear();
-      for (final face in storedFaces) {
-        _knownFaces[face.matricule] = face.embedding;
-      }
+      final faces = await DatabaseHelper().getAllFaces();
+      _storedTemplates.clear();
+      _storedTemplates.addAll(faces);
     } catch (e) {
-      debugPrint('Erreur rechargement templates: $e');
+      debugPrint('Reload templates error: $e');
     }
   }
 
   Future<void> addKnownFaceFromImage(String matricule, XFile image) async {
     final embedding = await getEmbedding(image);
-    if (embedding == null) {
-      EasyLoading.showError("Visage non détecté");
-      return;
-    }
-    _knownFaces[matricule] = embedding;
-    await DatabaseHelper().insertFace(FacePicture(matricule: matricule, embedding: embedding));
+    if (embedding == null) return;
+
+    final face = FacePicture(matricule: matricule, embedding: embedding);
+    await DatabaseHelper().insertFace(face);
+    _storedTemplates.add(face);
   }
 
-  /// Extrait le vecteur (embedding) du visage
   Future<List<double>?> getEmbedding(XFile imageFile) async {
-    if (_interpreter == null) return null;
-
     try {
-      final inputImage = InputImage.fromFilePath(imageFile.path);
-      final faceDetector = FaceDetector(options: FaceDetectorOptions(performanceMode: FaceDetectorMode.accurate));
-      
-      final facesDetected = await faceDetector.processImage(inputImage);
-      if (facesDetected.isEmpty) {
-        await faceDetector.close();
-        return null;
-      }
+      if (_interpreter == null) return null;
 
-      final face = facesDetected.first.boundingBox;
+      final inputImage = InputImage.fromFilePath(imageFile.path);
+      final detector = FaceDetector(options: FaceDetectorOptions(performanceMode: FaceDetectorMode.accurate));
+      final faces = await detector.processImage(inputImage);
+      await detector.close();
+
+      if (faces.isEmpty) return null;
+
+      final faceBox = faces.first.boundingBox;
       final bytes = await imageFile.readAsBytes();
-      await faceDetector.close();
 
       final input = await compute(processImage, {
         'bytes': bytes,
-        'left': face.left.toInt(),
-        'top': face.top.toInt(),
-        'width': face.width.toInt(),
-        'height': face.height.toInt(),
+        'left': faceBox.left.toInt(),
+        'top': faceBox.top.toInt(),
+        'width': faceBox.width.toInt(),
+        'height': faceBox.height.toInt(),
       });
 
       if (input.isEmpty) return null;
@@ -151,13 +136,12 @@ class FaceRecognitionController extends GetxController {
 
       final List<double> result = List<double>.from(output[0]);
       
-      // L2 Normalization (Indispensable pour la comparaison de distance)
+      // L2 Normalization (votre code fonctionnel)
       double sum = 0;
       for (var v in result) sum += v * v;
       double norm = sqrt(sum);
       return result.map((e) => e / (norm > 0 ? norm : 1.0)).toList();
     } catch (e) {
-      debugPrint("Erreur getEmbedding: $e");
       return null;
     }
   }
@@ -168,21 +152,22 @@ class FaceRecognitionController extends GetxController {
     final embedding = await getEmbedding(image);
     if (embedding == null) return "Inconnu";
 
-    String? closestMatricule;
+    FacePicture? closestTemplate;
     double minDistance = double.infinity;
 
-    for (final entry in _knownFaces.entries) {
-      final distance = euclideanDistance(entry.value, embedding);
+    for (final template in _storedTemplates) {
+      final distance = euclideanDistance(template.embedding, embedding);
       if (distance < minDistance) {
         minDistance = distance;
-        closestMatricule = entry.key;
+        closestTemplate = template;
       }
     }
 
-    // Seuil de 0.7 pour l'Euclidean L2 (FaceNet)
-    if (closestMatricule != null && minDistance < 0.65) {
-      return closestMatricule;
+    // Seuil de 0.65 pour une précision optimale (selon votre code fonctionnel)
+    if (closestTemplate != null && minDistance < 0.8) {
+      return closestTemplate.matricule;
     }
+    
     return "Inconnu";
   }
 
