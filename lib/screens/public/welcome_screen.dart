@@ -9,6 +9,7 @@ import '/widgets/user_status.dart';
 import '/kernel/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -163,7 +164,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         label: "Planning",
                         color: Colors.tealAccent,
                         enabled: isGuard,
-                        // Utilisation directe du .value pour forcer la réactivité du badge
                         badge: tagsController.pendingPlanningCount.value > 0 ? "${tagsController.pendingPlanningCount.value}" : null,
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatrolPlanning())),
                       ),
@@ -283,14 +283,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               ),
                             )),
                           ],
-                          IconButton(
-                            onPressed: () async {
-                              EasyLoading.show(status: 'Synchronisation...');
-                              await tagsController.fetchAnnouncesAndPlannings();
-                              await SyncService.instance.syncPendingActions();
-                              EasyLoading.showSuccess("Données à jour");
-                            },
-                            icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
+                          
+                          // Icône de synchronisation dynamique
+                          Obx(() => tagsController.isLoading.value 
+                            ? const SpinKitRing(
+                                color: primaryMaterialColor,
+                                size: 20,
+                                lineWidth: 3,
+                              ).paddingAll(12)
+                            : IconButton(
+                                onPressed: () async {
+                                  tagsController.isLoading.value = true;
+                                  await tagsController.fetchAnnouncesAndPlannings();
+                                  await SyncService.instance.syncPendingActions();
+                                  tagsController.isLoading.value = false;
+                                  EasyLoading.showSuccess("Données à jour");
+                                },
+                                icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
+                              )
                           ),
                         ],
                       ),

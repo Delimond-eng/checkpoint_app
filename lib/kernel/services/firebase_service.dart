@@ -53,20 +53,28 @@ class FirebaseService {
         String title = message.notification?.title ?? message.data['title'] ?? "SALAMA";
         final String body = message.notification?.body ?? message.data['body'] ?? "";
 
+        // Ne pas afficher de notification locale pour les commandes biométriques
+        bool shouldNotify = true;
+        if (type == 'biometric_sync' || type == 'biometric_delete') {
+          shouldNotify = false;
+        }
+
         if (type != null && type.contains('planning')) {
           title = "Notification de planning";
           EasyLoading.showToast("Nouveau planning reçu !");
           
           if (Get.isRegistered<TagsController>()) {
             await tagsController.fetchAnnouncesAndPlannings();
-            SyncService.instance.syncPendingActions(); // Déclenche la synchro des envois
+            SyncService.instance.syncPendingActions(); 
           }
         } else {
           await handleNotificationData(message);
         }
 
-        showLocalNotification(title, body);
-        readMessage(body);
+        if (shouldNotify) {
+          showLocalNotification(title, body);
+          readMessage(body);
+        }
       });
 
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -113,6 +121,8 @@ class FirebaseService {
         return;
       }
 
+      if (kDebugMode) print("MATRICULES REÇUS POUR $type : $matricules");
+
       if (matricules.isNotEmpty) {
         if (type == 'biometric_sync') {
           await syncMatricules(matricules, silent: silent);
@@ -126,6 +136,9 @@ class FirebaseService {
 
   static Future<void> syncMatricules(List<String> matricules, {bool silent = true}) async {
     try {
+      if (Get.isRegistered<TagsController>()) {
+        tagsController.isLoading.value = true;
+      }
       final response = await Api.request(
         method: 'post',
         url: 'biometrics/by-matricules',
@@ -149,11 +162,18 @@ class FirebaseService {
       }
     } catch (e) {
       debugPrint("Biometric Sync Error: $e");
+    } finally {
+      if (Get.isRegistered<TagsController>()) {
+        tagsController.isLoading.value = false;
+      }
     }
   }
 
   static Future<void> deleteMatricules(List<String> matricules, {bool silent = true}) async {
     try {
+      if (Get.isRegistered<TagsController>()) {
+        tagsController.isLoading.value = true;
+      }
       final dbHelper = DatabaseHelper();
       for (var matricule in matricules) {
         await dbHelper.deleteFace(matricule);
@@ -163,6 +183,10 @@ class FirebaseService {
       }
     } catch (e) {
       debugPrint("Biometric Delete Error: $e");
+    } finally {
+      if (Get.isRegistered<TagsController>()) {
+        tagsController.isLoading.value = false;
+      }
     }
   }
 

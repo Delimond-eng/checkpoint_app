@@ -1,4 +1,5 @@
 import 'dart:async';
+import '/global/controllers.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '/kernel/services/http_manager.dart';
 import '/kernel/services/local_db_service.dart';
@@ -25,6 +26,7 @@ class SyncService {
     if (connectivityResult.isEmpty || connectivityResult.every((r) => r == ConnectivityResult.none)) return;
 
     _isSyncing = true;
+    tagsController.isLoading.value = true; // Activer le loading global
 
     try {
       final manager = HttpManager();
@@ -37,9 +39,6 @@ class SyncService {
         final dynamic response = await manager.syncLocalAction(action);
         
         if (response is Map<String, dynamic>) {
-          // LOGIQUE INTELLIGENTE D'ID : 
-          // Si c'est un PatrolScan, l'ID de la patrouille est dans 'patrol_id'.
-          // Si c'est une Patrol (creation), c'est dans 'id'.
           String? realPatrolId;
           if (response.containsKey('patrol_id')) {
             realPatrolId = response['patrol_id'].toString();
@@ -48,19 +47,15 @@ class SyncService {
           }
 
           final localSid = action['local_session_id'];
-          
           if (realPatrolId != null && localSid != null && localSid != "") {
-            // Met à jour les autres actions de la même session locale avec l'ID réel du serveur
             await LocalDbService.instance.updatePendingActionsId(localSid, realPatrolId);
           }
-          
           await LocalDbService.instance.deletePendingAction(action['id']);
         } 
         else if (response == "success") {
           await LocalDbService.instance.deletePendingAction(action['id']);
         } 
         else {
-          // Échec : on arrête pour maintenir l'ordre chronologique
           break;
         }
       }
@@ -68,6 +63,7 @@ class SyncService {
       // Erreur silencieuse
     } finally {
       _isSyncing = false;
+      tagsController.isLoading.value = false; // Désactiver le loading global
     }
   }
 
