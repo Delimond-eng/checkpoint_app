@@ -138,6 +138,7 @@ class FirebaseService {
       if (Get.isRegistered<TagsController>()) {
         tagsController.isLoading.value = true;
       }
+      tagsController.isLoading.value = true;
       final response = await Api.request(
         method: 'post',
         url: 'biometrics/by-matricules',
@@ -145,7 +146,6 @@ class FirebaseService {
       );
       if (response != null && response['data'] != null) {
         List data = response['data'];
-        print(data);
         final dbHelper = DatabaseHelper();
         for (var item in data) {
           List<double> embedding = List<double>.from(
@@ -166,6 +166,7 @@ class FirebaseService {
       if (Get.isRegistered<TagsController>()) {
         tagsController.isLoading.value = false;
       }
+      tagsController.isLoading.value = false;
     }
   }
 

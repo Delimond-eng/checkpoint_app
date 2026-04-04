@@ -48,7 +48,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   String _formatNextPatrol(Planning? planning) {
     if (planning == null || planning.date == null || planning.startTime == null) {
-      return "En attente..."; // On pourrait ajouter une clé de trad ici aussi
+      return "En attente...";
     }
     
     try {
@@ -76,27 +76,34 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     final isSupervisor = user.role?.toLowerCase() == 'supervisor';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0F),
+      backgroundColor: const Color(0xFF0B0B0F), // Dark Header Background
       body: Obx(() {
         final hasPatrol = tagsController.hasActivePatrol;
         final hasSupervision = authController.pendingSupervision.value != null;
 
         return Column(
           children: [
+            // Dark Header Section
             Container(
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 25),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xFF0B0B0F), Color(0xFF16161E)],
+                  colors: [
+                    Color(0xFF0B0B0F),
+                    Color(0xFF16161E),
+                  ],
                 ),
               ),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      Image.asset("assets/images/mamba-2.png", height: 32.0),
+                      Image.asset(
+                        "assets/images/mamba-2.png",
+                        height: 32.0,
+                      ),
                       const SizedBox(width: 8),
                       const Text(
                         "SALAMA",
@@ -154,7 +161,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ),
                       _buildHeaderAction(
                         icon: Icons.shield_outlined,
-                        label: "Supervision",
+                        label: "supervision".tr,
                         color: Colors.amberAccent,
                         enabled: isSupervisor,
                         badge: hasSupervision ? "!" : null,
@@ -183,8 +190,36 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AnnouncePage())),
                       ),
                       _buildHeaderAction(
+                        icon: Icons.add_location_alt_rounded,
+                        label: "zone_plus".tr,
+                        color: Colors.deepOrangeAccent,
+                        enabled: isSupervisor,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorQRCODECompleter())),
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.add_location_rounded,
+                        label: "station_plus".tr,
+                        color: Colors.deepOrangeAccent,
+                        enabled: isSupervisor,
+                        onTap: () =>Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MobileQrScannerPage011(
+                              isStationGps: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                      _buildHeaderAction(
+                        icon: Icons.face_rounded,
+                        label: "face_plus".tr,
+                        color: Colors.cyanAccent,
+                        enabled: isSupervisor,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const EnrollFacePage())),
+                      ),
+                      _buildHeaderAction(
                         icon: Icons.person_rounded,
-                        label: "Profil",
+                        label: "profil".tr,
                         color: Colors.blueGrey,
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilPage())),
                       ),
@@ -194,12 +229,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               ),
             ),
             
+            // White Dashboard Section
             Expanded(
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(35),
+                    topRight: Radius.circular(35),
+                  ),
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(25, 20, 25, 20),
