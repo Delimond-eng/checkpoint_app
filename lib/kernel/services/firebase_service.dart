@@ -53,7 +53,6 @@ class FirebaseService {
         String title = message.notification?.title ?? message.data['title'] ?? "SALAMA";
         final String body = message.notification?.body ?? message.data['body'] ?? "";
 
-        // Ne pas afficher de notification locale pour les commandes biométriques
         bool shouldNotify = true;
         if (type == 'biometric_sync' || type == 'biometric_delete') {
           shouldNotify = false;
@@ -146,6 +145,7 @@ class FirebaseService {
       );
       if (response != null && response['data'] != null) {
         List data = response['data'];
+        print(data);
         final dbHelper = DatabaseHelper();
         for (var item in data) {
           List<double> embedding = List<double>.from(

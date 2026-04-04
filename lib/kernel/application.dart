@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import '../global/controllers.dart';
+import '../global/store.dart';
 import '../screens/auth/login.dart';
 import '../screens/public/welcome_screen.dart';
 
@@ -34,12 +35,16 @@ class _ApplicationState extends State<Application> {
 
   @override
   Widget build(BuildContext context) {
+    // Récupérer la langue sauvegardée au démarrage
+    String? savedLang = localStorage.read("language");
+    Locale initialLocale = savedLang != null ? Locale(savedLang) : Get.deviceLocale ?? const Locale('fr', 'FR');
+
     return GetMaterialApp(
       title: 'Salama Mamba',
       debugShowCheckedModeBanner: false,
-      translations: AppTranslations(), // Ajout des traductions
-      locale: Get.deviceLocale, // Langue par défaut du système
-      fallbackLocale: const Locale('fr', 'FR'), // Langue de secours
+      translations: AppTranslations(),
+      locale: initialLocale, // Utilise la langue sauvegardée
+      fallbackLocale: const Locale('fr', 'FR'),
       theme: ThemeData(
         useMaterial3: true,
         primarySwatch: Palette.kPrimarySwatch,

@@ -37,6 +37,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void initState() {
     super.initState();
     initializeDateFormatting('fr_FR', null);
+    initializeDateFormatting('en_US', null);
+    initializeDateFormatting('pt_PT', null);
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       tagsController.fetchAnnouncesAndPlannings();
       SyncService.instance.start();
@@ -45,7 +48,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   String _formatNextPatrol(Planning? planning) {
     if (planning == null || planning.date == null || planning.startTime == null) {
-      return "En attente de nouveau planning...";
+      return "En attente..."; // On pourrait ajouter une clé de trad ici aussi
     }
     
     try {
@@ -56,21 +59,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         date = DateTime.parse(planning.date!);
       }
 
-      final DateTime now = DateTime.now();
-      final DateTime today = DateTime(now.year, now.month, now.day);
-      final DateTime tomorrow = today.add(const Duration(days: 1));
-      final DateTime targetDate = DateTime(date.year, date.month, date.day);
-
+      final String currentLocale = Get.locale?.toString() ?? 'fr_FR';
       String timeStr = planning.startTime!.replaceAll(':', 'h');
+      String formattedDate = DateFormat('EEEE d MMMM', currentLocale).format(date);
       
-      if (targetDate == today) {
-        return "Aujourd'hui à $timeStr";
-      } else if (targetDate == tomorrow) {
-        return "Demain à $timeStr";
-      } else {
-        String formattedDate = DateFormat('EEEE d MMMM', 'fr_FR').format(date);
-        return "${formattedDate[0].toUpperCase()}${formattedDate.substring(1)} à $timeStr";
-      }
+      return "${formattedDate[0].toUpperCase()}${formattedDate.substring(1)} à $timeStr";
     } catch (e) {
       return "${planning.date} à ${planning.startTime}";
     }
@@ -83,35 +76,27 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     final isSupervisor = user.role?.toLowerCase() == 'supervisor';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0F), // Dark Header Background
+      backgroundColor: const Color(0xFF0B0B0F),
       body: Obx(() {
-        // Détection des changements réactifs
         final hasPatrol = tagsController.hasActivePatrol;
         final hasSupervision = authController.pendingSupervision.value != null;
 
         return Column(
           children: [
-            // Dark Header Section
             Container(
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 25),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFF0B0B0F),
-                    Color(0xFF16161E),
-                  ],
+                  colors: [Color(0xFF0B0B0F), Color(0xFF16161E)],
                 ),
               ),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      Image.asset(
-                        "assets/images/mamba-2.png",
-                        height: 32.0,
-                      ),
+                      Image.asset("assets/images/mamba-2.png", height: 32.0),
                       const SizedBox(width: 8),
                       const Text(
                         "SALAMA",
@@ -140,13 +125,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     children: [
                       _buildHeaderAction(
                         icon: Icons.face_retouching_natural_rounded,
-                        label: "Présence",
+                        label: "presence".tr,
                         color: Colors.blueAccent,
                         onTap: () => _showBottonPresenceChoice(context),
                       ),
                       _buildHeaderAction(
                         icon: Icons.qr_code_scanner_rounded,
-                        label: "RONDE",
+                        label: "patrol".tr.toUpperCase(),
                         color: Colors.orangeAccent,
                         enabled: isGuard,
                         badge: hasPatrol ? "!" : null,
@@ -161,7 +146,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ),
                       _buildHeaderAction(
                         icon: Icons.event_note_rounded,
-                        label: "Planning",
+                        label: "planning".tr,
                         color: Colors.tealAccent,
                         enabled: isGuard,
                         badge: tagsController.pendingPlanningCount.value > 0 ? "${tagsController.pendingPlanningCount.value}" : null,
@@ -179,51 +164,23 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ),
                       _buildHeaderAction(
                         icon: Icons.description_rounded,
-                        label: "Requêtes",
+                        label: "request".tr,
                         color: Colors.purpleAccent,
                         onTap: () => showRequestModal(context),
                       ),
                       _buildHeaderAction(
                         icon: Icons.report_problem_rounded,
-                        label: "Alertes",
+                        label: "alert".tr,
                         color: Colors.redAccent,
                         onTap: () => showSignalementModal(context),
                       ),
                       _buildHeaderAction(
                         icon: Icons.notifications_active_rounded,
-                        label: "Annonces",
+                        label: "annonces".tr,
                         color: Colors.yellowAccent,
                         badge: tagsController.announceCount.value > 0 ? "${tagsController.announceCount.value}" : null,
                         badgeColor: Colors.redAccent,
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AnnouncePage())),
-                      ),
-                      _buildHeaderAction(
-                        icon: Icons.add_location_alt_rounded,
-                        label: "Zone +",
-                        color: Colors.deepOrangeAccent,
-                        enabled: isSupervisor,
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SupervisorQRCODECompleter())),
-                      ),
-                      _buildHeaderAction(
-                        icon: Icons.add_location_rounded,
-                        label: "Station +",
-                        color: Colors.deepOrangeAccent,
-                        enabled: isSupervisor,
-                        onTap: () =>Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MobileQrScannerPage011(
-                              isStationGps: true,
-                            ),
-                          ),
-                        ),
-                      ),
-                      _buildHeaderAction(
-                        icon: Icons.face_rounded,
-                        label: "Visage +",
-                        color: Colors.cyanAccent,
-                        enabled: isSupervisor,
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const EnrollFacePage())),
                       ),
                       _buildHeaderAction(
                         icon: Icons.person_rounded,
@@ -237,16 +194,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               ),
             ),
             
-            // White Dashboard Section
             Expanded(
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(35),
-                    topRight: Radius.circular(35),
-                  ),
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(25, 20, 25, 20),
@@ -257,9 +210,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           if (!isSupervisor)...[
-                            const Text(
-                              "Tableau de bord",
-                              style: TextStyle(
+                            Text(
+                              "dashboard".tr,
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF16161E),
@@ -284,20 +237,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             )),
                           ],
                           
-                          // Icône de synchronisation dynamique
                           Obx(() => tagsController.isLoading.value 
-                            ? const SpinKitRing(
-                                color: primaryMaterialColor,
-                                size: 20,
-                                lineWidth: 3,
-                              ).paddingAll(12)
+                            ? const SpinKitRing(color: primaryMaterialColor, size: 20, lineWidth: 3).paddingAll(12)
                             : IconButton(
                                 onPressed: () async {
                                   tagsController.isLoading.value = true;
                                   await tagsController.fetchAnnouncesAndPlannings();
                                   await SyncService.instance.syncPendingActions();
                                   tagsController.isLoading.value = false;
-                                  EasyLoading.showSuccess("Données à jour");
+                                  EasyLoading.showSuccess("sync_data".tr);
                                 },
                                 icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
                               )
@@ -310,28 +258,28 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         _btnSuperviseAgents(),
                         const SizedBox(height: 20),
                       ] else ...[
-                        const Text(
-                          "DÉTAILS OPÉRATIONNELS",
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
+                        Text(
+                          "operational_details".tr,
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
                         ),
                         const SizedBox(height: 12),
                         _buildInfoCard(
                           Icons.location_on_rounded, 
-                          "Site d'affectation", 
-                          user.site?.name ?? "Non défini",
+                          "site_assignment".tr, 
+                          user.site?.name ?? "N/A",
                           Colors.blue
                         ),
                         _buildInfoCard(
                           Icons.access_time_filled_rounded, 
-                          "Prochaine patrouille", 
+                          "next_patrol".tr, 
                           _formatNextPatrol(tagsController.nextPlanning.value), 
                           Colors.orange
                         ),
                       ],
 
-                      const Text(
-                        "POINTAGE DE PRÉSENCE",
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
+                      Text(
+                        "attendance".tr.toUpperCase(),
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
                       ),
                       const SizedBox(height: 10),
                       Row(
@@ -339,7 +287,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           Expanded(
                             child: _buildPresenceActionRowCard(
                               icon: Icons.login_rounded,
-                              title: "Signer l'arrivée",
+                              title: "check_in".tr,
                               color: Colors.green,
                               onTap: () {
                                 tagsController.isLoading.value = false;
@@ -351,7 +299,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           Expanded(
                             child: _buildPresenceActionRowCard(
                               icon: Icons.logout_rounded,
-                              title: "Signer le départ",
+                              title: "check_out".tr,
                               color: primaryColor,
                               onTap: () {
                                 tagsController.isLoading.value = false;
@@ -440,16 +388,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
-                  ),
-                ),
-              if (!enabled)
-                Positioned(
-                  bottom: -2,
-                  right: -2,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(color: Color(0xFF16161E), shape: BoxShape.circle),
-                    child: const Icon(Icons.lock_rounded, color: Colors.white38, size: 10),
                   ),
                 ),
             ],
@@ -568,7 +506,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Bienvenue, ${user.fullname?.split(' ')[0] ?? 'Agent'}",
+                            "${"welcome".tr}, ${user.fullname?.split(' ')[0] ?? 'Agent'}",
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -580,7 +518,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           const SizedBox(height: 2),
                           Text(
                             hasPatrol 
-                              ? (tagsController.isOfflinePatrolActive.value ? "Patrouille active (Mode Hors-ligne)." : "Une patrouille est en cours d'exécution.")
+                              ? (tagsController.isOfflinePatrolActive.value ? "offline_msg".tr : "patrol_in_progress".tr)
                               : (isGuard ? "Veuillez consulter votre planning de patrouille." : "Statut disponible pour supervision."),
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.6),
@@ -683,13 +621,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
-                const Text("PATROUILLE", style: TextStyle(color: Colors.black87, fontFamily: 'Staatliches', fontSize: 24, letterSpacing: 1.5)),
+                Text("patrol".tr.toUpperCase(), style: const TextStyle(color: Colors.black87, fontFamily: 'Staatliches', fontSize: 24, letterSpacing: 1.5)),
                 const SizedBox(height: 24),
                 Row(
                   children: [
                     Expanded(child: CostumButton(bgColor: Colors.grey.shade100, title: "Poursuivre", labelColor: Colors.black87, onPress: () { Get.back(); Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage())); })),
                     const SizedBox(width: 12.0),
-                    Expanded(child: CostumButton(title: "Clôturer", bgColor: primaryMaterialColor, labelColor: Colors.white, onPress: () { Get.back(); Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage())); })),
+                    Expanded(child: CostumButton(title: "confirm".tr, bgColor: primaryMaterialColor, labelColor: Colors.white, onPress: () { Get.back(); Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage())); })),
                   ],
                 ),
               ],
@@ -720,9 +658,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   width: 40, height: 4,
                   margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
                 ),
-                const Text(
-                  "POINTAGE DE PRÉSENCE",
-                  style: TextStyle(color: Colors.black87, fontFamily: 'Staatliches', fontSize: 24, letterSpacing: 1.5),
+                Text(
+                  "attendance".tr.toUpperCase(),
+                  style: const TextStyle(color: Colors.black87, fontFamily: 'Staatliches', fontSize: 24, letterSpacing: 1.5),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -730,7 +668,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     Expanded(
                       child: CostumButton(
                         bgColor: Colors.grey.shade100,
-                        title: "Signer mon arrivée",
+                        title: "check_in".tr,
                         labelColor: Colors.black87,
                         onPress: () {
                           tagsController.isLoading.value = false;
@@ -742,7 +680,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     const SizedBox(width: 12.0),
                     Expanded(
                       child: CostumButton(
-                        title: "Signer mon départ",
+                        title: "check_out".tr,
                         bgColor: primaryMaterialColor,
                         labelColor: Colors.white,
                         onPress: () {

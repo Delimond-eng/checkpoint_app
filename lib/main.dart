@@ -8,7 +8,7 @@ import 'package:get_storage/get_storage.dart';
 
 import '/kernel/application.dart';
 import '/kernel/controllers/tag_controller.dart';
-import '/kernel/services/alarm_service.dart'; // Import ajouté
+import '/kernel/services/alarm_service.dart';
 import 'firebase_options.dart';
 import 'kernel/controllers/auth_controller.dart';
 import 'kernel/controllers/face_recognition_controller.dart';
@@ -17,26 +17,25 @@ import 'kernel/services/firebase_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialisation des notifications d'alarme
+  await GetStorage.init();
+  
+  // Initialisation des contrôleurs GetX en premier
+  Get.put(TagsController());
+  Get.put(AuthController());
+  Get.put(FaceRecognitionController());
+
+  // Initialisation des services
   await AlarmService.initializeNotifications();
 
   try {
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
-    /* await FirebaseMessaging.instance.requestPermission(); */
     await FirebaseService.initFCM();
-    // await FirebaseService.getToken();
   } catch (e) {
     if (kDebugMode) {
       print(e);
     }
   }
-  await GetStorage.init();
-  
-  // L'ordre d'initialisation est important car AuthController utilise TagsController dans onInit
-  Get.put(TagsController());
-  Get.put(AuthController());
-  Get.put(FaceRecognitionController());
   
   configEasyLoading();
   runApp(const Application());
@@ -46,7 +45,7 @@ void configEasyLoading() {
   EasyLoading.instance
     ..displayDuration = const Duration(milliseconds: 2000)
     ..loadingStyle = EasyLoadingStyle.custom
-    ..radius = 14.0 // Définissez ici le radius
+    ..radius = 14.0
     ..backgroundColor = Colors.black
     ..textColor = Colors.white
     ..indicatorColor = Colors.white

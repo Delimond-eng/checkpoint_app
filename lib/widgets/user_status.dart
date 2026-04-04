@@ -180,9 +180,9 @@ class UserStatus extends StatelessWidget {
             Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
             Text("select_language".tr, style: const TextStyle(fontFamily: "Staatliches", fontSize: 20, letterSpacing: 1)),
             const SizedBox(height: 20),
-            _buildLanguageItem("french".tr, "assets/images/fr.png", const Locale('fr', 'FR')),
-            _buildLanguageItem("english".tr, "assets/images/en.png", const Locale('en', 'US')),
-            _buildLanguageItem("portuguese".tr, "assets/images/pt.png", const Locale('pt', 'PT')),
+            _buildLanguageItem("french".tr, const Locale('fr', 'FR')),
+            _buildLanguageItem("english".tr, const Locale('en', 'US')),
+            _buildLanguageItem("portuguese".tr, const Locale('pt', 'PT')),
             const SizedBox(height: 20),
           ],
         ),
@@ -190,11 +190,13 @@ class UserStatus extends StatelessWidget {
     );
   }
 
-  Widget _buildLanguageItem(String label, String flagPath, Locale locale) {
+  Widget _buildLanguageItem(String label, Locale locale) {
     return ListTile(
       onTap: () {
         Get.updateLocale(locale);
         localStorage.write("language", locale.languageCode);
+        tagsController.update(); // Notifie le TagsController
+        Get.forceAppUpdate(); // Force Flutter à redessiner toute l'application
         Get.back();
       },
       leading: const Icon(Icons.language_rounded, color: primaryColor),

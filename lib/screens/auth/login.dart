@@ -12,6 +12,7 @@ import '/widgets/costum_field.dart';
 import 'package:flutter/material.dart';
 
 import '/kernel/services/http_manager.dart';
+import '/widgets/language_selector.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -67,8 +68,6 @@ class _LoginScreenState extends State<LoginScreen> {
             color: Colors.black87,
           ),
 
-          // FILIGRANE AU CENTRE (Fixe par rapport à l'écran total)
-
           // Main Content
           Positioned.fill(
             child: Center(
@@ -77,6 +76,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: const EdgeInsets.symmetric(horizontal:15.0),
                 child: Column(
                   children: [
+                    // Language Action
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: IconButton(
+                        onPressed: () => showLanguageSelector(context),
+                        icon: const Icon(Icons.translate_rounded, color: Colors.white70),
+                      ),
+                    ),
+                    
                     // Logo Central
                     Center(
                       child: Hero(
@@ -128,10 +136,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                       borderRadius: BorderRadius.circular(15),
                                       border: Border.all(color: Colors.white.withOpacity(0.1)),
                                     ),
-                                    child: const Text(
-                                      "Veuillez entrer vos identifiants pour continuer",
+                                    child: Text(
+                                      "credentials_msg".tr,
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12.0,
                                         fontWeight: FontWeight.w400,
                                         color: Colors.white70,
@@ -146,21 +154,21 @@ class _LoginScreenState extends State<LoginScreen> {
                               Column(
                                 children: [
                                   CustomField(
-                                    hintText: "Matricule agent",
+                                    hintText: "matricule".tr,
                                     iconPath: "assets/icons/user.svg",
                                     inputType: TextInputType.text,
                                     controller: txtUserName,
                                   ),
                                   const SizedBox(height: 5.0),
                                   CustomField(
-                                    hintText: "Mot de passe",
+                                    hintText: "password".tr,
                                     iconPath: "assets/icons/key.svg",
                                     isPassword: true,
                                     controller: txtUserPass,
                                   ),
                                   const SizedBox(height: 5.0),
                                   CostumButton(
-                                    title: "Se Connecter",
+                                    title: "login_btn".tr,
                                     bgColor: primaryColor,
                                     labelColor: Colors.white,
                                     isLoading: isLoading,
@@ -222,104 +230,5 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
     });
-  }
-
-
-  Widget oldScreen(context){
-    var screenSize = MediaQuery.of(context).size;
-    return Scaffold(
-      body: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          Container(
-            height: screenSize.height,
-            width: screenSize.width,
-            decoration: const BoxDecoration(
-              color: Color(0xFF020005),
-            ),
-          ),
-          SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              0,
-              (screenSize.height * .44),
-              0,
-              4,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      "assets/images/mamba-2.png",
-                      height: 100.0,
-                      fit: BoxFit.scaleDown,
-                    ),
-                    const SizedBox(
-                      height: 10.0,
-                    ),
-                    const Text(
-                      "SALAMA",
-                      style: TextStyle(
-                        fontSize: 30.0,
-                        fontWeight: FontWeight.w900,
-                        color: whiteColor,
-                        fontFamily: 'Staatliches',
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 30.0,
-                ),
-                Container(
-                  height: screenSize.height,
-                  decoration: const BoxDecoration(
-                    color: scaffoldColor,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(30.0),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
-                    child: Column(
-                      children: [
-                        CustomField(
-                          hintText: "Matricule agent",
-                          iconPath: "assets/icons/user.svg",
-                          controller: txtUserName,
-                        ),
-                        CustomField(
-                          hintText: "Mot de passe",
-                          iconPath: "assets/icons/key.svg",
-                          isPassword: true,
-                          controller: txtUserPass,
-                        ),
-                        SizedBox(
-                          width: screenSize.width,
-                          height: 55.0,
-                          child: CostumButton(
-                            onPress: _login,
-                            isLoading: isLoading,
-                            title: 'Connecter',
-                            bgColor: primaryMaterialColor,
-                            labelColor: whiteColor,
-                          ),
-                        ).marginOnly(bottom: 40)
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
