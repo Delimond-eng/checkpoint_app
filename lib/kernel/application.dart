@@ -1,5 +1,6 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 import '/kernel/services/alarm_service.dart';
+import '/kernel/services/translations.dart';
 import '/themes/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -23,7 +24,6 @@ class _ApplicationState extends State<Application> {
   }
 
   void _setupNotificationListeners() {
-    // On pointe vers les méthodes statiques de AlarmService qui ont le décorateur @pragma("vm:entry-point")
     AwesomeNotifications().setListeners(
       onActionReceivedMethod: AlarmService.onActionReceivedMethod,
       onNotificationCreatedMethod: AlarmService.onNotificationCreatedMethod,
@@ -37,6 +37,9 @@ class _ApplicationState extends State<Application> {
     return GetMaterialApp(
       title: 'Salama Mamba',
       debugShowCheckedModeBanner: false,
+      translations: AppTranslations(), // Ajout des traductions
+      locale: Get.deviceLocale, // Langue par défaut du système
+      fallbackLocale: const Locale('fr', 'FR'), // Langue de secours
       theme: ThemeData(
         useMaterial3: true,
         primarySwatch: Palette.kPrimarySwatch,

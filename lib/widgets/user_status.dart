@@ -21,7 +21,6 @@ class UserStatus extends StatelessWidget {
     return PopupMenuButton<int>(
       elevation: 10,
       offset: const Offset(0, 52),
-      // Utilisation de shape pour garantir le borderRadius de 20
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20.0),
       ),
@@ -74,8 +73,10 @@ class UserStatus extends StatelessWidget {
       ),
       onSelected: (value) {
         if (value == 1) {
+          _showLanguageDialog(context);
+        } else if (value == 2) {
           DGCustomDialog.showInteraction(context,
-              message: "Etes-vous sûr de vouloir vous déconnecter ?",
+              message: "confirm_logout".tr,
               onValidated: () {
             localStorage.remove("user_session");
             Get.offAll(() => const LoginScreen());
@@ -104,7 +105,7 @@ class UserStatus extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                      Text(
-                      "PROFIL AGENT CONNECTé".toUpperCase(),
+                      "profil_agent".tr.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.black87,
                         fontSize: 10,
@@ -115,23 +116,42 @@ class UserStatus extends StatelessWidget {
                   ],
                 ),
                  Divider(color: Colors.grey.shade300, height: 24),
-                _buildInfoRow(Icons.person_outline, "Nom", user.fullname ?? "N/A"),
-                _buildInfoRow(Icons.badge_outlined, "Matricule", user.matricule ?? "N/A"),
-                _buildInfoRow(Icons.location_on_outlined, "Station", user.site?.name ?? "Non définie"),
+                _buildInfoRow(Icons.person_outline, "nom".tr, user.fullname ?? "N/A"),
+                _buildInfoRow(Icons.badge_outlined, "matricule".tr, user.matricule ?? "N/A"),
+                _buildInfoRow(Icons.location_on_outlined, "station".tr, user.site?.name ?? "N/A"),
               ],
             ),
           ),
         ),
         const PopupMenuDivider(height: 1, color: Colors.grey,),
-        const PopupMenuItem<int>(
+        PopupMenuItem<int>(
           value: 1,
           child: Row(
             children: [
-              Icon(Icons.power_settings_new_rounded, size: 20, color: Colors.redAccent),
-              SizedBox(width: 12),
+              const Icon(Icons.translate_rounded, size: 20, color: Colors.blueAccent),
+              const SizedBox(width: 12),
               Text(
-                'DÉCONNEXION',
-                style: TextStyle(
+                'langue'.tr,
+                style: const TextStyle(
+                  color: Colors.blueAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
+                  fontFamily: "Ubuntu",
+                ),
+              )
+            ],
+          ),
+        ),
+        PopupMenuItem<int>(
+          value: 2,
+          child: Row(
+            children: [
+              const Icon(Icons.power_settings_new_rounded, size: 20, color: Colors.redAccent),
+              const SizedBox(width: 12),
+              Text(
+                'deconnexion'.tr,
+                style: const TextStyle(
                   color: Colors.redAccent,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -143,6 +163,45 @@ class UserStatus extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(25),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+            Text("select_language".tr, style: const TextStyle(fontFamily: "Staatliches", fontSize: 20, letterSpacing: 1)),
+            const SizedBox(height: 20),
+            _buildLanguageItem("french".tr, "assets/images/fr.png", const Locale('fr', 'FR')),
+            _buildLanguageItem("english".tr, "assets/images/en.png", const Locale('en', 'US')),
+            _buildLanguageItem("portuguese".tr, "assets/images/pt.png", const Locale('pt', 'PT')),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageItem(String label, String flagPath, Locale locale) {
+    return ListTile(
+      onTap: () {
+        Get.updateLocale(locale);
+        localStorage.write("language", locale.languageCode);
+        Get.back();
+      },
+      leading: const Icon(Icons.language_rounded, color: primaryColor),
+      title: Text(label, style: const TextStyle(fontFamily: "Ubuntu", fontWeight: FontWeight.bold)),
+      trailing: Get.locale?.languageCode == locale.languageCode 
+        ? const Icon(Icons.check_circle_rounded, color: Colors.green) 
+        : null,
     );
   }
 
