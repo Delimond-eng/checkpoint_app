@@ -1,7 +1,6 @@
 import 'dart:ui';
 import '/constants/styles.dart';
 import '/global/controllers.dart';
-import '/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -41,9 +40,9 @@ Future<void> showSupervisorCompleter(BuildContext context) async {
               ),
             ),
             
-            const Text(
-              "CONFIGURATION ZONE",
-              style: TextStyle(
+            Text(
+              "CONFIGURATION ZONE".tr,
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Staatliches',
@@ -53,7 +52,7 @@ Future<void> showSupervisorCompleter(BuildContext context) async {
             ),
             const SizedBox(height: 10),
             Text(
-              "Associez un libellé à ce point de contrôle.",
+              "Associez un libellé à ce point de contrôle.".tr,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade500,
@@ -68,7 +67,6 @@ Future<void> showSupervisorCompleter(BuildContext context) async {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Info Card
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -88,23 +86,23 @@ Future<void> showSupervisorCompleter(BuildContext context) async {
                             child: const Icon(Icons.add_location_alt_rounded, color: Colors.orangeAccent, size: 28),
                           ),
                           const SizedBox(width: 15),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "POINT DÉTECTÉ",
-                                  style: TextStyle(
+                                  "POINT DÉTECTÉ".tr,
+                                  style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.orangeAccent,
                                     letterSpacing: 1,
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
-                                  "NOUVELLE ZONE",
-                                  style: TextStyle(
+                                  "zone_plus".tr.toUpperCase(),
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF16161E),
@@ -119,16 +117,7 @@ Future<void> showSupervisorCompleter(BuildContext context) async {
                     ),
                     const SizedBox(height: 30),
 
-                    const Text(
-                      "NOM DE LA ZONE",
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                        letterSpacing: 1.2,
-                        fontFamily: 'Ubuntu',
-                      ),
-                    ),
+                    _buildFieldLabel("NOM DE LA ZONE".tr),
                     const SizedBox(height: 10),
                     Container(
                       decoration: BoxDecoration(
@@ -141,7 +130,7 @@ Future<void> showSupervisorCompleter(BuildContext context) async {
                         controller: areaLibelle,
                         style: const TextStyle(fontFamily: 'Ubuntu', fontSize: 14),
                         decoration: InputDecoration(
-                          hintText: "Ex: Entrée Principale, Parking Sud...",
+                          hintText: "Ex: Entrée Principale, Parking Sud...".tr,
                           hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
                           prefixIcon: const Icon(Icons.edit_location_alt_rounded, size: 20, color: Colors.orangeAccent),
                           border: InputBorder.none,
@@ -155,7 +144,7 @@ Future<void> showSupervisorCompleter(BuildContext context) async {
                       width: double.infinity,
                       height: 55,
                       child: SubmitButton(
-                        label: "ENREGISTRER LA ZONE",
+                        label: "confirm".tr.toUpperCase(),
                         loading: tagsController.isLoading.value,
                         onPressed: () async {
                           if (areaLibelle.text.isEmpty) {
@@ -172,7 +161,7 @@ Future<void> showSupervisorCompleter(BuildContext context) async {
                             EasyLoading.showToast(value.toString());
                           } else {
                             Get.back();
-                            EasyLoading.showSuccess("Zone configurée avec succès !");
+                            EasyLoading.showSuccess("success".tr);
                           }
                         },
                       ),
@@ -184,6 +173,22 @@ Future<void> showSupervisorCompleter(BuildContext context) async {
             ),
           ],
         ),
+      ),
+    ),
+  );
+}
+
+Widget _buildFieldLabel(String label) {
+  return Padding(
+    padding: const EdgeInsets.only(left: 5),
+    child: Text(
+      label,
+      style: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.bold,
+        color: Colors.grey,
+        letterSpacing: 1.2,
+        fontFamily: 'Ubuntu',
       ),
     ),
   );

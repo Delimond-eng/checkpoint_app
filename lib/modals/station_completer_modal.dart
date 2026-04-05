@@ -1,7 +1,6 @@
 import 'dart:ui';
 import '/constants/styles.dart';
 import '/global/controllers.dart';
-import '/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -28,7 +27,6 @@ Future<void> showStationCompleterModal(BuildContext context, {VoidCallback? onFi
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Column(
           children: [
-            // Header Handle
             Container(
               width: 40,
               height: 4,
@@ -51,7 +49,7 @@ Future<void> showStationCompleterModal(BuildContext context, {VoidCallback? onFi
             ),
             const SizedBox(height: 5),
             Text(
-              "Enregistrez la position actuelle de la station.",
+              "Enregistrez la position actuelle de la station.".tr,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade500,
@@ -66,7 +64,6 @@ Future<void> showStationCompleterModal(BuildContext context, {VoidCallback? onFi
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Info Card for Station
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -90,9 +87,9 @@ Future<void> showStationCompleterModal(BuildContext context, {VoidCallback? onFi
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  "STATION SCANNÉE",
-                                  style: TextStyle(
+                                Text(
+                                  "station_plus".tr.toUpperCase(),
+                                  style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.indigo,
@@ -101,7 +98,7 @@ Future<void> showStationCompleterModal(BuildContext context, {VoidCallback? onFi
                                 ),
                                 const SizedBox(height: 4),
                                 Obx(() => Text(
-                                  tagsController.scannedSite.value.name?.toUpperCase() ?? "STATION INCONNUE",
+                                  tagsController.scannedSite.value.name?.toUpperCase() ?? "station".tr.toUpperCase(),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -144,7 +141,7 @@ Future<void> showStationCompleterModal(BuildContext context, {VoidCallback? onFi
                       width: double.infinity,
                       height: 55,
                       child: SubmitButton(
-                        label: "ENREGISTRER LA POSITION",
+                        label: "confirm".tr.toUpperCase(),
                         color: Colors.indigo,
                         loading: tagsController.isLoading.value,
                         onPressed: () async {

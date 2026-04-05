@@ -9,7 +9,7 @@ import 'package:path/path.dart';
 
 import '../kernel/services/http_manager.dart';
 import '../widgets/submit_button.dart';
-import 'media_capture_modal.dart'; // Import du nouveau modal
+import 'media_capture_modal.dart'; 
 
 Future<void> showSignalementModal(BuildContext context) async {
   final textTitle = TextEditingController();
@@ -42,9 +42,9 @@ Future<void> showSignalementModal(BuildContext context) async {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const Text(
-              "SIGNALER UN INCIDENT",
-              style: TextStyle(
+            Text(
+              "incident_sign".tr.toUpperCase(),
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Staatliches',
@@ -71,7 +71,7 @@ Future<void> showSignalementModal(BuildContext context) async {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildFieldLabel("TITRE DE L'INCIDENT"),
+                        _buildFieldLabel("incident_title".tr),
                         _buildInputField(
                           controller: textTitle,
                           hint: "Ex: Intrusion, Panne technique...",
@@ -79,7 +79,7 @@ Future<void> showSignalementModal(BuildContext context) async {
                           color: Colors.redAccent,
                         ),
                         const SizedBox(height: 20),
-                        _buildFieldLabel("PREUVE VISUELLE"),
+                        _buildFieldLabel("visual_proof".tr),
                         Obx(() => _buildMediaPicker(context)),
                         const SizedBox(height: 5.0),
                         Obx(() {
@@ -139,7 +139,7 @@ Future<void> showSignalementModal(BuildContext context) async {
                           );
                         }),
                         const SizedBox(height: 20),
-                        _buildFieldLabel("DESCRIPTION DES FAITS"),
+                        _buildFieldLabel("facts_desc".tr),
                         _buildInputField(
                           controller: textDescription,
                           hint: "Expliquez ce qu'il s'est passé...",
@@ -152,7 +152,7 @@ Future<void> showSignalementModal(BuildContext context) async {
                           width: double.infinity,
                           height: 55,
                           child: SubmitButton(
-                            label: "TRANSMETTRE L'ALERTE",
+                            label: "send_alert".tr,
                             loading: tagsController.isLoading.value,
                             onPressed: () async {
                               if (tagsController.mediaFile.value == null) {
@@ -174,7 +174,7 @@ Future<void> showSignalementModal(BuildContext context) async {
                               } else {
                                 Get.back();
                                 tagsController.mediaFile.value = null;
-                                EasyLoading.showSuccess("Signalement transmis avec succès !");
+                                EasyLoading.showSuccess("success".tr);
                               }
                             },
                           ),
@@ -275,7 +275,7 @@ Widget _buildMediaPicker(BuildContext context) {
             ),
             const SizedBox(height: 8),
             Text(
-              file == null ? "OUVRIR LA CAMÉRA" : "MÉDIA CAPTURÉ",
+              file == null ? "open_camera".tr : "media_captured".tr,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,

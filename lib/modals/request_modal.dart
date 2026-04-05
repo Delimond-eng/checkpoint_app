@@ -1,6 +1,5 @@
 import 'dart:ui';
 import '/global/controllers.dart';
-import '/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -42,9 +41,9 @@ Future<void> showRequestModal(BuildContext context) async {
             ),
             
             // Modal Title
-            const Text(
-              "NOUVELLE REQUÊTE",
-              style: TextStyle(
+            Text(
+              "new_request".tr.toUpperCase(),
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Staatliches',
@@ -54,7 +53,7 @@ Future<void> showRequestModal(BuildContext context) async {
             ),
             const SizedBox(height: 10),
             Text(
-              "Veuillez détailler votre demande administrative.",
+              "inform_request".tr,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade500,
@@ -69,14 +68,14 @@ Future<void> showRequestModal(BuildContext context) async {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildFieldLabel("OBJET"),
+                    _buildFieldLabel("subject".tr),
                     _buildInputField(
                       controller: textTitle,
                       hint: "Sujet de votre requête...",
                       icon: Icons.title_rounded,
                     ),
                     const SizedBox(height: 25),
-                    _buildFieldLabel("DESCRIPTION DÉTAILLÉE"),
+                    _buildFieldLabel("desc_detail".tr),
                     _buildInputField(
                       controller: textDescription,
                       hint: "Expliquez votre situation ici...",
@@ -88,7 +87,7 @@ Future<void> showRequestModal(BuildContext context) async {
                       width: double.infinity,
                       height: 55,
                       child: SubmitButton(
-                        label: "ENVOYER LA REQUÊTE",
+                        label: "send_request".tr,
                         loading: tagsController.isLoading.value,
                         onPressed: () async {
                           if (textTitle.text.isEmpty || textDescription.text.isEmpty) {
@@ -104,7 +103,7 @@ Future<void> showRequestModal(BuildContext context) async {
                             EasyLoading.showToast(response);
                           } else {
                             Get.back();
-                            EasyLoading.showSuccess("Requête soumise avec succès !");
+                            EasyLoading.showSuccess("success".tr);
                           }
                         },
                       ),

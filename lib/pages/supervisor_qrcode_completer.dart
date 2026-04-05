@@ -45,7 +45,7 @@ class _SupervisorQRCODECompleterState extends State<SupervisorQRCODECompleter> {
           showSupervisorCompleter(context);
         }
       } catch (e) {
-        EasyLoading.showToast("Echec du scan de qrcode. Veuillez reéssayer !");
+        EasyLoading.showToast("scan_error".tr);
       }
     }
   }
@@ -96,13 +96,13 @@ class _SupervisorQRCODECompleterState extends State<SupervisorQRCODECompleter> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        "CONFIGURATION",
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Staatliches', letterSpacing: 2),
+                      Text(
+                        "configuration".tr,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Staatliches', letterSpacing: 2),
                       ),
-                      const Text(
-                        "COMPLETER LA ZONE",
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
+                      Text(
+                        "complete_zone".tr,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
                       ),
                     ],
                   ),

@@ -41,7 +41,7 @@ Future<void> showSupervisorFormModal(BuildContext context) async {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'Staatliches', letterSpacing: 1.5, color: Color(0xFF16161E)),
               ),
               const SizedBox(height: 5),
-              Text("Évaluez les critères de performance de l'agent.", style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontFamily: 'Ubuntu')),
+              Text("Évaluez les critères de performance de l'agent.".tr, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontFamily: 'Ubuntu')),
               const SizedBox(height: 25),
 
               Expanded(
@@ -50,7 +50,6 @@ Future<void> showSupervisorFormModal(BuildContext context) async {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Photo Section
                       StatefulBuilder(
                         builder: (context, setter) {
                           File? photo = authController.supervisedDatas.firstWhereOrNull((e) => e['agent_id'] == agentId)?['photo'];
@@ -88,7 +87,6 @@ Future<void> showSupervisorFormModal(BuildContext context) async {
                       ),
                       const SizedBox(height: 30),
 
-                      // Criteria List
                       ...authController.supervisorElements.map((e) {
                         var existingNote = existingData?['notes']?.firstWhere((n) => n['control_element_id'] == e.id, orElse: () => null);
                         return ElementCard(
@@ -100,7 +98,7 @@ Future<void> showSupervisorFormModal(BuildContext context) async {
                               existingData['notes']?.add({
                                 'control_element_id': e.id, 
                                 'note': noteLabel, 
-                                'comment': null // Commentaire à null par défaut par critère
+                                'comment': null 
                               });
                             }
                           },
@@ -112,7 +110,7 @@ Future<void> showSupervisorFormModal(BuildContext context) async {
                         width: double.infinity,
                         height: 55,
                         child: SubmitButton(
-                          label: "ENREGISTRER LA NOTE",
+                          label: "save_enrollment".tr,
                           color: primaryMaterialColor,
                           onPressed: () {
                             if (existingData == null) {
@@ -120,8 +118,6 @@ Future<void> showSupervisorFormModal(BuildContext context) async {
                               return;
                             }
                             var notes = existingData['notes'] as List;
-                            
-                            // Un agent est marqué "supervisé" si TOUS les éléments ont été cotés
                             bool allCriteriaRated = authController.supervisorElements.isNotEmpty && 
                             authController.supervisorElements.every((e) =>
                               notes.any((n) => n['control_element_id'] == e.id && n['note'] != null)
@@ -192,9 +188,9 @@ class _ElementCardState extends State<ElementCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildGradeBtn("B", "BON", Colors.green, selectedNote == "B"),
-              _buildGradeBtn("P", "PASSABLE", Colors.orange, selectedNote == "P"),
-              _buildGradeBtn("M", "MAUVAIS", Colors.red, selectedNote == "M"),
+              _buildGradeBtn("B", "GOOD", Colors.green, selectedNote == "B"),
+              _buildGradeBtn("P", "FAIR", Colors.orange, selectedNote == "P"),
+              _buildGradeBtn("M", "POOR", Colors.red, selectedNote == "M"),
             ],
           ),
         ],

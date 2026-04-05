@@ -28,18 +28,13 @@ class HttpManager {
   String _timeHHmm() => DateFormat('HH:mm').format(DateTime.now());
   String _dateOnly() => DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-  // Extrait l'heure d'une chaine au format HH:mm pour le pointage
   String _extractTimeOnly(String? dateTimeStr) {
     if (dateTimeStr == null || dateTimeStr.isEmpty) return _timeHHmm();
     String time = dateTimeStr;
     if (dateTimeStr.contains(' ')) {
       time = dateTimeStr.split(' ').last;
     }
-    // S'assurer de ne garder que HH:mm (enlever les secondes si présentes)
-    if (time.length >= 5) {
-      return time.substring(0, 5);
-    }
-    return time;
+    return time.length >= 5 ? time.substring(0, 5) : time;
   }
 
   String _formatToBackend(String? dateStr) {
@@ -101,7 +96,7 @@ class HttpManager {
   Future<dynamic> beginPatrol(String comment) async {
     var latlng = await _getCurrentLocation() ?? "0.0,0.0";
     var patrolIdVal = tagsController.patrolId.value;
-    var planningId = tagsController.planningId.value;
+    var planningId = tagsController.planningId.value; // Ceci est le schedule_id
     var user = authController.userSession.value!;
     var nowStr = _now();
     var timeHHmm = _timeHHmm();
@@ -115,7 +110,7 @@ class HttpManager {
       "matricule": tagsController.faceResult.value,
       "comment": comment,
       "latlng": latlng,
-      "started_at": nowStr, 
+      "started_at": nowStr,
       "time": timeHHmm,
     };
 
@@ -148,6 +143,7 @@ class HttpManager {
       if (patrolIdVal == 0) {
         tagsController.isOfflinePatrolActive.value = true;
         localStorage.write("is_offline_patrol", true);
+        localStorage.write("active_schedule_id", planningId);
         localStorage.write("local_session_id", localSessionId);
         if (planningId.isNotEmpty) await tagsController.removePlanningLocally(int.parse(planningId));
       }
@@ -157,8 +153,11 @@ class HttpManager {
     try {
       var response = await Api.request(url: "patrol.scan", method: "post", body: data, files: {"photo": photoFile});
       if (response != null && !response.containsKey("errors")) {
-        if (localStorage.read("patrol_id") == null) {
-          localStorage.write("patrol_id", response["result"]["id"] ?? response["result"]["patrol_id"]);
+        // Enregistre le vrai ID retourné par le serveur
+        var realId = response["result"]["patrol_id"] ?? response["result"]["id"];
+        if (realId != null) {
+          localStorage.write("patrol_id", realId);
+          tagsController.patrolId.value = realId is int ? realId : int.parse(realId.toString());
         }
         if (patrolIdVal == 0 && planningId.isNotEmpty) await tagsController.removePlanningLocally(int.parse(planningId));
         tagsController.refreshPending();
@@ -179,6 +178,7 @@ class HttpManager {
     var planningId = tagsController.planningId.value;
     var user = authController.userSession.value!;
     var nowStr = _now();
+    var timeHHmm = _timeHHmm();
     File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
 
     if (await _isOffline()) {
@@ -192,10 +192,12 @@ class HttpManager {
         'photo_path': photoFile.path,
         'created_at': nowStr,
         'ended_at': nowStr,
+        'time': timeHHmm,
       });
       localStorage.remove("patrol_id");
       localStorage.remove("is_offline_patrol");
       localStorage.remove("local_session_id");
+      localStorage.remove("active_schedule_id");
       tagsController.isOfflinePatrolActive.value = false;
       tagsController.refreshPending();
       return "Hors-ligne : Clôture enregistrée localement.";
@@ -207,6 +209,7 @@ class HttpManager {
         "agent_id": user.id,
         "comment_text": comment ?? "",
         "ended_at": nowStr,
+        "time": timeHHmm,
       };
       if (patrolIdVal != null && patrolIdVal != 0) data["patrol_id"] = patrolIdVal.toString();
 
@@ -215,6 +218,7 @@ class HttpManager {
         localStorage.remove("patrol_id");
         localStorage.remove("local_session_id");
         localStorage.remove("is_offline_patrol");
+        localStorage.remove("active_schedule_id");
         tagsController.isOfflinePatrolActive.value = false;
         tagsController.refreshPending();
         return response["message"] ?? "Patrouille clôturée avec succès.";
@@ -260,6 +264,7 @@ class HttpManager {
           "agent_id": action['agent_id'],
           "comment_text": action['comment'],
           "ended_at": _formatToBackend(action['ended_at'] ?? action['created_at']),
+          "time": _extractTimeOnly(action['time']),
         };
         if (action['patrol_id'] != null && action['patrol_id'] != "" && action['patrol_id'] != "0") {
           body["patrol_id"] = action['patrol_id'];
@@ -314,13 +319,7 @@ class HttpManager {
     }
 
     try {
-      // MODE ONLINE STRICT : On n'envoie pas les champs temporels, le serveur utilise ses propres valeurs.
-      Map<String, dynamic> data = {
-        "matricule": user.matricule,
-        "key": key,
-        "coordonnees": latlng,
-      };
-      
+      Map<String, dynamic> data = {"matricule": user.matricule, "key": key, "coordonnees": latlng};
       var response = await Api.request(url: "presence.create", method: "post", body: data, files: {'photo': photoFile});
       if (response != null && !response.containsKey("errors")) return response["message"] ?? "Succès";
       EasyLoading.showError(_parseError(response));

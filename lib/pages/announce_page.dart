@@ -18,17 +18,15 @@ class _AnnouncePageState extends State<AnnouncePage> {
   @override
   void initState() {
     super.initState();
-    // On s'assure que les données sont rafraîchies (mode intelligent géré par le controller)
     tagsController.fetchAnnouncesAndPlannings();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0F), // Dark Header Background
+      backgroundColor: const Color(0xFF0B0B0F), 
       body: Column(
         children: [
-          // Fixed Header Section
           Container(
             padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
             decoration: const BoxDecoration(
@@ -62,9 +60,9 @@ class _AnnouncePageState extends State<AnnouncePage> {
                   ],
                 ),
                 const SizedBox(height: 25),
-                const Text(
-                  "INFOS SERVICE",
-                  style: TextStyle(
+                Text(
+                  "service_infos".tr,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: primaryMaterialColor,
@@ -72,9 +70,9 @@ class _AnnouncePageState extends State<AnnouncePage> {
                     letterSpacing: 2,
                   ),
                 ),
-                const Text(
-                  "COMMUNIQUÉS",
-                  style: TextStyle(
+                Text(
+                  "communiques".tr,
+                  style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
@@ -85,7 +83,6 @@ class _AnnouncePageState extends State<AnnouncePage> {
             ),
           ),
 
-          // Content Section (White Sheet)
           Expanded(
             child: Container(
               width: double.infinity,
@@ -246,9 +243,9 @@ class _AnnouncePageState extends State<AnnouncePage> {
                             child: const Icon(Icons.campaign_rounded, color: primaryMaterialColor, size: 20),
                           ),
                           const SizedBox(width: 12),
-                          const Text(
-                            "DÉTAIL DU COMMUNIQUÉ",
-                            style: TextStyle(
+                          Text(
+                            "announce_detail".tr,
+                            style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
@@ -281,7 +278,7 @@ class _AnnouncePageState extends State<AnnouncePage> {
                       ),
                       const Divider(height: 40),
                       Text(
-                        announce.content ?? "Pas de contenu disponible.",
+                        announce.content ?? "",
                         style: const TextStyle(
                           fontSize: 15,
                           color: Color(0xFF45454B),
@@ -301,7 +298,7 @@ class _AnnouncePageState extends State<AnnouncePage> {
                             elevation: 0,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                           ),
-                          child: const Text("J'AI PRIS CONNAISSANCE", style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: Text("read_announce".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
@@ -320,11 +317,11 @@ class _AnnouncePageState extends State<AnnouncePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.notifications_off_rounded, size: 60, color: Colors.grey.shade300),
+          Icon(Icons.campaign_outlined, size: 60, color: Colors.grey.shade300),
           const SizedBox(height: 15),
-          const Text(
-            "Aucun communiqué pour le moment",
-            style: TextStyle(
+          Text(
+            "no_announce".tr,
+            style: const TextStyle(
               color: Colors.grey,
               fontSize: 16,
               fontWeight: FontWeight.bold,

@@ -79,15 +79,15 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                     ],
                   ),
                   const SizedBox(height: 25),
-                  const Text(
-                    "INSPECTION SUR SITE",
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Ubuntu', letterSpacing: 2),
+                  Text(
+                    "inspection".tr.toUpperCase(),
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Ubuntu', letterSpacing: 2),
                   ),
                   Row(
                     children: [
                       Expanded(
                         child: Text(
-                          tagsController.scannedSite.value.name?.toUpperCase() ?? "STATION",
+                          tagsController.scannedSite.value.name?.toUpperCase() ?? "station".tr.toUpperCase(),
                           style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
                         ),
                       ),
@@ -99,7 +99,7 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                             Get.back();
                           },
                           icon: const Icon(Icons.refresh_rounded, color: Colors.redAccent, size: 18),
-                          label: const Text("ANNULER LE SCAN", style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu')),
+                          label: Text("ANNULER LE SCAN".tr, style: const TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu')),
                           style: TextButton.styleFrom(backgroundColor: Colors.redAccent.withOpacity(0.1)),
                         ),
                     ],
@@ -136,9 +136,9 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                           
                           if (authController.pendingSupervision.value != null) ...[
                             const SizedBox(height: 30),
-                            const Text(
-                              "OBSERVATION GÉNÉRALE (OPTIONNEL)",
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
+                            Text(
+                              "OBSERVATION GÉNÉRALE (OPTIONNEL)".tr,
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
                             ),
                             const SizedBox(height: 10),
                             Container(
@@ -166,13 +166,13 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
 
                           authController.pendingSupervision.value != null
                             ? SubmitButton(
-                                label: "CLÔTURER LA RONDE",
+                                label: "CLÔTURER LA RONDE".tr,
                                 color: Colors.green,
                                 loading: tagsController.isLoading.value,
                                 onPressed: () => showRecognitionModal(context, key: "supervize-out", onValidate: closeSupervision),
                               )
                             : SubmitButton(
-                                label: "DÉMARRER LA SUPERVISION",
+                                label: "start_supervision".tr.toUpperCase(),
                                 color: primaryMaterialColor,
                                 loading: tagsController.isLoading.value,
                                 onPressed: () => showRecognitionModal(context, key: "supervize-in", onValidate: supervizeStart),
@@ -212,7 +212,7 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage011()));
               },
               icon: const Icon(Icons.qr_code_scanner_rounded),
-              label: const Text("RESCANNER"),
+              label: Text("RESCANNER".tr),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF8F9FA),
                 foregroundColor: Colors.black87,
@@ -287,17 +287,17 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
         if (result.containsKey("errors")) {
           EasyLoading.showInfo(result["errors"].toString());
         } else {
-          EasyLoading.showSuccess(result["message"] ?? "Supervision clôturée");
+          EasyLoading.showSuccess(result["message"] ?? "success".tr);
           localStorage.remove("supervision");
           authController.refreshSupervision();
           Get.back();
         }
       } else {
-        EasyLoading.showInfo("Échec de la requête.");
+        EasyLoading.showInfo("error".tr);
       }
     } catch (e) {
       tagsController.isLoading.value = false;
-      EasyLoading.showError("Erreur : $e");
+      EasyLoading.showError("error".tr);
     }
   }
 }
@@ -355,7 +355,7 @@ class SupervisorAgentTile extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            data.fullname?.toUpperCase() ?? "AGENT",
+                            data.fullname?.toUpperCase() ?? "agent".tr.toUpperCase(),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
@@ -375,7 +375,7 @@ class SupervisorAgentTile extends StatelessWidget {
                       IconButton(
                         onPressed: () => _cancelRating(data.id!),
                         icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
-                        tooltip: "Annuler la cotation",
+                        tooltip: "ANNULER LA COTATION".tr,
                       ),
                       Container(
                         padding: const EdgeInsets.all(4),

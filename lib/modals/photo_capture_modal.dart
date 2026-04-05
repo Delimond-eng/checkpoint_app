@@ -3,13 +3,10 @@ import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import '/constants/styles.dart';
-import '/themes/app_theme.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../widgets/costum_icon_button.dart';
-import '../widgets/svg.dart';
 
 Future<dynamic> showPhotoCaptureModal(BuildContext context,
     {Function(File file)? onValidate}) async {
@@ -50,7 +47,6 @@ Future<dynamic> showPhotoCaptureModal(BuildContext context,
         ),
         child: Column(
           children: [
-            // Header Handle
             Container(
               width: 40,
               height: 4,
@@ -61,9 +57,9 @@ Future<dynamic> showPhotoCaptureModal(BuildContext context,
               ),
             ),
             
-            const Text(
-              "CAPTURE PHOTO",
-              style: TextStyle(
+            Text(
+              "CAPTURE PHOTO".tr,
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Staatliches',
@@ -73,7 +69,7 @@ Future<dynamic> showPhotoCaptureModal(BuildContext context,
             ),
             const SizedBox(height: 5),
             Text(
-              "Prenez une photo pour justifier l'action.",
+              "Prenez une photo pour justifier l'action.".tr,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade500,
@@ -88,7 +84,6 @@ Future<dynamic> showPhotoCaptureModal(BuildContext context,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Camera Preview Circle
                     Center(
                       child: Container(
                         width: 280,
@@ -128,12 +123,10 @@ Future<dynamic> showPhotoCaptureModal(BuildContext context,
                     
                     const SizedBox(height: 40),
 
-                    // Controls
                     StatefulBuilder(
                       builder: (context, setter) => Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Capture Button
                           GestureDetector(
                             onTap: () async {
                               try {
@@ -159,7 +152,6 @@ Future<dynamic> showPhotoCaptureModal(BuildContext context,
                             ),
                           ),
                           const SizedBox(width: 30),
-                          // Flash Button
                           GestureDetector(
                             onTap: () async {
                               setter(() {

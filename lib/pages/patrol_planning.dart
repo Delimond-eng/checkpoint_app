@@ -1,7 +1,5 @@
 import 'dart:ui';
 import '/global/controllers.dart';
-import '/kernel/services/http_manager.dart';
-import '/kernel/services/local_db_service.dart';
 import '/pages/mobile_qr_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -25,7 +23,8 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
   void initState() {
     super.initState();
     initializeDateFormatting('fr_FR', null);
-    // On lance la mise à jour serveur de manière silencieuse
+    initializeDateFormatting('en_US', null);
+    initializeDateFormatting('pt_PT', null);
     tagsController.fetchAnnouncesAndPlannings();
   }
 
@@ -65,13 +64,13 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
                   ],
                 ),
                 const SizedBox(height: 25),
-                const Text(
-                  "PLANNING",
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Staatliches', letterSpacing: 2),
+                Text(
+                  "planning".tr.toUpperCase(),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Staatliches', letterSpacing: 2),
                 ),
-                const Text(
-                  "MES PATROUILLES",
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
+                Text(
+                  "my_patrols".tr,
+                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
                 ),
                 const SizedBox(height: 10),
                 Text(
@@ -159,11 +158,13 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
       final DateTime tomorrow = today.add(const Duration(days: 1));
       final DateTime targetDate = DateTime(date.year, date.month, date.day);
 
+      final String currentLocale = Get.locale?.toString() ?? 'fr_FR';
+
       if (targetDate == today) return "Aujourd'hui";
       if (targetDate == yesterday) return "Hier";
       if (targetDate == tomorrow) return "Demain";
 
-      String formatted = DateFormat('EEEE d MMMM', 'fr_FR').format(date);
+      String formatted = DateFormat('EEEE d MMMM', currentLocale).format(date);
       return formatted[0].toUpperCase() + formatted.substring(1);
     } catch (e) {
       return dateStr;
@@ -210,7 +211,6 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
     final nextPlanningId = tagsController.nextPlanning.value?.id;
     final isNext = planning.id == nextPlanningId;
 
-    // Détection si planning passé aujourd'hui et non fait
     bool isPastTodayNotDone = false;
     final now = DateTime.now();
     final todayStr = DateFormat('yyyy-MM-dd').format(now);
@@ -324,9 +324,9 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
                             ),
                             border: Border.all(color: primaryMaterialColor.withOpacity(0.3)),
                           ),
-                          child: const Text(
-                            "NON EFFECTUÉE",
-                            style: TextStyle(color: primaryMaterialColor, fontSize: 8, fontWeight: FontWeight.bold),
+                          child: Text(
+                            "not_done".tr,
+                            style: const TextStyle(color: primaryMaterialColor, fontSize: 8, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -356,13 +356,13 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
-              const Text("DÉBUTER LA RONDE ?", style: TextStyle(fontFamily: 'Staatliches', fontSize: 22, letterSpacing: 1.5)),
+              Text("DÉBUTER LA RONDE ?", style: const TextStyle(fontFamily: 'Staatliches', fontSize: 22, letterSpacing: 1.5)),
               const SizedBox(height: 15),
               Text("Voulez-vous commencer la ronde pour : ${planning.libelle} ?", textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Ubuntu', fontSize: 14, color: Colors.black54)),
               const SizedBox(height: 30),
               Row(
                 children: [
-                  Expanded(child: TextButton(onPressed: () => Get.back(), style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15)), child: const Text("ANNULER", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)))),
+                  Expanded(child: TextButton(onPressed: () => Get.back(), style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15)), child: Text("cancel".tr.toUpperCase(), style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)))),
                   const SizedBox(width: 15),
                   Expanded(
                     child: ElevatedButton(
@@ -372,7 +372,7 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
                         Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage()));
                       },
                       style: ElevatedButton.styleFrom(backgroundColor: primaryMaterialColor, padding: const EdgeInsets.symmetric(vertical: 15), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
-                      child: const Text("DÉMARRER", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: Text("DÉMARRER".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],

@@ -36,7 +36,6 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
       try {
         if (!tagsController.isScanningModalOpen.value) {
           Map<String, dynamic> jsonMap = jsonDecode(barcodes.barcodes.first.displayValue!);
-          print(jsonMap);
           var area = Area.fromJson(jsonMap);
           tagsController.scannedArea.value = area;
           tagsController.isLoading.value = false;
@@ -44,13 +43,12 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
           tagsController.isScanningModalOpen.value = true;
           controller.stop();
           showScanningCompleter(context, onFinished: () {
-            // Relancer le scanner automatiquement après validation
             tagsController.isScanningModalOpen.value = false;
             controller.start();
           });
         }
       } catch (e) {
-        EasyLoading.showToast("Echec du scan de qrcode. Veuillez reéssayer !");
+        EasyLoading.showToast("scan_error".tr);
       }
     }
   }
@@ -61,16 +59,13 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Background Scanner
           MobileScanner(
             controller: controller,
             onDetect: _handleBarcode,
           ),
           
-          // Scanner Overlay with Animation or Refresh Icon
           Obx(() => ScannerOverlay(isScanned: tagsController.isScanningModalOpen.value)),
 
-          // Glass Header Section
           Positioned(
             top: 0,
             left: 0,
@@ -102,13 +97,13 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        "PATROUILLE",
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Staatliches', letterSpacing: 2),
+                      Text(
+                        "patrol".tr.toUpperCase(),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Staatliches', letterSpacing: 2),
                       ),
-                      const Text(
-                        "SCANNEZ LE POINT",
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
+                      Text(
+                        "scan_point".tr,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
                       ),
                     ],
                   ),
@@ -117,14 +112,13 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
             ),
           ),
 
-          // Bottom Controls & Close Action
           Positioned(
             bottom: 40,
             left: 0,
             right: 0,
             child: Column(
               children: [
-                Obx(() => tagsController.hasActivePatrol // Utilisation du getter intelligent
+                Obx(() => tagsController.hasActivePatrol 
                   ? Padding(
                       padding: const EdgeInsets.only(bottom: 20, left: 30, right: 30),
                       child: Container(
@@ -140,7 +134,7 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
                         child: ElevatedButton.icon(
                           onPressed: () => showClosePatrolModal(context),
                           icon: const Icon(Icons.stop_circle_rounded),
-                          label: const Text("CLÔTURER LA PATROUILLE", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Ubuntu')),
+                          label: Text("close_patrol".tr.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Ubuntu')),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.redAccent,
                             foregroundColor: Colors.white,

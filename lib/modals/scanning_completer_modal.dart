@@ -39,9 +39,9 @@ Future<void> showScanningCompleter(BuildContext context, {String key = "patrol",
               ),
             ),
             
-            const Text(
-              "VALIDATION DU POINT",
-              style: TextStyle(
+            Text(
+              "VALIDATION DU POINT".tr,
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Staatliches',
@@ -51,7 +51,7 @@ Future<void> showScanningCompleter(BuildContext context, {String key = "patrol",
             ),
             const SizedBox(height: 10),
             Text(
-              "Confirmez votre passage sur ce point de contrôle.",
+              "Confirmez votre passage sur ce point de contrôle.".tr,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade500,
@@ -66,7 +66,6 @@ Future<void> showScanningCompleter(BuildContext context, {String key = "patrol",
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Scanned Item Info Card
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -96,7 +95,7 @@ Future<void> showScanningCompleter(BuildContext context, {String key = "patrol",
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  key == "supervize-in" ? "STATION SCANNÉE" : "ZONE IDENTIFIÉE",
+                                  key == "supervize-in" ? "station_plus".tr.toUpperCase() : "zone_plus".tr.toUpperCase(),
                                   style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -124,9 +123,9 @@ Future<void> showScanningCompleter(BuildContext context, {String key = "patrol",
                     ),
                     const SizedBox(height: 25),
 
-                    const Text(
-                      "OBSERVATION (OPTIONNEL)",
-                      style: TextStyle(
+                    Text(
+                      "OBSERVATION (OPTIONNEL)".tr,
+                      style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey,
@@ -147,7 +146,7 @@ Future<void> showScanningCompleter(BuildContext context, {String key = "patrol",
                         maxLines: 4,
                         style: const TextStyle(fontFamily: 'Ubuntu', fontSize: 14),
                         decoration: InputDecoration(
-                          hintText: "Saisissez un problème ou une remarque si nécessaire...",
+                          hintText: "Saisissez un problème ou une remarque si nécessaire...".tr,
                           hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(vertical: 15),
@@ -160,7 +159,7 @@ Future<void> showScanningCompleter(BuildContext context, {String key = "patrol",
                       width: double.infinity,
                       height: 55,
                       child: SubmitButton(
-                        label: "CONTINUER VERS POINTAGE",
+                        label: "CONTINUER VERS POINTAGE".tr,
                         loading: tagsController.isLoading.value,
                         onPressed: () async {
                           showRecognitionModal(

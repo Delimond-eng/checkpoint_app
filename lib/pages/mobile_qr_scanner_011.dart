@@ -54,7 +54,7 @@ class _MobileQrScannerPage011State extends State<MobileQrScannerPage011> {
           }
         }
       } catch (e) {
-        EasyLoading.showToast("Echec du scan de qrcode. Veuillez reéssayer !");
+        EasyLoading.showToast("scan_error".tr);
       }
     }
   }
@@ -106,13 +106,13 @@ class _MobileQrScannerPage011State extends State<MobileQrScannerPage011> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        "SCAN STATION",
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Staatliches', letterSpacing: 2),
+                      Text(
+                        "scan_station".tr,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryMaterialColor, fontFamily: 'Staatliches', letterSpacing: 2),
                       ),
-                      const Text(
-                        "SCANNEZ LE QR CODE",
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
+                      Text(
+                        "scan_qr_code".tr,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
                       ),
                     ],
                   ),

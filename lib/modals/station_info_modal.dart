@@ -1,7 +1,6 @@
 import 'dart:ui';
 import '/constants/styles.dart';
 import '/global/controllers.dart';
-import '/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -38,7 +37,6 @@ Future<void> showStationInfoModal(BuildContext context, {VoidCallback? onFinishe
                 ),
               ),
               
-              // Station Icon / Illustration
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -53,9 +51,9 @@ Future<void> showStationInfoModal(BuildContext context, {VoidCallback? onFinishe
               ),
               const SizedBox(height: 20),
               
-              const Text(
-                "STATION IDENTIFIÉE",
-                style: TextStyle(
+              Text(
+                "station".tr.toUpperCase(),
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey,
@@ -65,7 +63,7 @@ Future<void> showStationInfoModal(BuildContext context, {VoidCallback? onFinishe
               ),
               const SizedBox(height: 10),
               Text(
-                site.name?.toUpperCase() ?? "STATION INCONNUE",
+                site.name?.toUpperCase() ?? "station".tr.toUpperCase(),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 24,
@@ -86,7 +84,6 @@ Future<void> showStationInfoModal(BuildContext context, {VoidCallback? onFinishe
               
               const SizedBox(height: 35),
               
-              // Action Button
               SizedBox(
                 width: double.infinity,
                 height: 60,
@@ -113,19 +110,19 @@ Future<void> showStationInfoModal(BuildContext context, {VoidCallback? onFinishe
                   ),
                   child: tagsController.isLoading.value
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Row(
+                      : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              "CONTINUER L'INSPECTION",
-                              style: TextStyle(
+                              "continue_btn".tr.toUpperCase(),
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1,
                                 fontFamily: 'Ubuntu',
                               ),
                             ),
-                            SizedBox(width: 10),
-                            Icon(Icons.arrow_forward_rounded),
+                            const SizedBox(width: 10),
+                            const Icon(Icons.arrow_forward_rounded),
                           ],
                         ),
                 ),

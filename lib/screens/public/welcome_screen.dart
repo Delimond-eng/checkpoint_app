@@ -261,12 +261,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             const Spacer(),
                           ]
                           else...[
-                            const Expanded(child: Padding(
-                              padding: EdgeInsets.only(top: 15, bottom: 5),
+                            Expanded(child: Padding(
+                              padding: const EdgeInsets.only(top: 15, bottom: 5),
                               child: Text(
-                                "Cliquez sur le bouton « Superviser les agents », puis scannez le QR code de la station afin de procéder à l’inspection des agents.",
+                                "supervision_instruction".tr,
                                 textAlign: TextAlign.start,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.grey,
                                   fontSize: 10,
                                   fontStyle: FontStyle.italic,
@@ -276,6 +276,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             )),
                           ],
                           
+                          // Icône de synchronisation dynamique
                           Obx(() => tagsController.isLoading.value 
                             ? const SpinKitRing(color: primaryMaterialColor, size: 20, lineWidth: 3).paddingAll(12)
                             : IconButton(
@@ -429,6 +430,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ),
                   ),
                 ),
+              if (!enabled)
+                Positioned(
+                  bottom: -2,
+                  right: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(color: Color(0xFF16161E), shape: BoxShape.circle),
+                    child: const Icon(Icons.lock_rounded, color: Colors.white38, size: 10),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 6),
@@ -497,7 +508,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   if (hasPatrol) {
                     _showBottonPatrolChoice(context);
                   } else {
-                    EasyLoading.showToast("Veuillez sélectionner votre planning !");
+                    EasyLoading.showToast("check_planning_msg".tr);
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const PatrolPlanning()));
                   }
                 } else {
@@ -558,7 +569,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           Text(
                             hasPatrol 
                               ? (tagsController.isOfflinePatrolActive.value ? "offline_msg".tr : "patrol_in_progress".tr)
-                              : (isGuard ? "Veuillez consulter votre planning de patrouille." : "Statut disponible pour supervision."),
+                              : (isGuard ? "check_planning_msg".tr : "available_status".tr),
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.6),
                               fontSize: 11,
@@ -607,13 +618,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: const Icon(Icons.shield_outlined, color: Colors.blueAccent, size: 32),
                 ),
                 const SizedBox(width: 20),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "SUPERVISER LES AGENTS",
-                        style: TextStyle(
+                        "supervise_agents".tr,
+                        style: const TextStyle(
                           color: Colors.blueAccent,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -621,10 +632,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           letterSpacing: 1,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        "Cliquez pour scanner une station dans la laquelle vs faite la supervision",
-                        style: TextStyle(
+                        "supervise_btn_msg".tr,
+                        style: const TextStyle(
                           color: Colors.black54,
                           fontSize: 11,
                           fontFamily: 'Ubuntu',
@@ -664,9 +675,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    Expanded(child: CostumButton(bgColor: Colors.grey.shade100, title: "Poursuivre", labelColor: Colors.black87, onPress: () { Get.back(); Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage())); })),
+                    Expanded(child: CostumButton(bgColor: Colors.grey.shade100, title: "continue_btn".tr, labelColor: Colors.black87, onPress: () { Get.back(); Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage())); })),
                     const SizedBox(width: 12.0),
-                    Expanded(child: CostumButton(title: "confirm".tr, bgColor: primaryMaterialColor, labelColor: Colors.white, onPress: () { Get.back(); Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage())); })),
+                    Expanded(child: CostumButton(title: "close_btn".tr, bgColor: primaryMaterialColor, labelColor: Colors.white, onPress: () { Get.back(); Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage())); })),
                   ],
                 ),
               ],

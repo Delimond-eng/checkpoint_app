@@ -7,6 +7,7 @@ import '/kernel/models/area.dart';
 import '/kernel/models/user.dart';
 import '/kernel/models/planning.dart';
 import '/kernel/models/announce.dart';
+import '/kernel/models/Patrol.dart';
 import '/kernel/services/http_manager.dart';
 import '/kernel/services/local_db_service.dart';
 import '/kernel/services/alarm_service.dart';
@@ -23,7 +24,12 @@ class TagsController extends GetxController with WidgetsBindingObserver {
   var scannedArea = Area().obs;
   var scannedSite = Site().obs;
   var isQrcodeScanned = false.obs;
+  
+  // Model Patrol réactif pour suivre la patrouille en cours
+  Rxn<Patrol> currentPatrol = Rxn<Patrol>();
+  
   var patrolId = 0.obs;
+  var activeScheduleId = "".obs;
   var isOfflinePatrolActive = false.obs;
   var isLoading = false.obs;
   var isScanningModalOpen = false.obs;
@@ -41,16 +47,26 @@ class TagsController extends GetxController with WidgetsBindingObserver {
   var plannings = <Planning>[].obs;
   var announces = <Announce>[].obs;
 
-  StreamSubscription<List<Map<String, dynamic>>>? _patrolStreamSubscription;
+  StreamSubscription<List<Map<String, dynamic>>?>? _patrolStreamSubscription;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
-  bool get hasActivePatrol => patrolId.value != 0 || isOfflinePatrolActive.value;
+  // Getter intelligent : vérifie soit la patrouille serveur, soit la patrouille offline locale
+  bool get hasActivePatrol => currentPatrol.value != null || isOfflinePatrolActive.value || activeScheduleId.value.isNotEmpty;
 
   @override
   void onInit() {
     super.onInit();
     WidgetsBinding.instance.addObserver(this);
+    
+    // RESTAURATION DE L'ÉTAT AU DÉMARRAGE
     isOfflinePatrolActive.value = localStorage.read("is_offline_patrol") ?? false;
+    activeScheduleId.value = localStorage.read("active_schedule_id")?.toString() ?? "";
+    patrolId.value = localStorage.read("patrol_id") ?? 0;
+    
+    var savedPatrol = localStorage.read("current_patrol");
+    if (savedPatrol != null) {
+      currentPatrol.value = Patrol.fromJson(Map<String, dynamic>.from(savedPatrol));
+    }
   }
 
   @override
@@ -96,36 +112,45 @@ class TagsController extends GetxController with WidgetsBindingObserver {
     _patrolStreamSubscription = Stream.periodic(interval).asyncMap((_) async {
       try {
         var connectivityResult = await Connectivity().checkConnectivity();
-        if (connectivityResult.isEmpty || connectivityResult.every((r) => r == ConnectivityResult.none)) return <Map<String, dynamic>>[];
+        if (connectivityResult.isEmpty || connectivityResult.every((r) => r == ConnectivityResult.none)) return null;
 
         if (authController.userSession.value != null && authController.userSession.value?.id != null) {
-          final data = await HttpManager().checkPending();
-          return data ?? <Map<String, dynamic>>[];
+          return await HttpManager().checkPending();
         }
-        return <Map<String, dynamic>>[];
+        return null;
       } catch (e) {
-        return <Map<String, dynamic>>[];
+        return null;
       }
     }).listen((pendingPatrols) {
-      if (pendingPatrols != null && pendingPatrols.isEmpty) {
-        Connectivity().checkConnectivity().then((result) {
-          if (result.any((r) => r != ConnectivityResult.none)) {
-             if (!isOfflinePatrolActive.value) {
-                localStorage.remove("patrol_id");
-                patrolId.value = 0;
-             }
-          }
-        });
-      } else if (pendingPatrols != null && pendingPatrols.isNotEmpty) {
-        final first = pendingPatrols.first;
-        final newId = first["id"] ?? 0;
-        if (patrolId.value != newId) {
-          patrolId.value = newId;
-          localStorage.write("patrol_id", newId);
-          if (isOfflinePatrolActive.value) {
-            isOfflinePatrolActive.value = false;
-            localStorage.write("is_offline_patrol", false);
-          }
+      if (pendingPatrols == null) return; 
+
+      if (pendingPatrols.isEmpty) {
+        if (!isOfflinePatrolActive.value && activeScheduleId.value.isEmpty) {
+          currentPatrol.value = null;
+          patrolId.value = 0;
+          activeScheduleId.value = "";
+          localStorage.remove("patrol_id");
+          localStorage.remove("current_patrol");
+          localStorage.remove("active_schedule_id");
+        }
+      } else {
+        final patrolData = pendingPatrols.first;
+        final patrol = Patrol.fromJson(Map<String, dynamic>.from(patrolData));
+        currentPatrol.value = patrol;
+        
+        // Persistance des données serveur pour le mode offline ultérieur
+        patrolId.value = patrol.id ?? 0;
+        localStorage.write("patrol_id", patrol.id);
+        localStorage.write("current_patrol", patrolData);
+        
+        if (patrol.scheduleId != null) {
+          activeScheduleId.value = patrol.scheduleId.toString();
+          localStorage.write("active_schedule_id", patrol.scheduleId);
+        }
+
+        if (isOfflinePatrolActive.value) {
+          isOfflinePatrolActive.value = false;
+          localStorage.write("is_offline_patrol", false);
         }
       }
     });
@@ -213,7 +238,7 @@ class TagsController extends GetxController with WidgetsBindingObserver {
         final today = DateTime(now.year, now.month, now.day);
         
         final filteredPlannings = remotePlannings.where((p) {
-          if (p.id != null && locallyConsumedIds.contains(p.id.toString())) return false;
+          if (p.id != null && (locallyConsumedIds.contains(p.id.toString()) || activeScheduleId.value == p.id.toString())) return false;
           
           try {
             DateTime pDate = p.date!.contains('/') 
@@ -268,6 +293,7 @@ class TagsController extends GetxController with WidgetsBindingObserver {
         return start.isAfter(now);
       }, orElse: () => list.first);
     } catch (e) {
+      // Correction ici : utiliser planningsList au lieu de list car list n'est pas accessible ici
       nextPlanning.value = planningsList.isNotEmpty ? planningsList.first : null;
     }
   }
@@ -275,6 +301,12 @@ class TagsController extends GetxController with WidgetsBindingObserver {
   void refreshPending() {
     var patrolIdLocal = localStorage.read("patrol_id");
     patrolId.value = patrolIdLocal ?? 0;
+    activeScheduleId.value = localStorage.read("active_schedule_id")?.toString() ?? "";
     isOfflinePatrolActive.value = localStorage.read("is_offline_patrol") ?? false;
+    
+    var savedPatrol = localStorage.read("current_patrol");
+    if (savedPatrol != null) {
+      currentPatrol.value = Patrol.fromJson(Map<String, dynamic>.from(savedPatrol));
+    }
   }
 }

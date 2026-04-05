@@ -14,7 +14,7 @@ Future<void> showMediaCaptureModal(BuildContext context, {required Function(File
   try {
     cameras = await availableCameras();
   } catch (e) {
-    EasyLoading.showError("Erreur caméra : $e");
+    EasyLoading.showError("error".tr);
     return;
   }
 
@@ -48,7 +48,6 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
   @override
   void initState() {
     super.initState();
-    // Rechercher la caméra arrière par défaut
     int backCameraIndex = widget.cameras.indexWhere(
             (camera) => camera.lensDirection == CameraLensDirection.back
     );
@@ -89,7 +88,7 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
       widget.onMediaCaptured(File(image.path));
       Navigator.pop(context);
     } catch (e) {
-      EasyLoading.showError("Erreur capture : $e");
+      EasyLoading.showError("error".tr);
     }
   }
 
@@ -106,7 +105,7 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
         setState(() => _isRecording = true);
       }
     } catch (e) {
-      EasyLoading.showError("Erreur vidéo : $e");
+      EasyLoading.showError("error".tr);
     }
   }
 
@@ -132,9 +131,9 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
               decoration: BoxDecoration(color: Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(2)),
             ),
-            const Text(
-              "CAPTURE MÉDIA",
-              style: TextStyle(fontSize: 20,
+            Text(
+              "CAPTURE MÉDIA".tr,
+              style: const TextStyle(fontSize: 20,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Staatliches',
                   letterSpacing: 1.5),
@@ -174,19 +173,16 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
 
             const SizedBox(height: 30),
 
-            // Controls
             Padding(
               padding: const EdgeInsets.only(bottom: 40),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Switch Camera
                   _buildSmallAction(
                     icon: Icons.flip_camera_ios_rounded,
                     onTap: _toggleCamera,
                   ),
 
-                  // Capture Photo
                   if (!_isRecording)
                     GestureDetector(
                       onTap: _takePhoto,
@@ -211,7 +207,6 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
                       ),
                     ),
 
-                  // Record Video
                   GestureDetector(
                     onTap: _toggleRecording,
                     child: Container(
@@ -240,7 +235,6 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
                     ),
                   ),
 
-                  // Flash
                   _buildSmallAction(
                     icon: _isFlashOn ? Icons.flash_on_rounded : Icons
                         .flash_off_rounded,

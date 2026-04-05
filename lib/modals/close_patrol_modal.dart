@@ -1,7 +1,6 @@
 import 'dart:ui';
 import '/constants/styles.dart';
 import '/global/controllers.dart';
-import '/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -41,9 +40,9 @@ Future<void> showClosePatrolModal(BuildContext context) async {
             ),
             
             // Modal Title
-            const Text(
-              "FIN DE PATROUILLE",
-              style: TextStyle(
+            Text(
+              "close_patrol".tr.toUpperCase(),
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Staatliches',
@@ -160,7 +159,7 @@ Future<void> showClosePatrolModal(BuildContext context) async {
                       width: double.infinity,
                       height: 55,
                       child: SubmitButton(
-                        label: "CLÔTURER LA SESSION",
+                        label: "close_patrol".tr.toUpperCase(),
                         color: primaryMaterialColor,
                         loading: tagsController.isLoading.value,
                         onPressed: () async {

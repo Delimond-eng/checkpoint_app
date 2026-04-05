@@ -10,7 +10,6 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 import '/global/controllers.dart';
 import '/kernel/services/http_manager.dart';
-import '/themes/app_theme.dart';
 import '/widgets/user_status.dart';
 import '../constants/styles.dart';
 
@@ -27,7 +26,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
   bool _isDetecting = false;
   bool _facePresent = false;
   bool _isCapturing = false;
-  int _cameraIndex = 1; // Default to front camera
+  int _cameraIndex = 1; 
   List<CameraDescription> _cameras = [];
   final TextEditingController _matriculeController = TextEditingController();
   
@@ -130,7 +129,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
       });
       await _controller!.stopImageStream();
     } catch (e) {
-      EasyLoading.showError("Erreur lors de la capture");
+      EasyLoading.showError("error".tr);
     } finally {
       setState(() => _isCapturing = false);
     }
@@ -139,7 +138,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
   Future<void> _submitEnroll() async {
     final matricule = _matriculeController.text.trim();
     if (matricule.isEmpty) {
-      EasyLoading.showInfo("Matricule requis");
+      EasyLoading.showInfo("matricule".tr);
       return;
     }
     
@@ -148,7 +147,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
     try {
       final embedding = await faceRecognitionController.getEmbedding(_capturedImage!);
       if (embedding == null || embedding.isEmpty) {
-        EasyLoading.showError("Échec de l'analyse faciale.");
+        EasyLoading.showError("error".tr);
         return;
       }
 
@@ -161,13 +160,13 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
           _capturedImage!,
         );
 
-        EasyLoading.showSuccess("Agent $matricule enrôlé avec succès");
+        EasyLoading.showSuccess("Agent $matricule ${"success".tr}");
         Get.back();
       } else {
         EasyLoading.showError(response.toString());
       }
     } catch (e) {
-      EasyLoading.showError("Échec : $e");
+      EasyLoading.showError("error".tr);
     } finally {
       EasyLoading.dismiss();
     }
@@ -184,7 +183,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0F), // Dark Theme
+      backgroundColor: const Color(0xFF0B0B0F), 
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -192,9 +191,9 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
           onPressed: () => Get.back(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
         ),
-        title: const Text(
-          "ENRÔLEMENT VISAGE",
-          style: TextStyle(fontFamily: 'Staatliches', letterSpacing: 1.5, color: Colors.white),
+        title: Text(
+          "face_enrollment".tr,
+          style: const TextStyle(fontFamily: 'Staatliches', letterSpacing: 1.5, color: Colors.white),
         ),
         actions: const [
           Padding(
@@ -228,7 +227,6 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
                       ),
                       const SizedBox(height: 30),
                       
-                      // Camera / Preview Circle
                       Center(
                         child: Container(
                           width: 280,
@@ -277,7 +275,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
                                 icon: _isCapturing 
                                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                                   : const Icon(Icons.camera_alt_rounded),
-                                label: const Text("CAPTURER", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Staatliches')),
+                                label: Text("capture_face".tr, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Staatliches')),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: primaryMaterialColor,
                                   foregroundColor: Colors.white,
@@ -320,9 +318,9 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
                                     controller: _matriculeController,
                                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu'),
                                     decoration: InputDecoration(
-                                      labelText: "Matricule de l'agent",
+                                      labelText: "matricule".tr,
                                       labelStyle: const TextStyle(color: Colors.white70),
-                                      hintText: "Saisir le matricule",
+                                      hintText: "matricule".tr,
                                       hintStyle: const TextStyle(color: Colors.white24),
                                       prefixIcon: const Icon(Icons.badge_rounded, color: primaryMaterialColor),
                                       enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
@@ -340,7 +338,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
                                               _initCamera(); 
                                             });
                                           },
-                                          child: const Text("REPRENDRE", style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold)),
+                                          child: Text("REPRENDRE".tr, style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.bold)),
                                         ),
                                       ),
                                       const SizedBox(width: 15),
@@ -353,7 +351,7 @@ class _EnrollFacePageState extends State<EnrollFacePage> {
                                             minimumSize: const Size(0, 50),
                                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                                           ),
-                                          child: const Text("VALIDER", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          child: Text("confirm".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
                                         ),
                                       ),
                                     ],

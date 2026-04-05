@@ -83,9 +83,9 @@ Future<dynamic> showRecognitionModal(BuildContext context,
                 ),
               ),
               
-              const Text(
-                "AUTHENTIFICATION",
-                style: TextStyle(
+              Text(
+                "AUTHENTIFICATION".tr,
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Staatliches',
@@ -95,7 +95,7 @@ Future<dynamic> showRecognitionModal(BuildContext context,
               ),
               const SizedBox(height: 5),
               Text(
-                "Validez votre identité par reconnaissance faciale.",
+                "Validez votre identité par reconnaissance faciale.".tr,
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade500,
@@ -239,7 +239,7 @@ Future<dynamic> showRecognitionModal(BuildContext context,
                           width: double.infinity,
                           height: 55,
                           child: CostumButton(
-                            title: "VALIDER L'ACTION",
+                            title: "VALIDER L'ACTION".tr,
                             isLoading: tagsController.isLoading.value,
                             bgColor: primaryMaterialColor,
                             labelColor: Colors.white,

@@ -21,12 +21,12 @@ class ProfilPage extends StatefulWidget {
 
 class _ProfilPageState extends State<ProfilPage> {
   String _getRoleLabel(String? role) {
-    if (role == null) return "AGENT";
+    if (role == null) return "agent".tr.toUpperCase();
     switch (role.toLowerCase()) {
       case 'guard':
-        return "Agent gardien";
+        return "guard".tr;
       case 'supervisor':
-        return "Superviseur";
+        return "supervision".tr;
       default:
         return role;
     }
@@ -37,10 +37,9 @@ class _ProfilPageState extends State<ProfilPage> {
     final user = authController.userSession.value!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0F), // Dark Header Background
+      backgroundColor: const Color(0xFF0B0B0F), 
       body: CustomScrollView(
         slivers: [
-          // Fixed Header Section (Same as Welcome)
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 40),
@@ -75,9 +74,9 @@ class _ProfilPageState extends State<ProfilPage> {
                     ],
                   ),
                   const SizedBox(height: 30),
-                  const Text(
-                    "MON COMPTE",
-                    style: TextStyle(
+                  Text(
+                    "my_account".tr.toUpperCase(),
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: primaryMaterialColor,
@@ -85,9 +84,9 @@ class _ProfilPageState extends State<ProfilPage> {
                       letterSpacing: 2,
                     ),
                   ),
-                  const Text(
-                    "PROFIL AGENT",
-                    style: TextStyle(
+                  Text(
+                    "agent_profile".tr.toUpperCase(),
+                    style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
@@ -99,7 +98,6 @@ class _ProfilPageState extends State<ProfilPage> {
             ),
           ),
 
-          // Profil Content Section (White Sheet)
           SliverFillRemaining(
             hasScrollBody: false,
             child: Container(
@@ -114,7 +112,6 @@ class _ProfilPageState extends State<ProfilPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Main Profil Info Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -124,7 +121,6 @@ class _ProfilPageState extends State<ProfilPage> {
                     ),
                     child: Row(
                       children: [
-                        // Avatar
                         Container(
                           height: 80,
                           width: 80,
@@ -156,13 +152,12 @@ class _ProfilPageState extends State<ProfilPage> {
                           ),
                         ),
                         const SizedBox(width: 20),
-                        // Name & Role
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                user.fullname?.toUpperCase() ?? "AGENT",
+                                user.fullname?.toUpperCase() ?? "agent".tr.toUpperCase(),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -197,43 +192,43 @@ class _ProfilPageState extends State<ProfilPage> {
 
                   const SizedBox(height: 20),
 
-                  const Text(
-                    "COORDONNÉES PROFESSIONNELLES",
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
+                  Text(
+                    "professional_details".tr.toUpperCase(),
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
                   ),
                   const SizedBox(height: 15),
 
-                  _buildInfoTile(Icons.badge_rounded, "Matricule", user.matricule ?? "N/A"),
-                  _buildInfoTile(Icons.location_on_rounded, "Station actuelle", user.site?.name ?? "Non assigné"),
-                  _buildInfoTile(Icons.business_center_rounded, "Agence", "MAMBA SECURITY"),
+                  _buildInfoTile(Icons.badge_rounded, "matricule".tr, user.matricule ?? "N/A"),
+                  _buildInfoTile(Icons.location_on_rounded, "current_station".tr, user.site?.name ?? "N/A"),
+                  _buildInfoTile(Icons.business_center_rounded, "agency".tr, "MAMBA SECURITY"),
 
                   const SizedBox(height: 10),
 
-                  const Text(
-                    "ACTIONS DE COMPTE",
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
+                  Text(
+                    "account_actions".tr.toUpperCase(),
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
                   ),
                   const SizedBox(height: 15),
 
                   _buildActionTile(
                     icon: Icons.description_rounded,
-                    title: "Faire une requête",
+                    title: "make_request".tr,
                     color: Colors.purple,
                     onTap: () => showRequestModal(context),
                   ),
                   _buildActionTile(
                     icon: Icons.report_problem_rounded,
-                    title: "Signaler un incident",
+                    title: "incident_sign".tr,
                     color: Colors.red,
                     onTap: () => showSignalementModal(context),
                   ),
                   _buildActionTile(
                     icon: Icons.logout_rounded,
-                    title: "Se déconnecter",
+                    title: "deconnexion".tr,
                     color: Colors.grey.shade700,
                     onTap: () {
                       DGCustomDialog.showInteraction(context,
-                          message: "Êtes-vous sûr de vouloir fermer votre session ?",
+                          message: "confirm_logout".tr,
                           onValidated: () {
                             localStorage.remove("user_session");
                             Get.offAll(() => const LoginScreen());
