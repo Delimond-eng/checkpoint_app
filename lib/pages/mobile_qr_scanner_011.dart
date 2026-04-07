@@ -72,7 +72,10 @@ class _MobileQrScannerPage011State extends State<MobileQrScannerPage011> {
           ),
           
           // Scanner Overlay with Animation or Refresh Icon
-          Obx(() => ScannerOverlay(isScanned: tagsController.isScanningModalOpen.value)),
+          Obx(() => ScannerOverlay(isScanned: tagsController.isScanningModalOpen.value, onRestarted: (){
+            tagsController.isScanningModalOpen.value = false;
+            controller.start();
+          },)),
 
           // Glass Header Section
           Positioned(

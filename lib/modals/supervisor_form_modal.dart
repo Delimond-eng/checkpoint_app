@@ -36,12 +36,12 @@ Future<void> showSupervisorFormModal(BuildContext context) async {
                 margin: const EdgeInsets.symmetric(vertical: 15),
                 decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
               ),
-              const Text(
-                "COTATION AGENT",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'Staatliches', letterSpacing: 1.5, color: Color(0xFF16161E)),
+              Text(
+                "rating_agent".tr.toUpperCase(),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'Staatliches', letterSpacing: 1.5, color: Color(0xFF16161E)),
               ),
               const SizedBox(height: 5),
-              Text("Évaluez les critères de performance de l'agent.".tr, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontFamily: 'Ubuntu')),
+              Text("rating_desc".tr, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontFamily: 'Ubuntu')),
               const SizedBox(height: 25),
 
               Expanded(
@@ -110,7 +110,7 @@ Future<void> showSupervisorFormModal(BuildContext context) async {
                         width: double.infinity,
                         height: 55,
                         child: SubmitButton(
-                          label: "save_enrollment".tr,
+                          label: "save_grade".tr.toUpperCase(),
                           color: primaryMaterialColor,
                           onPressed: () {
                             if (existingData == null) {
@@ -127,7 +127,7 @@ Future<void> showSupervisorFormModal(BuildContext context) async {
                               if (!authController.supervisedAgent.contains(agentId)) {
                                 authController.supervisedAgent.add(agentId);
                               }
-                              EasyLoading.showSuccess("Agent évalué");
+                              EasyLoading.showSuccess("agent_rated".tr);
                             } else {
                               authController.supervisedAgent.remove(agentId);
                             }
@@ -188,9 +188,9 @@ class _ElementCardState extends State<ElementCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildGradeBtn("B", "GOOD", Colors.green, selectedNote == "B"),
-              _buildGradeBtn("P", "FAIR", Colors.orange, selectedNote == "P"),
-              _buildGradeBtn("M", "POOR", Colors.red, selectedNote == "M"),
+              _buildGradeBtn("B", "good".tr, Colors.green, selectedNote == "B"),
+              _buildGradeBtn("P", "fair".tr, Colors.orange, selectedNote == "P"),
+              _buildGradeBtn("M", "poor".tr, Colors.red, selectedNote == "M"),
             ],
           ),
         ],
@@ -206,10 +206,11 @@ class _ElementCardState extends State<ElementCard> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(15.0),
+        height: 40.0,
+        width: 40.0,
         decoration: BoxDecoration(
           color: isActive ? color : color.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
+          shape: BoxShape.circle,
           border: Border.all(color: isActive ? color : color.withOpacity(0.2)),
         ),
         child: Column(

@@ -64,7 +64,12 @@ class _MobileQrScannerPageState extends State<MobileQrScannerPage> {
             onDetect: _handleBarcode,
           ),
           
-          Obx(() => ScannerOverlay(isScanned: tagsController.isScanningModalOpen.value)),
+          Obx(() => ScannerOverlay(isScanned: tagsController.isScanningModalOpen.value
+            , onRestarted: (){
+              tagsController.isScanningModalOpen.value = false;
+              controller.start();
+            },
+          )),
 
           Positioned(
             top: 0,

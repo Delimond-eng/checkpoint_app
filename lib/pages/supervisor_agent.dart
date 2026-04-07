@@ -122,7 +122,6 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                   color: Colors.white,
                   borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
                 ),
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
                   child: agents.isEmpty 
@@ -260,23 +259,28 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
       request.files.add(await http.MultipartFile.fromPath('photo', photoFin.path));
     }
 
+    int backendIndex = 0; // Compteur pour les index serveurs
     for (int i = 0; i < supervisedAgents.length; i++) {
       final agentData = supervisedAgents[i];
+      // On vérifie que l'agent a une photo ET qu'il a été validé (dans la liste supervisedAgent)
       if (agentData['photo'] == null || agentData['photo'] is! File) continue;
+      if (!authController.supervisedAgent.contains(agentData['agent_id'])) continue;
 
-      request.fields['agents[$i][agent_id]'] = agentData['agent_id'].toString();
-      request.fields['agents[$i][comment]'] = agentData['comment'] ?? "";
+      request.fields['agents[$backendIndex][agent_id]'] = agentData['agent_id'].toString();
+      request.fields['agents[$backendIndex][comment]'] = agentData['comment'] ?? "";
       
       File agentPhoto = await ImageService.compressForUpload(agentData['photo'] as File);
-      request.files.add(await http.MultipartFile.fromPath('agents[$i][photo]', agentPhoto.path));
+      request.files.add(await http.MultipartFile.fromPath('agents[$backendIndex][photo]', agentPhoto.path));
 
       final notes = (agentData['notes'] as List<dynamic>).map((e) => Map<String, dynamic>.from(e)).toList();
       for (int j = 0; j < notes.length; j++) {
         final note = notes[j];
-        request.fields['agents[$i][notes][$j][control_element_id]'] = note['control_element_id'].toString();
-        request.fields['agents[$i][notes][$j][note]'] = note['note'].toString();
-        request.fields['agents[$i][notes][$j][comment]'] = ""; 
+        request.fields['agents[$backendIndex][notes][$j][control_element_id]'] = note['control_element_id'].toString();
+        request.fields['agents[$backendIndex][notes][$j][note]'] = note['note'].toString();
+        request.fields['agents[$backendIndex][notes][$j][comment]'] = ""; 
       }
+      
+      backendIndex++; // On n'incrémente que si l'agent a été ajouté à la requête
     }
 
     try {
@@ -288,7 +292,7 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
         if (result.containsKey("errors")) {
           EasyLoading.showInfo(result["errors"].toString());
         } else {
-          EasyLoading.showSuccess(result["message"] ?? "success".tr);
+          EasyLoading.showSuccess(result["message"] ?? "supervision_closed".tr);
           localStorage.remove("supervision");
           authController.refreshSupervision();
           Get.back();
@@ -297,8 +301,10 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
         EasyLoading.showInfo("error".tr);
       }
     } catch (e) {
-      tagsController.isLoading.value = false;
+      if (kDebugMode) print(e);
       EasyLoading.showError("error".tr);
+    } finally {
+      tagsController.isLoading.value = false;
     }
   }
 }
@@ -377,7 +383,7 @@ class SupervisorAgentTile extends StatelessWidget {
                         IconButton(
                           onPressed: () => _cancelRating(data.id!),
                           icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
-                          tooltip: "ANNULER LA COTATION".tr,
+                          tooltip: "cancel_rating".tr,
                         ),
                         Container(
                           padding: const EdgeInsets.all(4),
@@ -409,6 +415,6 @@ class SupervisorAgentTile extends StatelessWidget {
     authController.supervisedAgent.remove(agentId);
     authController.supervisedDatas.removeWhere((element) => element['agent_id'] == agentId);
     authController.supervisedDatas.refresh();
-    EasyLoading.showToast("Cotation annulée pour cet agent");
+    EasyLoading.showToast("rating_cancelled".tr);
   }
 }

@@ -155,7 +155,10 @@ class AppTranslations extends Translations {
           'select_planning_msg': 'Veuillez sélectionner votre planning !',
           'verify_infos': 'Vérifiez les informations',
           'face_detected_ready': 'Visage détecté : Prêt',
-          'rescan':'Rescanner'
+          'rescan':'Rescanner',
+          'cancel_rating': 'ANNULER LA COTATION',
+          'rating_cancelled': 'Cotation annulée pour cet agent',
+          'agent_rated': 'Agent évalué'
         },
         'en': {
           'welcome': 'Welcome',
@@ -309,7 +312,10 @@ class AppTranslations extends Translations {
           'select_planning_msg': 'Please select your schedule!',
           'verify_infos': 'Verify information',
           'face_detected_ready': 'Face detected: Ready',
-          'rescan':'Rescan'
+          'rescan':'Rescan',
+          'cancel_rating': 'CANCEL RATING',
+          'rating_cancelled': 'Rating cancelled for this agent',
+          'agent_rated': 'Agent rated'
         },
         'pt': {
           'welcome': 'Bem-vindo',
@@ -393,7 +399,7 @@ class AppTranslations extends Translations {
           'read_announce': 'EU LI ISSO',
           'announce_detail': 'DETALHE DO ANÚNCIO',
           'face_enrollment': 'REGISTRO DE ROSTO',
-          'enroll_instruction': 'Por favor, capture seu rosto para autenticação biométrica.',
+          'enroll_instruction': 'Por favor, capture seu rosto para autenticação biométrique.',
           'capture_face': 'CAPTURER MEU ROSTO',
           'save_enrollment': 'SALVAR REGISTRO',
           'configuration': 'CONFIGURAÇÃO',
@@ -415,7 +421,7 @@ class AppTranslations extends Translations {
           'station_identified': 'ESTAÇÃO IDENTIFICADA',
           'continue_inspection': 'CONTINUAR INSPEÇÃO',
           'rating_agent': 'AVALIAÇÃO DO AGENTE',
-          'rating_desc': 'Avalie os critérios de desempenho do agente.',
+          'rating_desc': 'Avalie os critères de desempenho do agente.',
           'save_grade': 'SALVAR AVALIAÇÃO',
           'good': 'BOM',
           'fair': 'REGULAR',
@@ -423,7 +429,7 @@ class AppTranslations extends Translations {
           'gps_config': 'CONFIGURAÇÃO GPS',
           'gps_desc': 'Registre a posição atual da estação.',
           'station_scanned': 'ESTAÇÃO ESCANEADA',
-          'gps_instruction': 'Certifique-se de estar no local exato da estação para capturer coordenadas GPS precisas.',
+          'gps_instruction': 'Certifique-se de estar no local exato da estação para capturer coordonnées GPS précises.',
           'point_detected': 'PONTO DETECTADO',
           'new_zone': 'NOVA ZONA',
           'zone_name': 'NOME DA ZONA',
@@ -463,7 +469,10 @@ class AppTranslations extends Translations {
           'select_planning_msg': 'Por favor, selecione seu cronograma!',
           'verify_infos': 'Verifique as informações',
           'face_detected_ready': 'Rosto detectado: Pronto',
-          'rescan':'Reescanear'
+          'rescan':'Reescanear',
+          'cancel_rating': 'CANCELAR AVALIAÇÃO',
+          'rating_cancelled': 'Avaliação cancelada para este agente',
+          'agent_rated': 'Agente avaliado'
         }
       };
 }

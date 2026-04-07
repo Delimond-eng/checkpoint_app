@@ -3,7 +3,8 @@ import '../constants/styles.dart';
 
 class ScannerOverlay extends StatefulWidget {
   final bool isScanned;
-  const ScannerOverlay({super.key, this.isScanned = false});
+  final VoidCallback? onRestarted;
+  const ScannerOverlay({super.key, this.isScanned = false, this.onRestarted});
 
   @override
   State<ScannerOverlay> createState() => _ScannerOverlayState();
@@ -76,18 +77,21 @@ class _ScannerOverlayState extends State<ScannerOverlay> with SingleTickerProvid
         // Scanning Animation Line OR Refresh Icon
         Center(
           child: widget.isScanned 
-            ? Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  shape: BoxShape.circle,
+            ? GestureDetector(
+              onTap: widget.onRestarted,
+              child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.refresh_rounded,
+                    color: Colors.white,
+                    size: 40
+                  ),
                 ),
-                child: const Icon(
-                  Icons.refresh_rounded, 
-                  color: Colors.white, 
-                  size: 40
-                ),
-              )
+            )
             : AnimatedBuilder(
                 animation: _animation,
                 builder: (context, child) {
