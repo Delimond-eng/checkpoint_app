@@ -158,7 +158,11 @@ class AppTranslations extends Translations {
           'rescan':'Rescanner',
           'cancel_rating': 'ANNULER LA COTATION',
           'rating_cancelled': 'Cotation annulée pour cet agent',
-          'agent_rated': 'Agent évalué'
+          'agent_rated': 'Agent évalué',
+          'notification_planning_title': 'Notification de planning',
+          'notification_planning_body': 'Nouveau planning reçu !',
+          'notification_patrol_time': 'Heure de patrouille',
+          'notification_default_title': 'SALAMA'
         },
         'en': {
           'welcome': 'Welcome',
@@ -315,7 +319,11 @@ class AppTranslations extends Translations {
           'rescan':'Rescan',
           'cancel_rating': 'CANCEL RATING',
           'rating_cancelled': 'Rating cancelled for this agent',
-          'agent_rated': 'Agent rated'
+          'agent_rated': 'Agent rated',
+          'notification_planning_title': 'Planning Notification',
+          'notification_planning_body': 'New planning received!',
+          'notification_patrol_time': 'Patrol Time',
+          'notification_default_title': 'SALAMA'
         },
         'pt': {
           'welcome': 'Bem-vindo',
@@ -415,7 +423,7 @@ class AppTranslations extends Translations {
           'auth_desc': 'Valide sua identidade por reconhecimento facial.',
           'valider_action': 'VALIDAR AÇÃO',
           'irreversible_action': 'AÇÃO IRREVERSÍVEL',
-          'irreversible_desc': 'Confirme o fim da sua patrulha. Você não poderá mais adicionar pontos após esta etapa.',
+          'irreversible_desc': 'Confirme o fim da sua patrulha. Você não poderá mais adicionar pontos après esta etapa.',
           'final_observations': 'OBSERVAÇÕES FINAIS (OPCIONAL)',
           'rapport_desc': 'Relatório de fim de patrouille ou observações...',
           'station_identified': 'ESTAÇÃO IDENTIFICADA',
@@ -435,7 +443,7 @@ class AppTranslations extends Translations {
           'zone_name': 'NOME DA ZONA',
           'zone_hint': 'Ex: Entrada Principal, Estacionamento Sul...',
           'point_validation': 'VALIDATION DU POINT',
-          'point_desc': 'Confirme sua passagem neste ponto de controle.',
+          'point_desc': 'Confirme sua passage neste ponto de controle.',
           'zone_identified': 'ZONA IDENTIFICADA',
           'observation_optional': 'OBSERVATION (OPCIONAL)',
           'problem_hint': 'Digite um problema ou observação se necessário...',
@@ -472,7 +480,11 @@ class AppTranslations extends Translations {
           'rescan':'Reescanear',
           'cancel_rating': 'CANCELAR AVALIAÇÃO',
           'rating_cancelled': 'Avaliação cancelada para este agente',
-          'agent_rated': 'Agente avaliado'
+          'agent_rated': 'Agente avaliado',
+          'notification_planning_title': 'Notificação de Planejamento',
+          'notification_planning_body': 'Novo planejamento recebido!',
+          'notification_patrol_time': 'Hora da Patrulha',
+          'notification_default_title': 'SALAMA'
         }
       };
 }

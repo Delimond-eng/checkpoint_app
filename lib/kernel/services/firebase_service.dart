@@ -50,7 +50,7 @@ class FirebaseService {
         if (kDebugMode) print("FCM Message (Foreground): ${message.data}");
         
         final String? type = message.data['type'];
-        String title = message.notification?.title ?? message.data['title'] ?? "SALAMA";
+        String title = message.notification?.title ?? message.data['title'] ?? "notification_default_title".tr;
         final String body = message.notification?.body ?? message.data['body'] ?? "";
 
         bool shouldNotify = true;
@@ -59,8 +59,8 @@ class FirebaseService {
         }
 
         if (type != null && type.contains('planning')) {
-          title = "Notification de planning";
-          EasyLoading.showToast("Nouveau planning reçu !");
+          title = "notification_planning_title".tr;
+          EasyLoading.showToast("notification_planning_body".tr);
           
           if (Get.isRegistered<TagsController>()) {
             await tagsController.fetchAnnouncesAndPlannings();
@@ -138,7 +138,6 @@ class FirebaseService {
       if (Get.isRegistered<TagsController>()) {
         tagsController.isLoading.value = true;
       }
-      tagsController.isLoading.value = true;
       final response = await Api.request(
         method: 'post',
         url: 'biometrics/by-matricules',
@@ -166,7 +165,6 @@ class FirebaseService {
       if (Get.isRegistered<TagsController>()) {
         tagsController.isLoading.value = false;
       }
-      tagsController.isLoading.value = false;
     }
   }
 
@@ -204,7 +202,12 @@ class FirebaseService {
   }
 
   static Future<void> readMessage(String text) async {
-    await flutterTts.setLanguage("fr-FR");
+    String langCode = Get.locale?.languageCode ?? 'fr';
+    String ttsLang = "fr-FR";
+    if (langCode == 'en') ttsLang = "en-US";
+    if (langCode == 'pt') ttsLang = "pt-PT";
+
+    await flutterTts.setLanguage(ttsLang);
     await flutterTts.setVolume(1.0);
     await flutterTts.setSpeechRate(0.5);
     await flutterTts.setPitch(1.0);

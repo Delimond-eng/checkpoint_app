@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -24,6 +25,6 @@ class NotificationService {
     const NotificationDetails notificationDetails =
         NotificationDetails(android: androidDetails);
     await flutterLocalNotificationsPlugin.show(
-        id, 'Heure de patrouille', libelle, notificationDetails);
+        id, 'notification_patrol_time'.tr, libelle, notificationDetails);
   }
 }
