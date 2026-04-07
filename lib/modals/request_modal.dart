@@ -71,14 +71,14 @@ Future<void> showRequestModal(BuildContext context) async {
                     _buildFieldLabel("subject".tr),
                     _buildInputField(
                       controller: textTitle,
-                      hint: "Sujet de votre requête...",
+                      hint: "subject_hint".tr,
                       icon: Icons.title_rounded,
                     ),
                     const SizedBox(height: 25),
                     _buildFieldLabel("desc_detail".tr),
                     _buildInputField(
                       controller: textDescription,
-                      hint: "Expliquez votre situation ici...",
+                      hint: "desc_hint".tr,
                       icon: Icons.notes_rounded,
                       maxLines: 5,
                     ),
@@ -91,7 +91,7 @@ Future<void> showRequestModal(BuildContext context) async {
                         loading: tagsController.isLoading.value,
                         onPressed: () async {
                           if (textTitle.text.isEmpty || textDescription.text.isEmpty) {
-                            EasyLoading.showToast("Tous les champs sont requis !");
+                            EasyLoading.showToast("fields_required".tr);
                             return;
                           }
                           tagsController.isLoading.value = true;

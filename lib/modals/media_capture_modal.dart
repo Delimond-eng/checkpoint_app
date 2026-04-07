@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:path_provider/path_provider.dart';
 
 Future<void> showMediaCaptureModal(BuildContext context, {required Function(File file) onMediaCaptured}) async {
   List<CameraDescription> cameras = [];
@@ -38,9 +39,10 @@ class _MediaCaptureContent extends StatefulWidget {
   State<_MediaCaptureContent> createState() => _MediaCaptureContentState();
 }
 
-class _MediaCaptureContentState extends State<_MediaCaptureContent> {
+class _MediaCaptureContentState extends State<_MediaCaptureContent> with TickerProviderStateMixin {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
+  late AnimationController _progressController;
   bool _isRecording = false;
   bool _isFlashOn = false;
   int _cameraIndex = 0;
@@ -48,6 +50,17 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
   @override
   void initState() {
     super.initState();
+    
+    // Initialisation du contrôleur de progression (30 secondes)
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 30),
+    )..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          if (_isRecording) _toggleRecording(); // Arrêt auto à 30s
+        }
+      });
+
     int backCameraIndex = widget.cameras.indexWhere(
             (camera) => camera.lensDirection == CameraLensDirection.back
     );
@@ -70,10 +83,12 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
   @override
   void dispose() {
     _controller.dispose();
+    _progressController.dispose();
     super.dispose();
   }
 
   Future<void> _toggleCamera() async {
+    if (_isRecording) return;
     _cameraIndex = (_cameraIndex + 1) % widget.cameras.length;
     await _controller.dispose();
     setState(() {
@@ -96,16 +111,32 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
     try {
       await _initializeControllerFuture;
       if (_isRecording) {
+        // Arrêt manuel ou automatique
         final video = await _controller.stopVideoRecording();
+        _progressController.stop();
+        
         setState(() => _isRecording = false);
-        widget.onMediaCaptured(File(video.path));
+        
+        // Conversion forcée en .mp4
+        File videoFile = File(video.path);
+        if (!video.path.toLowerCase().endsWith('.mp4')) {
+          final String dir = (await getTemporaryDirectory()).path;
+          final String newPath = '$dir/vid_${DateTime.now().millisecondsSinceEpoch}.mp4';
+          videoFile = await videoFile.rename(newPath);
+        }
+        
+        widget.onMediaCaptured(videoFile);
         Navigator.pop(context);
       } else {
+        // Démarrage de l'enregistrement
         await _controller.startVideoRecording();
         setState(() => _isRecording = true);
+        _progressController.forward(from: 0.0);
       }
     } catch (e) {
       EasyLoading.showError("error".tr);
+      setState(() => _isRecording = false);
+      _progressController.reset();
     }
   }
 
@@ -114,10 +145,7 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
       child: Container(
-        height: MediaQuery
-            .of(context)
-            .size
-            .height * 0.85,
+        height: MediaQuery.of(context).size.height * 0.85,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -173,6 +201,7 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
 
             const SizedBox(height: 30),
 
+            // Controls
             Padding(
               padding: const EdgeInsets.only(bottom: 40),
               child: Row(
@@ -183,6 +212,7 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
                     onTap: _toggleCamera,
                   ),
 
+                  // Capture Photo (masqué pendant l'enregistrement vidéo)
                   if (!_isRecording)
                     GestureDetector(
                       onTap: _takePhoto,
@@ -207,34 +237,56 @@ class _MediaCaptureContentState extends State<_MediaCaptureContent> {
                       ),
                     ),
 
+                  // Record Video with Progress
                   GestureDetector(
                     onTap: _toggleRecording,
-                    child: Container(
-                      height: 80, width: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.redAccent, width: 4),
-                      ),
-                      child: Center(
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          height: _isRecording ? 30 : 60,
-                          width: _isRecording ? 30 : 60,
-                          decoration: BoxDecoration(
-                            color: Colors.redAccent,
-                            borderRadius: BorderRadius.circular(
-                                _isRecording ? 5 : 30),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (_isRecording)
+                          SizedBox(
+                            height: 90, width: 90,
+                            child: AnimatedBuilder(
+                              animation: _progressController,
+                              builder: (context, child) {
+                                return CircularProgressIndicator(
+                                  value: _progressController.value,
+                                  strokeWidth: 6,
+                                  color: Colors.redAccent,
+                                  backgroundColor: Colors.redAccent.withOpacity(0.2),
+                                );
+                              },
+                            ),
                           ),
-                          child: !_isRecording
-                              ? const Icon(
-                              Icons.videocam_rounded, color: Colors.white,
-                              size: 30)
-                              : null,
+                        Container(
+                          height: 80, width: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.redAccent, width: 4),
+                          ),
+                          child: Center(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              height: _isRecording ? 30 : 60,
+                              width: _isRecording ? 30 : 60,
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent,
+                                borderRadius: BorderRadius.circular(
+                                    _isRecording ? 5 : 30),
+                              ),
+                              child: !_isRecording
+                                  ? const Icon(
+                                  Icons.videocam_rounded, color: Colors.white,
+                                  size: 30)
+                                  : null,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
 
+                  // Flash
                   _buildSmallAction(
                     icon: _isFlashOn ? Icons.flash_on_rounded : Icons
                         .flash_off_rounded,

@@ -74,7 +74,7 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  "Consultez et débutez vos rondes planifiées.",
+                  "patrol_desc".tr,
                   style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, fontFamily: 'Ubuntu'),
                 ),
               ],
@@ -158,12 +158,11 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
       final DateTime tomorrow = today.add(const Duration(days: 1));
       final DateTime targetDate = DateTime(date.year, date.month, date.day);
 
+      if (targetDate == today) return "today".tr;
+      if (targetDate == yesterday) return "yesterday".tr;
+      if (targetDate == tomorrow) return "tomorrow".tr;
+
       final String currentLocale = Get.locale?.toString() ?? 'fr_FR';
-
-      if (targetDate == today) return "Aujourd'hui";
-      if (targetDate == yesterday) return "Hier";
-      if (targetDate == tomorrow) return "Demain";
-
       String formatted = DateFormat('EEEE d MMMM', currentLocale).format(date);
       return formatted[0].toUpperCase() + formatted.substring(1);
     } catch (e) {
@@ -356,9 +355,9 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
-              Text("DÉBUTER LA RONDE ?", style: const TextStyle(fontFamily: 'Staatliches', fontSize: 22, letterSpacing: 1.5)),
+              Text("start_patrol_q".tr, style: const TextStyle(fontFamily: 'Staatliches', fontSize: 22, letterSpacing: 1.5)),
               const SizedBox(height: 15),
-              Text("Voulez-vous commencer la ronde pour : ${planning.libelle} ?", textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Ubuntu', fontSize: 14, color: Colors.black54)),
+              Text("${"start_patrol_confirm".tr} : ${planning.libelle} ?", textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Ubuntu', fontSize: 14, color: Colors.black54)),
               const SizedBox(height: 30),
               Row(
                 children: [
@@ -392,7 +391,7 @@ class _PatrolPlanningState extends State<PatrolPlanning> {
         children: [
           Icon(Icons.event_busy_rounded, size: 60, color: Colors.grey.shade300),
           const SizedBox(height: 15),
-          const Text("Aucun planning disponible", style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu')),
+          Text("no_planning".tr, style: const TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu')),
         ],
       ),
     );

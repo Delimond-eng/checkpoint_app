@@ -45,6 +45,7 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
       backgroundColor: const Color(0xFF0B0B0F),
       body: Obx(() {
         final agents = authController.stationAgents;
+        final hasPendingSupervision = authController.pendingSupervision.value != null;
         
         return Column(
           children: [
@@ -91,7 +92,7 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                           style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Staatliches'),
                         ),
                       ),
-                      if (authController.pendingSupervision.value == null)
+                      if (!hasPendingSupervision)
                         TextButton.icon(
                           onPressed: () {
                             authController.stationAgents.clear();
@@ -99,15 +100,15 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                             Get.back();
                           },
                           icon: const Icon(Icons.refresh_rounded, color: Colors.redAccent, size: 18),
-                          label: Text("ANNULER LE SCAN".tr, style: const TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu')),
+                          label: Text("cancel".tr.toUpperCase(), style: const TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Ubuntu')),
                           style: TextButton.styleFrom(backgroundColor: Colors.redAccent.withOpacity(0.1)),
                         ),
                     ],
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    authController.pendingSupervision.value != null ? "Ronde de supervision en cours" : "Veuillez démarrer la ronde pour noter les agents.",
-                    style: TextStyle(color: authController.pendingSupervision.value != null ? Colors.greenAccent : Colors.white38, fontSize: 12, fontFamily: 'Ubuntu'),
+                    hasPendingSupervision ? "patrol_in_progress".tr : "supervision_start_msg".tr,
+                    style: TextStyle(color: hasPendingSupervision ? Colors.greenAccent : Colors.white38, fontSize: 12, fontFamily: 'Ubuntu'),
                   ),
                 ],
               ),
@@ -131,13 +132,13 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                         children: [
                           ...agents.map((agent) => SupervisorAgentTile(
                             data: agent,
-                            isActive: authController.pendingSupervision.value != null,
+                            isActive: hasPendingSupervision,
                           )),
                           
-                          if (authController.pendingSupervision.value != null) ...[
+                          if (hasPendingSupervision) ...[
                             const SizedBox(height: 30),
                             Text(
-                              "OBSERVATION GÉNÉRALE (OPTIONNEL)".tr,
+                              "observation_optional".tr,
                               style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2, fontFamily: 'Ubuntu'),
                             ),
                             const SizedBox(height: 10),
@@ -153,7 +154,7 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                                 maxLines: 3,
                                 style: const TextStyle(fontFamily: 'Ubuntu', fontSize: 14),
                                 decoration: InputDecoration(
-                                  hintText: "Remarques sur l'état général de la station...",
+                                  hintText: "rapport_desc".tr,
                                   hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
                                   border: InputBorder.none,
                                   contentPadding: const EdgeInsets.symmetric(vertical: 15),
@@ -164,9 +165,9 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                           
                           const SizedBox(height: 40),
 
-                          authController.pendingSupervision.value != null
+                          hasPendingSupervision
                             ? SubmitButton(
-                                label: "CLÔTURER LA RONDE".tr,
+                                label: "close_btn".tr.toUpperCase(),
                                 color: Colors.green,
                                 loading: tagsController.isLoading.value,
                                 onPressed: () => showRecognitionModal(context, key: "supervize-out", onValidate: closeSupervision),
@@ -198,10 +199,10 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
           children: [
             Icon(Icons.person_search_rounded, size: 80, color: Colors.grey.shade200),
             const SizedBox(height: 20),
-            const Text(
-              "Aucun agent détecté sur cette station. Veuillez scanner à nouveau le QR code.",
+            Text(
+              "no_agent_msg".tr,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontFamily: 'Ubuntu', fontSize: 14),
+              style: const TextStyle(color: Colors.grey, fontFamily: 'Ubuntu', fontSize: 14),
             ),
             const SizedBox(height: 30),
             ElevatedButton.icon(
@@ -212,7 +213,7 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage011()));
               },
               icon: const Icon(Icons.qr_code_scanner_rounded),
-              label: Text("RESCANNER".tr),
+              label: Text("rescan".tr),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF8F9FA),
                 foregroundColor: Colors.black87,
@@ -236,7 +237,7 @@ class _SupervisorAgentState extends State<SupervisorAgent> {
       EasyLoading.showError(value);
     } else {
       authController.refreshSupervision();
-      EasyLoading.showSuccess("Ronde de supervision démarrée !");
+      EasyLoading.showSuccess("success".tr);
     }
   }
 
@@ -309,90 +310,92 @@ class SupervisorAgentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isChecked = authController.supervisedAgent.contains(data.id);
-
-    return Obx(()=>Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFF8F9FA) : Colors.grey.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isChecked ? Colors.green.withOpacity(0.3) : Colors.grey.withOpacity(0.1)),
-        ),
-        child: Column(
-          children: [
-            InkWell(
-              onTap: isActive ? () {
-                authController.selectedAgentId.value = data.id!;
-                _startSupervisionForAgent(data.id!);
-                showSupervisorFormModal(context);
-              } : null,
-              borderRadius: BorderRadius.circular(20),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: isChecked ? Colors.green : Colors.grey.shade300, width: 2),
-                      ),
-                      child: ClipOval(
-                        child: data.photo != null
-                            ? CachedNetworkImage(
-                          imageUrl: data.photo!,
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => Image.asset("assets/images/profil-2.png"),
-                        )
-                            : Image.asset("assets/images/profil-2.png"),
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            data.fullname?.toUpperCase() ?? "agent".tr.toUpperCase(),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: isActive ? const Color(0xFF16161E) : Colors.grey,
-                              fontFamily: 'Ubuntu',
-                            ),
-                          ),
-                          Text(
-                            data.matricule ?? "",
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontFamily: 'Ubuntu'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isChecked) ...[
-                      // Delete button to cancel rating for this agent
-                      IconButton(
-                        onPressed: () => _cancelRating(data.id!),
-                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
-                        tooltip: "ANNULER LA COTATION".tr,
-                      ),
+    return Obx((){
+      final isChecked = authController.supervisedAgent.contains(data.id);
+      
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isActive ? const Color(0xFFF8F9FA) : Colors.grey.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: isChecked ? Colors.green.withOpacity(0.3) : Colors.grey.withOpacity(0.1)),
+          ),
+          child: Column(
+            children: [
+              InkWell(
+                onTap: isActive ? () {
+                  authController.selectedAgentId.value = data.id!;
+                  _startSupervisionForAgent(data.id!);
+                  showSupervisorFormModal(context);
+                } : null,
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
                       Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                        child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
-                      )
-                    ]
-                    else if (isActive)
-                      const Icon(Icons.chevron_right_rounded, color: Colors.grey),
-                  ],
+                        height: 50,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: isChecked ? Colors.green : Colors.grey.shade300, width: 2),
+                        ),
+                        child: ClipOval(
+                          child: data.photo != null
+                              ? CachedNetworkImage(
+                            imageUrl: data.photo!,
+                            fit: BoxFit.cover,
+                            errorWidget: (context, url, error) => Image.asset("assets/images/profil-2.png"),
+                          )
+                              : Image.asset("assets/images/profil-2.png"),
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              data.fullname?.toUpperCase() ?? "agent".tr.toUpperCase(),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: isActive ? const Color(0xFF16161E) : Colors.grey,
+                                fontFamily: 'Ubuntu',
+                              ),
+                            ),
+                            Text(
+                              data.matricule ?? "",
+                              style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontFamily: 'Ubuntu'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isChecked) ...[
+                        // Delete button to cancel rating for this agent
+                        IconButton(
+                          onPressed: () => _cancelRating(data.id!),
+                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                          tooltip: "ANNULER LA COTATION".tr,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                          child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
+                        )
+                      ]
+                      else if (isActive)
+                        const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    ));
+      );
+    });
   }
 
   void _startSupervisionForAgent(int agentId) {

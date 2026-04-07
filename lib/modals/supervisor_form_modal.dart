@@ -206,16 +206,18 @@ class _ElementCardState extends State<ElementCard> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        padding: const EdgeInsets.all(15.0),
         decoration: BoxDecoration(
           color: isActive ? color : color.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: isActive ? color : color.withOpacity(0.2)),
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(code, style: TextStyle(fontWeight: FontWeight.bold, color: isActive ? Colors.white : color, fontSize: 16, fontFamily: 'Staatliches')),
-            Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: isActive ? Colors.white70 : color.withOpacity(0.5), fontSize: 8, fontFamily: 'Ubuntu')),
+            //Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: isActive ? Colors.white70 : color.withOpacity(0.5), fontSize: 8, fontFamily: 'Ubuntu')),
           ],
         ),
       ),

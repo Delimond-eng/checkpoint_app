@@ -108,7 +108,7 @@ class TagsController extends GetxController with WidgetsBindingObserver {
   }
 
   void _startPatrolStream() {
-    const Duration interval = Duration(seconds: 45);
+    const Duration interval = Duration(seconds: 10);
     _patrolStreamSubscription = Stream.periodic(interval).asyncMap((_) async {
       try {
         var connectivityResult = await Connectivity().checkConnectivity();

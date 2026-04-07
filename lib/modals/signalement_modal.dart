@@ -54,7 +54,7 @@ Future<void> showSignalementModal(BuildContext context) async {
             ),
             const SizedBox(height: 10),
             Text(
-              "Décrivez l'incident et joignez une preuve visuelle.",
+              "incident_desc".tr,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade500,
@@ -74,7 +74,7 @@ Future<void> showSignalementModal(BuildContext context) async {
                         _buildFieldLabel("incident_title".tr),
                         _buildInputField(
                           controller: textTitle,
-                          hint: "Ex: Intrusion, Panne technique...",
+                          hint: "incident_hint".tr,
                           icon: Icons.error_outline_rounded,
                           color: Colors.redAccent,
                         ),
@@ -142,7 +142,7 @@ Future<void> showSignalementModal(BuildContext context) async {
                         _buildFieldLabel("facts_desc".tr),
                         _buildInputField(
                           controller: textDescription,
-                          hint: "Expliquez ce qu'il s'est passé...",
+                          hint: "facts_hint".tr,
                           icon: Icons.subject_rounded,
                           maxLines: 4,
                           color: Colors.redAccent,
@@ -156,11 +156,11 @@ Future<void> showSignalementModal(BuildContext context) async {
                             loading: tagsController.isLoading.value,
                             onPressed: () async {
                               if (tagsController.mediaFile.value == null) {
-                                EasyLoading.showToast("Une capture photo ou vidéo est requise !");
+                                EasyLoading.showToast("media_required".tr);
                                 return;
                               }
                               if (textTitle.text.isEmpty || textDescription.text.isEmpty) {
-                                EasyLoading.showToast("Veuillez remplir tous les champs !");
+                                EasyLoading.showToast("fields_required".tr);
                                 return;
                               }
 

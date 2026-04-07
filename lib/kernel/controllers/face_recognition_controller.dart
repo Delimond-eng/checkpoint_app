@@ -164,7 +164,7 @@ class FaceRecognitionController extends GetxController {
     }
 
     // Seuil de 0.65 pour une précision optimale (selon votre code fonctionnel)
-    if (closestTemplate != null && minDistance < 0.8) {
+    if (closestTemplate != null && minDistance < 0.7) {
       return closestTemplate.matricule;
     }
     

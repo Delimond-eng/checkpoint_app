@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../constants/styles.dart';
 import '../global/controllers.dart';
 import '../kernel/models/planning.dart';
-import '../kernel/services/http_manager.dart';
 import '../widgets/svg.dart';
 
 class PlanningPage extends StatefulWidget {
@@ -28,7 +27,7 @@ class _PlanningPageState extends State<PlanningPage> {
               "assets/images/logo.png",
               height: 25.0,
             ).paddingRight(5),
-            Text("Planning de patrouille".toUpperCase()),
+            Text("planning".tr.toUpperCase()),
           ],
         ),
         actions: [
@@ -59,7 +58,7 @@ class _PlanningPageState extends State<PlanningPage> {
             size: 80.0,
             color: primaryColor,
           ).paddingBottom(8.0),
-          const Text("Pas d'information pour l'instant !")
+          Text("no_planning".tr)
         ],
       ),
     );
@@ -85,7 +84,6 @@ class _PlanningPageState extends State<PlanningPage> {
           var item = plannings[index];
           bool isNext = item.id == nextPlanningId;
           
-          // Déterminer si le planning est passé pour aujourd'hui et non fait
           bool isPastToday = false;
           if ((item.date == todayStr || item.date == todaySlashStr) && item.endTime != null) {
             try {
@@ -137,9 +135,9 @@ class _PlanningPageState extends State<PlanningPage> {
                                 color: primaryMaterialColor,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Text(
-                                "À VENIR",
-                                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              child: Text(
+                                "to_come".tr,
+                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                               ),
                             ),
                         ],
@@ -184,14 +182,14 @@ class _PlanningPageState extends State<PlanningPage> {
                       ),
                       border: Border.all(color: primaryMaterialColor.withOpacity(0.3)),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.error_outline_rounded, color: primaryMaterialColor, size: 12),
-                        SizedBox(width: 4),
+                        const Icon(Icons.error_outline_rounded, color: primaryMaterialColor, size: 12),
+                        const SizedBox(width: 4),
                         Text(
-                          "NON EFFECTUÉE",
-                          style: TextStyle(color: primaryMaterialColor, fontSize: 9, fontWeight: FontWeight.bold),
+                          "not_done".tr,
+                          style: const TextStyle(color: primaryMaterialColor, fontSize: 9, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),

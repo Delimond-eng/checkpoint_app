@@ -39,7 +39,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     initializeDateFormatting('fr_FR', null);
     initializeDateFormatting('en_US', null);
     initializeDateFormatting('pt_PT', null);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       tagsController.fetchAnnouncesAndPlannings();
       SyncService.instance.start();
@@ -50,7 +50,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     if (planning == null || planning.date == null || planning.startTime == null) {
       return "En attente...";
     }
-    
+
     try {
       DateTime date;
       if (planning.date!.contains('/')) {
@@ -62,7 +62,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       final String currentLocale = Get.locale?.toString() ?? 'fr_FR';
       String timeStr = planning.startTime!.replaceAll(':', 'h');
       String formattedDate = DateFormat('EEEE d MMMM', currentLocale).format(date);
-      
+
       return "${formattedDate[0].toUpperCase()}${formattedDate.substring(1)} à $timeStr";
     } catch (e) {
       return "${planning.date} à ${planning.startTime}";
@@ -142,11 +142,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         color: Colors.orangeAccent,
                         enabled: isGuard,
                         badge: hasPatrol ? "!" : null,
+                        badgeColor: Colors.deepOrange,
                         onTap: () {
                           if (hasPatrol) {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileQrScannerPage()));
                           } else {
-                            EasyLoading.showToast("Veuillez sélectionner votre planning !");
+                            EasyLoading.showToast("check_planning_msg".tr);
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const PatrolPlanning()));
                           }
                         },
@@ -228,7 +229,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ],
               ),
             ),
-            
+
             // White Dashboard Section
             Expanded(
               child: Container(
@@ -275,20 +276,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               ),
                             )),
                           ],
-                          
+
                           // Icône de synchronisation dynamique
-                          Obx(() => tagsController.isLoading.value 
-                            ? const SpinKitRing(color: primaryMaterialColor, size: 20, lineWidth: 3).paddingAll(12)
-                            : IconButton(
-                                onPressed: () async {
-                                  tagsController.isLoading.value = true;
-                                  await tagsController.fetchAnnouncesAndPlannings();
-                                  await SyncService.instance.syncPendingActions();
-                                  tagsController.isLoading.value = false;
-                                  EasyLoading.showSuccess("sync_data".tr);
-                                },
-                                icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
-                              )
+                          Obx(() => tagsController.isLoading.value
+                              ? const SpinKitRing(color: primaryMaterialColor, size: 20, lineWidth: 3).paddingAll(12)
+                              : IconButton(
+                            onPressed: () async {
+                              tagsController.isLoading.value = true;
+                              await tagsController.fetchAnnouncesAndPlannings();
+                              await SyncService.instance.syncPendingActions();
+                              tagsController.isLoading.value = false;
+                              EasyLoading.showSuccess("sync_data".tr);
+                            },
+                            icon: const Icon(Icons.sync_rounded, color: primaryMaterialColor),
+                          )
                           ),
                         ],
                       ),
@@ -304,16 +305,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                         const SizedBox(height: 12),
                         _buildInfoCard(
-                          Icons.location_on_rounded, 
-                          "site_assignment".tr, 
-                          user.site?.name ?? "N/A",
-                          Colors.blue
+                            Icons.location_on_rounded,
+                            "site_assignment".tr,
+                            user.site?.name ?? "N/A",
+                            Colors.blue
                         ),
                         _buildInfoCard(
-                          Icons.access_time_filled_rounded, 
-                          "next_patrol".tr, 
-                          _formatNextPatrol(tagsController.nextPlanning.value), 
-                          Colors.orange
+                            Icons.access_time_filled_rounded,
+                            "next_patrol".tr,
+                            _formatNextPatrol(tagsController.nextPlanning.value),
+                            Colors.orange
                         ),
                       ],
 
@@ -418,7 +419,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: badgeColor, 
+                      color: badgeColor,
                       shape: BoxShape.circle,
                       border: Border.all(color: const Color(0xFF0B0B0F), width: 1.5),
                     ),
@@ -558,18 +559,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           Text(
                             "${"welcome".tr}, ${user.fullname?.split(' ')[0] ?? 'Agent'}",
                             style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Staatliches',
-                              letterSpacing: 1.6
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Staatliches',
+                                letterSpacing: 1.6
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            hasPatrol 
-                              ? (tagsController.isOfflinePatrolActive.value ? "offline_msg".tr : "patrol_in_progress".tr)
-                              : (isGuard ? "check_planning_msg".tr : "available_status".tr),
+                            hasPatrol
+                                ? (tagsController.isOfflinePatrolActive.value ? "offline_msg".tr : "patrol_in_progress".tr)
+                                : (isGuard ? "check_planning_msg".tr : "available_status".tr),
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.6),
                               fontSize: 11,

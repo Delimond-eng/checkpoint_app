@@ -24,6 +24,8 @@ SupervisorDataResponse parseSupervisorData(dynamic json) {
 }
 
 class HttpManager {
+  static final Set<String> _processingPresences = {};
+
   String _now() => DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
   String _timeHHmm() => DateFormat('HH:mm').format(DateTime.now());
   String _dateOnly() => DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -121,7 +123,13 @@ class HttpManager {
     File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
 
     if (await _isOffline()) {
-      String localSessionId = DateTime.now().millisecondsSinceEpoch.toString();
+      // 🔥 REUTILISATION DU SESSION ID POUR EVITER LES DOUBLONS DE PATROUILLE
+      String? localSessionId = localStorage.read("local_session_id");
+      if (localSessionId == null || localSessionId == "" || patrolIdVal != 0) {
+        localSessionId = DateTime.now().millisecondsSinceEpoch.toString();
+        localStorage.write("local_session_id", localSessionId);
+      }
+
       await LocalDbService.instance.addPendingAction({
         'type': 'scan',
         'local_session_id': localSessionId,
@@ -144,7 +152,6 @@ class HttpManager {
         tagsController.isOfflinePatrolActive.value = true;
         localStorage.write("is_offline_patrol", true);
         localStorage.write("active_schedule_id", planningId);
-        localStorage.write("local_session_id", localSessionId);
         if (planningId.isNotEmpty) await tagsController.removePlanningLocally(int.parse(planningId));
       }
       return "Hors-ligne : Scan enregistré localement.";
@@ -237,7 +244,7 @@ class HttpManager {
       File? photoFile;
       if (action['photo_path'] != null) {
         photoFile = File(action['photo_path']);
-        if (!await photoFile.exists()) return "success";
+        if (!await photoFile.exists()) return {"status": "success"};
       }
 
       if (action['type'] == 'scan') {
@@ -257,7 +264,10 @@ class HttpManager {
           body["patrol_id"] = action['patrol_id'];
         }
         var response = await Api.request(url: "patrol.scan", method: "post", body: body, files: photoFile != null ? {"photo": photoFile} : null);
-        return (response != null && !response.containsKey("errors")) ? response["result"] : "error";
+        if (response != null && !response.containsKey("errors")) {
+           return response["result"] ?? response; 
+        }
+        return response;
       } else if (action['type'] == 'close') {
         Map<String, dynamic> body = {
           "schedule_id": action['schedule_id'],
@@ -269,64 +279,80 @@ class HttpManager {
         if (action['patrol_id'] != null && action['patrol_id'] != "" && action['patrol_id'] != "0") {
           body["patrol_id"] = action['patrol_id'];
         }
-        var response = await Api.request(url: "patrol.close", method: "post", body: body, files: photoFile != null ? {"photo": photoFile} : null);
-        return (response != null && !response.containsKey("errors")) ? "success" : "error";
+        return await Api.request(url: "patrol.close", method: "post", body: body, files: photoFile != null ? {"photo": photoFile} : null);
       } else if (action['type'] == 'presence') {
         var body = {
           "matricule": action['matricule'],
           "key": action['key'],
           "coordonnees": action['latlng'] ?? "0.0,0.0",
           "date_reference": action['date_reference'],
-          "started_at": _extractTimeOnly(action['started_at']),
-          "ended_at": _extractTimeOnly(action['ended_at']),
+          "started_at": action['started_at'],
+          "ended_at": action['ended_at'],
         };
-        var response = await Api.request(url: "presence.create", method: "post", body: body, files: photoFile != null ? {"photo": photoFile} : null);
-        return (response != null && !response.containsKey("errors")) ? "success" : "error";
+        return await Api.request(url: "presence.create", method: "post", body: body, files: photoFile != null ? {"photo": photoFile} : null);
       }
-      return "error";
+      return null;
     } catch (e) {
-      return "error";
+      return null;
     }
   }
 
   // Presence signal
   Future<dynamic> checkPresence({String? key}) async {
-    var latlng = await _getCurrentLocation() ?? "0.0,0.0";
     var user = authController.userSession.value!;
-    var dateRef = _dateOnly();
-    var timeHHmm = _timeHHmm();
-    File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
-
-    final pending = await LocalDbService.instance.getPendingActions();
-    if (pending.any((a) => a['type'] == 'presence' && a['key'] == key && a['date_reference'] == dateRef)) {
-      EasyLoading.showInfo("Pointage déjà en attente de synchronisation.");
-      return null;
-    }
-
-    if (await _isOffline()) {
-      await LocalDbService.instance.addPendingAction({
-        'type': 'presence',
-        'matricule': user.matricule,
-        'key': key,
-        'latlng': latlng,
-        'started_at': key == 'check-in' ? timeHHmm : null,
-        'ended_at': key == 'check-out' ? timeHHmm : null,
-        'date_reference': dateRef,
-        'photo_path': photoFile.path,
-        'created_at': _now(),
-      });
-      return "Hors-ligne : Pointage enregistré localement.";
-    }
+    
+    // Verrouillage anti-double clic
+    String lockKey = "${user.id}_$key";
+    if (_processingPresences.contains(lockKey)) return null;
+    _processingPresences.add(lockKey);
 
     try {
-      Map<String, dynamic> data = {"matricule": user.matricule, "key": key, "coordonnees": latlng};
-      var response = await Api.request(url: "presence.create", method: "post", body: data, files: {'photo': photoFile});
-      if (response != null && !response.containsKey("errors")) return response["message"] ?? "Succès";
-      EasyLoading.showError(_parseError(response));
-      return null;
-    } catch (e) {
-      EasyLoading.showError("Echec : $e");
-      return null;
+      var latlng = await _getCurrentLocation() ?? "0.0,0.0";
+      var dateRef = _dateOnly();
+      var fullNow = _now();
+      File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
+
+      // Vérification file d'attente locale
+      final pending = await LocalDbService.instance.getPendingActions();
+      if (pending.any((a) => a['type'] == 'presence' && a['key'] == key && a['date_reference'] == dateRef)) {
+        EasyLoading.showInfo("Pointage déjà en attente de synchronisation.");
+        return null;
+      }
+
+      if (await _isOffline()) {
+        await LocalDbService.instance.addPendingAction({
+          'type': 'presence',
+          'matricule': user.matricule,
+          'key': key,
+          'latlng': latlng,
+          'started_at': key == 'check-in' ? fullNow : null,
+          'ended_at': key == 'check-out' ? fullNow : null,
+          'date_reference': dateRef,
+          'photo_path': photoFile.path,
+          'created_at': fullNow,
+        });
+        return "Hors-ligne : Pointage enregistré localement.";
+      }
+
+      try {
+        Map<String, dynamic> data = {
+          "matricule": user.matricule, 
+          "key": key, 
+          "coordonnees": latlng,
+          "date_reference": dateRef,
+          "started_at": key == 'check-in' ? fullNow : null,
+          "ended_at": key == 'check-out' ? fullNow : null,
+        };
+        var response = await Api.request(url: "presence.create", method: "post", body: data, files: {'photo': photoFile});
+        if (response != null && !response.containsKey("errors")) return response["message"] ?? "Succès";
+        EasyLoading.showError(_parseError(response));
+        return null;
+      } catch (e) {
+        EasyLoading.showError("Echec : $e");
+        return null;
+      }
+    } finally {
+      _processingPresences.remove(lockKey);
     }
   }
 

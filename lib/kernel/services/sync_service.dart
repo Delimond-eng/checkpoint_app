@@ -20,15 +20,18 @@ class SyncService {
   }
 
   Future<void> syncPendingActions() async {
+    // 1. Verrouillage IMMEDIAT pour éviter les doubles exécutions
     if (_isSyncing) return;
-    
-    var connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult.isEmpty || connectivityResult.every((r) => r == ConnectivityResult.none)) return;
-
     _isSyncing = true;
-    tagsController.isLoading.value = true; // Activer le loading global
 
     try {
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult.isEmpty || connectivityResult.every((r) => r == ConnectivityResult.none)) {
+        _isSyncing = false;
+        return;
+      }
+
+      tagsController.isLoading.value = true;
       final manager = HttpManager();
 
       while (true) {
@@ -38,32 +41,42 @@ class SyncService {
         var action = Map<String, dynamic>.from(pendingActions.first);
         final dynamic response = await manager.syncLocalAction(action);
         
-        if (response is Map<String, dynamic>) {
+        // Erreur réseau : on arrête et on libère le verrou pour la prochaine tentative
+        if (response == null) break; 
+
+        // Gestion des réponses serveur (succès ou erreur logique)
+        if (response is Map) {
+          var resMap = response as Map<String, dynamic>;
+          
+          if (resMap.containsKey('errors')) {
+            // Supprimer pour ne pas bloquer la file si c'est une erreur définitive
+            await LocalDbService.instance.deletePendingAction(action['id']);
+            continue;
+          }
+
+          // Linking des IDs de patrouille
           String? realPatrolId;
-          if (response.containsKey('patrol_id')) {
-            realPatrolId = response['patrol_id'].toString();
-          } else if (response.containsKey('id')) {
-            realPatrolId = response['id'].toString();
+          if (resMap['result'] != null && resMap['result'] is Map) {
+            realPatrolId = (resMap['result']['patrol_id'] ?? resMap['result']['id'])?.toString();
+          } else {
+            realPatrolId = (resMap['patrol_id'] ?? resMap['id'] ?? resMap['result'])?.toString();
           }
 
           final localSid = action['local_session_id'];
-          if (realPatrolId != null && localSid != null && localSid != "") {
+          if (realPatrolId != null && localSid != null && localSid.isNotEmpty) {
             await LocalDbService.instance.updatePendingActionsId(localSid, realPatrolId);
           }
-          await LocalDbService.instance.deletePendingAction(action['id']);
-        } 
-        else if (response == "success") {
-          await LocalDbService.instance.deletePendingAction(action['id']);
-        } 
-        else {
-          break;
         }
+        
+        await LocalDbService.instance.deletePendingAction(action['id']);
+        await Future.delayed(const Duration(milliseconds: 200)); // Délai augmenté pour la stabilité
       }
     } catch (e) {
-      // Erreur silencieuse
+      // Erreur
     } finally {
       _isSyncing = false;
-      tagsController.isLoading.value = false; // Désactiver le loading global
+      tagsController.isLoading.value = false;
+      tagsController.refreshPending();
     }
   }
 

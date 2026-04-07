@@ -152,9 +152,9 @@ class KioskConfirmationDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14 * scale),
                       ),
                     ),
-                    child: const Text(
-                      "Annuler",
-                      style: TextStyle(
+                    child: Text(
+                      "cancel".tr,
+                      style: const TextStyle(
                         color: Colors.black45,
                         fontWeight: FontWeight.w700,
                         fontFamily: 'Ubuntu',
@@ -175,9 +175,9 @@ class KioskConfirmationDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14 * scale),
                       ),
                     ),
-                    child: const Text(
-                      "Confirmer",
-                      style: TextStyle(
+                    child: Text(
+                      "confirm".tr,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontFamily: 'Ubuntu',
                       ),
