@@ -300,6 +300,7 @@ class HttpManager {
   // Presence signal
   Future<dynamic> checkPresence({String? key}) async {
     var user = authController.userSession.value!;
+    var identifiedMatricule = tagsController.faceResult.value;
     
     // Verrouillage anti-double clic
     String lockKey = "${user.id}_$key";
@@ -314,7 +315,7 @@ class HttpManager {
 
       // Vérification file d'attente locale
       final pending = await LocalDbService.instance.getPendingActions();
-      if (pending.any((a) => a['type'] == 'presence' && a['key'] == key && a['date_reference'] == dateRef)) {
+      if (pending.any((a) => a['type'] == 'presence' && a['key'] == key && a['date_reference'] == dateRef && a['matricule'] == identifiedMatricule)) {
         EasyLoading.showInfo("Pointage déjà en attente de synchronisation.");
         return null;
       }
@@ -322,7 +323,7 @@ class HttpManager {
       if (await _isOffline()) {
         await LocalDbService.instance.addPendingAction({
           'type': 'presence',
-          'matricule': user.matricule,
+          'matricule': identifiedMatricule,
           'key': key,
           'latlng': latlng,
           'started_at': key == 'check-in' ? fullNow : null,
@@ -336,7 +337,7 @@ class HttpManager {
 
       try {
         Map<String, dynamic> data = {
-          "matricule": user.matricule, 
+          "matricule": identifiedMatricule, 
           "key": key, 
           "coordonnees": latlng,
           "date_reference": dateRef,

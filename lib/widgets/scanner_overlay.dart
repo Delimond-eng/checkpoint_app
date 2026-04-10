@@ -10,7 +10,8 @@ class ScannerOverlay extends StatefulWidget {
   State<ScannerOverlay> createState() => _ScannerOverlayState();
 }
 
-class _ScannerOverlayState extends State<ScannerOverlay> with SingleTickerProviderStateMixin {
+class _ScannerOverlayState extends State<ScannerOverlay>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -43,9 +44,7 @@ class _ScannerOverlayState extends State<ScannerOverlay> with SingleTickerProvid
           child: Stack(
             children: [
               Container(
-                decoration: const BoxDecoration(
-                  color: Colors.transparent,
-                ),
+                decoration: const BoxDecoration(color: Colors.transparent),
               ),
               Center(
                 child: Container(
@@ -67,8 +66,10 @@ class _ScannerOverlayState extends State<ScannerOverlay> with SingleTickerProvid
             width: 260,
             decoration: BoxDecoration(
               border: Border.all(
-                color: widget.isScanned ? Colors.greenAccent : Colors.white.withOpacity(0.5), 
-                width: 2
+                color: widget.isScanned
+                    ? Colors.greenAccent
+                    : Colors.white.withOpacity(0.5),
+                width: 2,
               ),
               borderRadius: BorderRadius.circular(30),
             ),
@@ -76,50 +77,50 @@ class _ScannerOverlayState extends State<ScannerOverlay> with SingleTickerProvid
         ),
         // Scanning Animation Line OR Refresh Icon
         Center(
-          child: widget.isScanned 
-            ? GestureDetector(
-              onTap: widget.onRestarted,
-              child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    shape: BoxShape.circle,
+          child: widget.isScanned
+              ? GestureDetector(
+                  onTap: widget.onRestarted,
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.refresh_rounded,
+                      color: Colors.white,
+                      size: 40,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.refresh_rounded,
-                    color: Colors.white,
-                    size: 40
-                  ),
-                ),
-            )
-            : AnimatedBuilder(
-                animation: _animation,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(0, -110 + (220 * _animation.value)),
-                    child: Container(
-                      width: 240,
-                      height: 2,
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: primaryMaterialColor.withOpacity(0.5),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          )
-                        ],
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.transparent,
-                            primaryMaterialColor,
-                            Colors.transparent,
+                )
+              : AnimatedBuilder(
+                  animation: _animation,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, -110 + (220 * _animation.value)),
+                      child: Container(
+                        width: 240,
+                        height: 2,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryMaterialColor.withOpacity(0.5),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
                           ],
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              primaryMaterialColor,
+                              Colors.transparent,
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
         ),
       ],
     );

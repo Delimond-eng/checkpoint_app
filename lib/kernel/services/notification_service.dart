@@ -15,14 +15,14 @@ class NotificationService {
   }
 
   Future<void> showNotification(int id, String libelle) async {
-    const AndroidNotificationDetails androidDetails =
+    AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
       'patrol_alerts',
-      'Alertes de patrouille',
+      'notification_channel_name'.tr, // Traduction du nom du canal
       importance: Importance.max,
       priority: Priority.high,
     );
-    const NotificationDetails notificationDetails =
+    NotificationDetails notificationDetails =
         NotificationDetails(android: androidDetails);
     await flutterLocalNotificationsPlugin.show(
         id, 'notification_patrol_time'.tr, libelle, notificationDetails);

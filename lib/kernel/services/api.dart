@@ -4,9 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class Api {
-  static String baseUrl = 'https://md.salama-drc.com/api';
+  static String baseUrl = 'https://mamba.salama-drc.com/api';
 
-  static Future<dynamic> request({
+  static Future<dynamic> request({ 
     required String method,
     required String url,
     Map<String, dynamic>? body,
