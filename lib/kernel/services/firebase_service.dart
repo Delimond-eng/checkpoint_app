@@ -8,6 +8,7 @@ import '/kernel/services/api.dart';
 import '/kernel/services/database_helper.dart';
 import '/kernel/services/mdm_service.dart';
 import '/kernel/services/sync_service.dart';
+import '/kernel/services/ota_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -54,7 +55,7 @@ class FirebaseService {
         final String body = message.notification?.body ?? message.data['body'] ?? "";
 
         bool shouldNotify = true;
-        if (type == 'biometric_sync' || type == 'biometric_delete') {
+        if (type == 'biometric_sync' || type == 'biometric_delete' || type == 'update') {
           shouldNotify = false;
         }
 
@@ -104,6 +105,13 @@ class FirebaseService {
       return;
     } else if (type == 'unlock') {
       await MdmService.unlockDevice();
+      return;
+    } else if (type == 'update') {
+      // RÉCUPÉRATION DE L'URL DE L'APK
+      final String? apkUrl = message.data['url'];
+      if (apkUrl != null && apkUrl.isNotEmpty) {
+        OtaService.instance.updateApp(apkUrl);
+      }
       return;
     }
 

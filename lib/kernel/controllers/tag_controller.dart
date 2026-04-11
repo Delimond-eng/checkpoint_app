@@ -50,8 +50,8 @@ class TagsController extends GetxController with WidgetsBindingObserver {
   StreamSubscription<List<Map<String, dynamic>>?>? _patrolStreamSubscription;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
-  // Getter intelligent : vérifie soit la patrouille serveur, soit la patrouille offline locale
-  bool get hasActivePatrol => currentPatrol.value != null || isOfflinePatrolActive.value || activeScheduleId.value.isNotEmpty;
+  // Getter intelligent : Le serveur prime s'il est disponible, sinon on regarde le mode offline
+  bool get hasActivePatrol => currentPatrol.value != null || isOfflinePatrolActive.value;
 
   @override
   void onInit() {
@@ -121,24 +121,35 @@ class TagsController extends GetxController with WidgetsBindingObserver {
       } catch (e) {
         return null;
       }
-    }).listen((pendingPatrols) {
+    }).listen((pendingPatrols) async {
+      // Si on ne reçoit rien (problème réseau ou pas de session), on ne change rien
       if (pendingPatrols == null) return; 
 
       if (pendingPatrols.isEmpty) {
-        if (!isOfflinePatrolActive.value && activeScheduleId.value.isEmpty) {
+        // SI LE SERVEUR DIT VIDE :
+        // On vérifie d'abord s'il y a une action de "scan" (début) en attente de synchro
+        final pendingActions = await LocalDbService.instance.getPendingActions();
+        bool hasPendingScan = pendingActions.any((a) => a['type'] == 'scan');
+
+        // Si pas de scan en attente, alors le serveur a raison : on vide tout
+        if (!hasPendingScan) {
           currentPatrol.value = null;
           patrolId.value = 0;
           activeScheduleId.value = "";
+          isOfflinePatrolActive.value = false;
+          
           localStorage.remove("patrol_id");
           localStorage.remove("current_patrol");
           localStorage.remove("active_schedule_id");
+          localStorage.remove("is_offline_patrol");
         }
       } else {
+        // LE SERVEUR DIT QU'IL Y A UNE PATROUILLE :
         final patrolData = pendingPatrols.first;
         final patrol = Patrol.fromJson(Map<String, dynamic>.from(patrolData));
         currentPatrol.value = patrol;
         
-        // Persistance des données serveur pour le mode offline ultérieur
+        // Mise à jour des infos et persistence
         patrolId.value = patrol.id ?? 0;
         localStorage.write("patrol_id", patrol.id);
         localStorage.write("current_patrol", patrolData);
@@ -148,6 +159,7 @@ class TagsController extends GetxController with WidgetsBindingObserver {
           localStorage.write("active_schedule_id", patrol.scheduleId);
         }
 
+        // On désactive le flag offline puisque la patrouille est connue du serveur
         if (isOfflinePatrolActive.value) {
           isOfflinePatrolActive.value = false;
           localStorage.write("is_offline_patrol", false);
@@ -293,7 +305,6 @@ class TagsController extends GetxController with WidgetsBindingObserver {
         return start.isAfter(now);
       }, orElse: () => list.first);
     } catch (e) {
-      // Correction ici : utiliser planningsList au lieu de list car list n'est pas accessible ici
       nextPlanning.value = planningsList.isNotEmpty ? planningsList.first : null;
     }
   }

@@ -53,6 +53,7 @@ dependencies:
   connectivity_plus: ^6.1.4
   battery_plus: ^6.2.2
   package_info_plus: ^8.3.0
+  ota_update: ^7.1.0
   #install_plugin: ^2.1.0
 dev_dependencies:
   flutter_test:
