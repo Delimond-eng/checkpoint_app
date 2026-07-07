@@ -320,7 +320,7 @@ Future<bool> checkPresence(String key) async {
 }
 
 Future<bool> closePatrol({String comment = ""}) async {
-  if (tagsController.faceResult.value != authController.userSession.value!.matricule) {
+  if (tagsController.faceResult.value.trim() != authController.userSession.value!.matricule!.trim()) {
     EasyLoading.showInfo("Le matricule agent ne correspond pas.");
     return false;
   }

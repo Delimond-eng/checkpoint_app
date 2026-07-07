@@ -4,6 +4,7 @@ import '/constants/styles.dart';
 import '/global/controllers.dart';
 import '/global/modal.dart';
 import '/global/store.dart';
+import '/kernel/services/local_db_service.dart';
 import '/modals/request_modal.dart';
 import '/modals/signalement_modal.dart';
 import '/screens/auth/login.dart';
@@ -229,7 +230,8 @@ class _ProfilPageState extends State<ProfilPage> {
                     onTap: () {
                       DGCustomDialog.showInteraction(context,
                           message: "confirm_logout".tr,
-                          onValidated: () {
+                          onValidated: () async {
+                            await LocalDbService.instance.clearUserData();
                             localStorage.remove("user_session");
                             Get.offAll(() => const LoginScreen());
                           });

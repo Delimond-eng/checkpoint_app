@@ -102,21 +102,35 @@ CREATE TABLE pending_actions (
 ''');
   }
 
+  // --- GLOBAL ---
+  Future<void> clearUserData() async {
+    final db = await instance.database;
+    await db.transaction((txn) async {
+      await txn.delete('plannings');
+      await txn.delete('announces');
+      // On ne vide pas forcément pending_actions car elles sont liées à l'agent
+    });
+  }
+
   // --- PLANNINGS ---
   Future<void> savePlannings(List<Planning> plannings) async {
     final db = await instance.database;
-    await db.delete('plannings');
-    for (var p in plannings) {
-      await db.insert('plannings', {
-        'id': p.id,
-        'libelle': p.libelle,
-        'date': p.date,
-        'start_time': p.startTime,
-        'end_time': p.endTime,
-        'site_id': p.siteId,
-        'site_name': p.site?.name,
-      });
-    }
+    await db.transaction((txn) async {
+      await txn.delete('plannings');
+      final batch = txn.batch();
+      for (var p in plannings) {
+        batch.insert('plannings', {
+          'id': p.id,
+          'libelle': p.libelle,
+          'date': p.date,
+          'start_time': p.startTime,
+          'end_time': p.endTime,
+          'site_id': p.siteId,
+          'site_name': p.site?.name,
+        });
+      }
+      await batch.commit(noResult: true);
+    });
   }
 
   Future<List<Planning>> getLocalPlannings() async {
@@ -140,16 +154,21 @@ CREATE TABLE pending_actions (
 
   // --- ANNOUNCES ---
   Future<void> saveAnnounces(List<Announce>? announces) async {
+    if (announces == null) return;
     final db = await instance.database;
-    await db.delete('announces');
-    for (var a in announces!) {
-      await db.insert('announces', {
-        'id': a.id,
-        'title': a.title,
-        'content': a.content,
-        'created_at': a.createdAt,
-      });
-    }
+    await db.transaction((txn) async {
+      await txn.delete('announces');
+      final batch = txn.batch();
+      for (var a in announces) {
+        batch.insert('announces', {
+          'id': a.id,
+          'title': a.title,
+          'content': a.content,
+          'created_at': a.createdAt,
+        });
+      }
+      await batch.commit(noResult: true);
+    });
   }
 
   Future<List<Announce>> getLocalAnnounces() async {

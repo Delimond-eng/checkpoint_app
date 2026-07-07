@@ -74,10 +74,14 @@ class HttpManager {
         if (response.containsKey("errors")) {
           return response["errors"].toString();
         } else {
+          // IMPORTANT: On nettoie les anciennes données locales avant de charger la nouvelle session
+          await LocalDbService.instance.clearUserData();
+          
           var agent = User.fromJson(response["agent"]);
           localStorage.write("user_session", agent.toJson());
           authController.userSession.value = agent;
           authController.refreshUser();
+          
           try {
             var token = await FirebaseService.getToken();
             await updateSiteTOKEN(token, agent.siteId);
@@ -98,7 +102,7 @@ class HttpManager {
   Future<dynamic> beginPatrol(String comment) async {
     var latlng = await _getCurrentLocation() ?? "0.0,0.0";
     var patrolIdVal = tagsController.patrolId.value;
-    var planningId = tagsController.planningId.value; // Ceci est le schedule_id
+    var planningId = tagsController.planningId.value; 
     var user = authController.userSession.value!;
     var nowStr = _now();
     var timeHHmm = _timeHHmm();
@@ -123,7 +127,6 @@ class HttpManager {
     File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
 
     if (await _isOffline()) {
-      // 🔥 REUTILISATION DU SESSION ID POUR EVITER LES DOUBLONS DE PATROUILLE
       String? localSessionId = localStorage.read("local_session_id");
       if (localSessionId == null || localSessionId == "" || patrolIdVal != 0) {
         localSessionId = DateTime.now().millisecondsSinceEpoch.toString();
@@ -160,7 +163,6 @@ class HttpManager {
     try {
       var response = await Api.request(url: "patrol.scan", method: "post", body: data, files: {"photo": photoFile});
       if (response != null && !response.containsKey("errors")) {
-        // Enregistre le vrai ID retourné par le serveur
         var realId = response["result"]["patrol_id"] ?? response["result"]["id"];
         if (realId != null) {
           localStorage.write("patrol_id", realId);
@@ -302,7 +304,6 @@ class HttpManager {
     var user = authController.userSession.value!;
     var identifiedMatricule = tagsController.faceResult.value;
     
-    // Verrouillage anti-double clic
     String lockKey = "${user.id}_$key";
     if (_processingPresences.contains(lockKey)) return null;
     _processingPresences.add(lockKey);
@@ -313,7 +314,6 @@ class HttpManager {
       var fullNow = _now();
       File photoFile = await ImageService.compressForUpload(tagsController.face.value!);
 
-      // Vérification file d'attente locale
       final pending = await LocalDbService.instance.getPendingActions();
       if (pending.any((a) => a['type'] == 'presence' && a['key'] == key && a['date_reference'] == dateRef && a['matricule'] == identifiedMatricule)) {
         EasyLoading.showInfo("Pointage déjà en attente de synchronisation.");
@@ -464,7 +464,13 @@ class HttpManager {
       if (response != null && response["schedules"] != null) {
         var jsonArr = response["schedules"];
         localStorage.write("schedules", jsonArr);
-        jsonArr.forEach((e) => planningsList.add(Planning.fromJson(e)));
+        for (var e in jsonArr) {
+          try {
+            planningsList.add(Planning.fromJson(e));
+          } catch (err) {
+             if (kDebugMode) print("Erreur parsing planning: $err");
+          }
+        }
       }
       return planningsList;
     } catch (e) { return null; }

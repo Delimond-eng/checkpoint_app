@@ -70,6 +70,7 @@ class Api {
       }
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        print(response.body);
         return jsonDecode(response.body);
       } else {
         // Tenter de retourner le corps de l'erreur (JSON) pour traitement logique

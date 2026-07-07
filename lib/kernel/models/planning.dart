@@ -31,14 +31,17 @@ class Planning {
   }
 
   factory Planning.fromJson(Map<String, dynamic> json) {
+    String? start = json['start_time']?.toString();
+    String? end = json['end_time']?.toString();
+    
     return Planning(
         id: json['id'],
         date: json['date'],
         libelle: json['libelle'],
-        startTime: json['start_time'].toString().substring(0, 5),
-        endTime: json['end_time'].toString().substring(0, 5),
+        startTime: (start != null && start.length >= 5) ? start.substring(0, 5) : start,
+        endTime: (end != null && end.length >= 5) ? end.substring(0, 5) : end,
         siteId: json['site_id'],
         agencyId: json['agency_id'],
-        site: Site.fromJson(json['site']));
+        site: json['site'] != null ? Site.fromJson(json['site']) : null);
   }
 }
